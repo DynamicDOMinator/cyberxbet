@@ -93,8 +93,8 @@ export default function Home() {
 
       <div className="relative z-[3]">
         {/* header  */}
-        <div className="flex items-cente flex-row-reverse justify-between">
-          <div className="flex items-center justify-end mt-8 mr-16 gap-4">
+        <div className="flex items-center flex-col lg:flex-row-reverse justify-between">
+          <div className="flex items-center justify-end mt-8 lg:mr-16 gap-4 px-4">
             <h1 className="text-white text-2xl font-bold font-Tajawal">
               CyberXbytes
             </h1>
@@ -107,7 +107,7 @@ export default function Home() {
             />
           </div>
 
-          <div className="flex items-center mt-8 ml-16 gap-8">
+          <div className="flex items-center mt-8 lg:ml-16 gap-8 px-4">
             <button className="text-white cursor-pointer hover:bg-[#38FFE5] transition-all duration-400 hover:text-black border-2 border-white font-medium py-2 px-4 rounded">
               تسجيل الدخول
             </button>
@@ -119,11 +119,11 @@ export default function Home() {
         {/* end of the header  */}
 
         {/* section one  */}
-        <div className="mt-20 ">
-          <h2 className="text-white text-7xl text-center mt-28 font-extrabold font-Tajawal">
+        <div className="mt-20 px-4">
+          <h2 className="text-white text-4xl lg:text-7xl text-center mt-28 font-extrabold font-Tajawal">
             ابدأ التحدي الآن
           </h2>
-          <p className="text-white text-center leading-20 text-4xl lg:px-28 lg:w-[910px] mt-20 mx-auto font-Tajawal">
+          <p className="text-white text-center leading-20 text-2xl lg:text-4xl px-4 lg:px-28 lg:w-[910px] mt-20 mx-auto font-Tajawal">
             انضم إلينا في <span className="text-[#38FFE5]"> CyberXbytes </span>{" "}
             لتختبر مهارتك في عالم الأمن السيبراني و تتنافس مع نخبه من المحترفين
             و الهواة فى بيئة لعب مشوقة مليئة بالتحديات
@@ -139,25 +139,25 @@ export default function Home() {
         {/* second section  */}
 
         <div>
-          <h3 className="text-white text-5xl text-center mt-28 font-extrabold font-Tajawal">
+          <h3 className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal px-4">
             ؟ <span className="text-[#38FFE5]">CyberXbytes</span> ما هدف
           </h3>
-          <p className="text-white text-center font-bold text-4xl mt-16 font-Tajawal">
+          <p className="text-white text-center font-bold text-2xl lg:text-4xl mt-16 font-Tajawal px-4">
             تطوير المهارات وصقل المواهب
           </p>
-          <p className="text-white text-center font-medium  lg:w-[932px] mx-auto text-4xl mt-16 font-Tajawal">
+          <p className="text-white text-center font-medium px-4 lg:w-[932px] mx-auto text-2xl lg:text-4xl mt-16 font-Tajawal">
             نهدف إلي إنشاء بيئة تفاعلية تسهم فى تأهيل الجيل القادم من محترفي
             الأمن السيبراني عبر التحديات الواقعية والألعاب التعليمية التي تجعل
             التعلم ممتعا وفعالا.
           </p>
 
-          <h3 className="text-white text-4xl text-center mt-28 font-bold font-Tajawal">
+          <h3 className="text-white text-2xl lg:text-4xl text-center mt-28 font-bold font-Tajawal px-4">
             استقطاب المواهب ونشر التحديات
           </h3>
 
           <p
             dir="rtl"
-            className="text-white text-center font-medium  lg:w-[932px] mx-auto text-4xl mt-16 font-Tajawal"
+            className="text-white text-center font-medium px-4 lg:w-[932px] mx-auto text-2xl lg:text-4xl mt-16 font-Tajawal"
           >
             في <span className="text-[#38FFE5]">CyberXbytes</span>.نفتح المجال
             للمحترفين والمبدعين لإضافة تحدياتهم الخاصة بعد مراجعتها, مما يتيح
@@ -167,12 +167,12 @@ export default function Home() {
         </div>
 
         {/* third section */}
-        <div className="mt-40">
-          <h3 className="text-white text-5xl text-center mt-28 font-extrabold font-Tajawal">
+        <div className="mt-40 px-4">
+          <h3 className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal">
             ؟ <span className="text-[#38FFE5]">CyberXbytes</span> لماذا تنضم إلي
           </h3>
 
-          <div className="mt-40 grid gap-10 md:gap-0 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto">
+          <div className="mt-40 grid gap-10 md:gap-0 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
             <div className="flex flex-col items-center gap-7 ">
               <Image
                 className="w-[100px] h-[100px]"
@@ -181,10 +181,10 @@ export default function Home() {
                 width={100}
                 alt="image"
               />
-              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 مساحة مفتوحة
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-2xl font-Tajawal">
+              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
                 مارس الأنشطة و حل التحديات في أي وقت
               </p>
             </div>
@@ -197,10 +197,10 @@ export default function Home() {
                 width={100}
                 alt="image"
               />
-              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 تصنيف عالمي
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-2xl font-Tajawal">
+              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
                 نافس للوصول إالى أعلي المراكز
               </p>
             </div>
@@ -212,16 +212,16 @@ export default function Home() {
                 width={100}
                 alt="image"
               />
-              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 بيئة لعب تنافسية
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-2xl font-Tajawal">
+              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
                 واجه تحديات تحاكي الهجمات الحقيقية
               </p>
             </div>
           </div>
 
-          <div className="mt-10 lg:mt-40 grid gap-10 md:gap-0 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto">
+          <div className="mt-10 lg:mt-40 grid gap-10 md:gap-0 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
             <div className="flex flex-col items-center gap-7 ">
               <Image
                 className="w-[100px] h-[100px]"
@@ -230,10 +230,10 @@ export default function Home() {
                 width={100}
                 alt="image"
               />
-              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 تحاكي الواقع
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-2xl font-Tajawal">
+              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
                 اختبر نفسك في سيناريوهات عملية
               </p>
             </div>
@@ -246,10 +246,10 @@ export default function Home() {
                 width={100}
                 alt="image"
               />
-              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 فرصة للتعلم
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-2xl font-Tajawal">
+              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
                 استمتع بتحديات مصممة لتعزيز مهاراتك
               </p>
             </div>
@@ -261,10 +261,10 @@ export default function Home() {
                 width={100}
                 alt="image"
               />
-              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 مجتمع تفاعلى
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-2xl font-Tajawal">
+              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
                 شارك انجازاتك وتعلم من الخبراء
               </p>
             </div>
@@ -274,13 +274,13 @@ export default function Home() {
         {/* forth section */}
 
         {/* third section */}
-        <div className="mt-40">
-          <h3 className="text-white text-5xl text-center mt-28 font-extrabold font-Tajawal">
+        <div className="mt-40 px-4">
+          <h3 className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal">
             <span className="text-[#38FFE5]">CyberXbytes</span> التحديات
             المتوفرة في
           </h3>
 
-          <div className="mt-40 grid gap-10 md:gap-10 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto">
+          <div className="mt-40 grid gap-10 md:gap-10 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
             <div className="flex flex-col items-center gap-7 ">
               <Image
                 className="w-[100px] h-[100px]"
@@ -289,7 +289,7 @@ export default function Home() {
                 width={100}
                 alt="image"
               />
-              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 تطبيقات الويب
               </h4>
               <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
@@ -307,10 +307,10 @@ export default function Home() {
                 width={100}
                 alt="image"
               />
-              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 الهندسة العكسية{" "}
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-2xl font-Tajawal">
+              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
                 ستتعلم في هذه التحديات كيف تفكك الأكواد التنفيذية وتحللها لفهم
                 كيفية عملها{" "}
               </p>
@@ -323,7 +323,7 @@ export default function Home() {
                 width={100}
                 alt="image"
               />
-              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 التشفير وفك التشفير
               </h4>
               <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
@@ -334,7 +334,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mt-10 lg:mt-40 grid gap-10 md:gap-10 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto">
+          <div className="mt-10 lg:mt-40 grid gap-10 md:gap-10 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
             <div className="flex flex-col items-center gap-7 ">
               <Image
                 className="w-[100px] h-[100px]"
@@ -343,7 +343,7 @@ export default function Home() {
                 width={100}
                 alt="image"
               />
-              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 متنوع
               </h4>
               <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
@@ -361,7 +361,7 @@ export default function Home() {
                 width={100}
                 alt="image"
               />
-              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 <span className="text-[#38FFE5]">CyberXbytes </span> تعلم مع
               </h4>
               <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
@@ -378,7 +378,7 @@ export default function Home() {
                 width={100}
                 alt="image"
               />
-              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 التحليل الجنائي الرقمي
               </h4>
               <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
@@ -390,7 +390,7 @@ export default function Home() {
         </div>
 
         {/* numbers section  */}
-        <div className="grid md:grid-cols-3 grid-cols-1 mt-20 place-items-center max-w-7xl mx-auto gap-10">
+        <div className="grid md:grid-cols-3 grid-cols-1 mt-20 place-items-center max-w-7xl mx-auto gap-10 px-4">
           <div className="w-[200px] text-center">
             <div className="h-[100px] bg-[#0A1214] shadow-[inset_0_2px_15px_rgba(51,51,51,0.7)] text-white rounded-2xl relative flex items-center justify-center">
               <NumberAnimation end={1000} />
@@ -408,17 +408,17 @@ export default function Home() {
           </div>
         </div>
 
-        <hr className="text-white my-14 mt-36 mx-20" />
+        <hr className="text-white my-14 mt-36 mx-4 lg:mx-20" />
 
         {/* footer  */}
-        <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 mt-20 place-items-start max-w-7xl mx-auto gap-28">
-          <div>
+        <div className="relative grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 mt-20 place-items-start max-w-7xl mx-auto px-4 gap-10">
+          <div className="w-full">
             <h5 className="text-white text-right text-2xl font-medium">
               انضم إلى مجتمعنا
             </h5>
             <p className="text-white text-right mt-2 text-2xl">
-              <span className="text-[#38FFE5]"> CyberXbytes </span> كن جزاءا من
-              مجتمع
+              <span className="text-[#38FFE5]"> CyberXbytes </span> كن جزاءا
+              من مجتمع
             </p>
             <ul className="flex flex-col gap-5 mt-6">
               <li className="flex items-center gap-2 text-white justify-end ">
@@ -437,51 +437,53 @@ export default function Home() {
             </ul>
           </div>
 
-          <div>
-            <h5 className="text-white text-right text-2xl font-medium">
-              تواصل معنا
-            </h5>
-            <p className="text-white text-right mt-2 text-2xl">
-              إذا كان لديك أي استفسار أو رغبت في التواصل معنا
-            </p>
-            <ul className="flex flex-col gap-5 mt-6">
-              <li className="flex items-center gap-2 text-white justify-end ">
-                @CyberXbytesSupport
-                <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
-                  <FaTwitter />
-                </span>
-              </li>
-              <li className="flex items-center gap-2 text-white justify-end">
-                @CyberXbytesSupport
-                <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
-                  <MdOutlineEmail />
-                </span>
-              </li>
-              <li className="flex items-center gap-2 text-white justify-end">
-                Telegram: @CyberXbytesSupport
-                <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
-                  <FaTelegramPlane />
-                </span>
-              </li>
-            </ul>
-          </div>
+          <div className="w-full flex flex-col lg:flex-row items-start justify-between gap-10 lg:gap-4">
+            <div className="w-full lg:w-2/3">
+              <h5 className="text-white text-right text-2xl font-medium">
+                تواصل معنا
+              </h5>
+              <p className="text-white text-right mt-2 text-2xl">
+                إذا كان لديك أي استفسار أو رغبت في التواصل معنا
+              </p>
+              <ul className="flex flex-col gap-5 mt-6">
+                <li className="flex items-center gap-2 text-white justify-end ">
+                  @CyberXbytesSupport
+                  <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                    <FaTwitter />
+                  </span>
+                </li>
+                <li className="flex items-center gap-2 text-white justify-end">
+                  @CyberXbytesSupport
+                  <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                    <MdOutlineEmail />
+                  </span>
+                </li>
+                <li className="flex items-center gap-2 text-white justify-end">
+                  Telegram: @CyberXbytesSupport
+                  <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                    <FaTelegramPlane />
+                  </span>
+                </li>
+              </ul>
+            </div>
 
-          <div>
-            <Image
-              src="/big logo.png"
-              alt="logo"
-              className="w-[120px] h-[174px]"
-              height={174}
-              width={120}
-              quality={100}
-            />
+            <div className="w-full lg:w-1/3 flex justify-center lg:justify-end mt-10 lg:mt-0">
+              <Image
+                src="/big logo.png"
+                alt="logo"
+                className="w-[100px] h-[145px] lg:w-[100px] lg:h-[145px]"
+                height={145}
+                width={100}
+                quality={100}
+              />
+            </div>
           </div>
         </div>
 
-        <hr className="text-white mt-14 mx-20" />
+        <hr className="text-white mt-14 mx-4 lg:mx-20" />
 
-        <div>
-          <p className="text-white text-right mt-10 mb-5 mx-20 flex items-center justify-end gap-1">
+        <div className="px-4 lg:px-20">
+          <p className="text-white text-right mt-10 mb-5 flex items-center justify-end gap-1">
             CyberXbytes.com {new Date().getFullYear()} <FaRegCopyright />
           </p>
         </div>
