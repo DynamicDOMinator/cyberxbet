@@ -5,8 +5,8 @@ import { useInView } from "react-intersection-observer";
 import { FaTwitter } from "react-icons/fa";
 import { MdOutlineEmail } from "react-icons/md";
 import { FaTelegramPlane } from "react-icons/fa";
-import { FaDiscord } from "react-icons/fa6";
-import { FaRegCopyright } from "react-icons/fa6";
+import { FaDiscord } from "react-icons/fa";
+import { FaRegCopyright } from "react-icons/fa";
 
 const NumberAnimation = ({ end }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -57,6 +57,12 @@ const NumberAnimation = ({ end }) => {
 };
 
 export default function Home() {
+  const [isEnglish, setIsEnglish] = useState(false);
+
+  const toggleLanguage = () => {
+    setIsEnglish(!isEnglish);
+  };
+
   useEffect(() => {
     const handleMouseMove = (e) => {
       document.documentElement.style.setProperty("--mouse-x", `${e.clientX}px`);
@@ -109,10 +115,13 @@ export default function Home() {
 
           <div className="flex items-center mt-8 lg:ml-16 gap-8 px-4">
             <button className="text-white cursor-pointer hover:bg-[#38FFE5] transition-all duration-400 hover:text-black border-2 border-white font-medium py-2 px-4 rounded">
-              تسجيل الدخول
+              {isEnglish ? "Login" : "تسجيل الدخول"}
             </button>
-            <button className="text-white cursor-pointer text-lg font-bold font-Tajawal">
-              English
+            <button
+              onClick={toggleLanguage}
+              className="text-white cursor-pointer text-lg font-bold font-Tajawal"
+            >
+              {isEnglish ? "عربي" : "English"}
             </button>
           </div>
         </div>
@@ -121,59 +130,92 @@ export default function Home() {
         {/* section one  */}
         <div className="mt-20 px-4">
           <h2 className="text-white text-4xl lg:text-7xl text-center mt-28 font-extrabold font-Tajawal">
-            ابدأ التحدي الآن
+            {isEnglish ? "Start the Challenge Now" : "ابدأ التحدي الآن"}
           </h2>
           <p className="text-white text-center leading-20 text-2xl lg:text-4xl px-4 lg:px-28 lg:w-[910px] mt-20 mx-auto font-Tajawal">
-            انضم إلينا في <span className="text-[#38FFE5]"> CyberXbytes </span>{" "}
-            لتختبر مهارتك في عالم الأمن السيبراني و تتنافس مع نخبه من المحترفين
-            و الهواة فى بيئة لعب مشوقة مليئة بالتحديات
+            {isEnglish ? (
+              <>
+                Join us at <span className="text-[#38FFE5]">CyberXbytes</span> to
+                test your skills in the cybersecurity world and compete with
+                elite professionals and enthusiasts in an exciting gaming
+                environment full of challenges
+              </>
+            ) : (
+              <>
+                انضم إلينا في <span className="text-[#38FFE5]">CyberXbytes</span>{" "}
+                لتختبر مهارتك في عالم الأمن السيبراني و تتنافس مع نخبه من
+                المحترفين و الهواة فى بيئة لعب مشوقة مليئة بالتحديات
+              </>
+            )}
           </p>
 
-          <div className="flex justify-center mt-14 ">
+          <div className="flex justify-center mt-14">
             <button className="bg-[#38FFE5] cursor-pointer text-black font-bold font-Tajawal py-4 px-8 rounded-lg hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300">
-              انضم الآن
+              {isEnglish ? "Join Now" : "انضم الآن"}
             </button>
           </div>
         </div>
 
         {/* second section  */}
-
         <div>
           <h3 className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal px-4">
-            ؟ <span className="text-[#38FFE5]">CyberXbytes</span> ما هدف
+            {isEnglish ? (
+              <>What is the goal of <span className="text-[#38FFE5]">CyberXbytes</span>?</>
+            ) : (
+              <>؟ <span className="text-[#38FFE5]">CyberXbytes</span> ما هدف</>
+            )}
           </h3>
           <p className="text-white text-center font-bold text-2xl lg:text-4xl mt-16 font-Tajawal px-4">
-            تطوير المهارات وصقل المواهب
+            {isEnglish ? "Developing Skills and Refining Talents" : "تطوير المهارات وصقل المواهب"}
           </p>
           <p className="text-white text-center font-medium px-4 lg:w-[932px] mx-auto text-2xl lg:text-4xl mt-16 font-Tajawal">
-            نهدف إلي إنشاء بيئة تفاعلية تسهم فى تأهيل الجيل القادم من محترفي
-            الأمن السيبراني عبر التحديات الواقعية والألعاب التعليمية التي تجعل
-            التعلم ممتعا وفعالا.
+            {isEnglish ? (
+              "We aim to create an interactive environment that contributes to preparing the next generation of cybersecurity professionals through realistic challenges and educational games that make learning fun and effective."
+            ) : (
+              "نهدف إلي إنشاء بيئة تفاعلية تسهم فى تأهيل الجيل القادم من محترفي الأمن السيبراني عبر التحديات الواقعية والألعاب التعليمية التي تجعل التعلم ممتعا وفعالا."
+            )}
           </p>
 
           <h3 className="text-white text-2xl lg:text-4xl text-center mt-28 font-bold font-Tajawal px-4">
-            استقطاب المواهب ونشر التحديات
+            {isEnglish ? "Attracting Talent and Spreading Challenges" : "استقطاب المواهب ونشر التحديات"}
           </h3>
 
           <p
-            dir="rtl"
+            dir={isEnglish ? "ltr" : "rtl"}
             className="text-white text-center font-medium px-4 lg:w-[932px] mx-auto text-2xl lg:text-4xl mt-16 font-Tajawal"
           >
-            في <span className="text-[#38FFE5]">CyberXbytes</span>.نفتح المجال
-            للمحترفين والمبدعين لإضافة تحدياتهم الخاصة بعد مراجعتها, مما يتيح
-            للمجتمع فرصة للتعلم من خبرات متنوعة, ويخلق فضاء ديناميكيا لنشر
-            المعرفة و تعزيز التعاون بين المختصين.
+            {isEnglish ? (
+              <>
+                At <span className="text-[#38FFE5]">CyberXbytes</span>, we open
+                the field for professionals and creators to add their own
+                challenges after review, providing the community with an
+                opportunity to learn from diverse experiences, creating a dynamic
+                space for spreading knowledge and enhancing collaboration between
+                specialists.
+              </>
+            ) : (
+              <>
+                في <span className="text-[#38FFE5]">CyberXbytes</span> نفتح المجال
+                للمحترفين والمبدعين لإضافة تحدياتهم الخاصة بعد مراجعتها, مما
+                يتيح للمجتمع فرصة للتعلم من خبرات متنوعة, ويخلق فضاء ديناميكيا
+                لنشر المعرفة و تعزيز التعاون بين المختصين.
+              </>
+            )}
           </p>
         </div>
 
         {/* third section */}
         <div className="mt-40 px-4">
           <h3 className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal">
-            ؟ <span className="text-[#38FFE5]">CyberXbytes</span> لماذا تنضم إلي
+            {isEnglish ? (
+              <>Why join <span className="text-[#38FFE5]">CyberXbytes</span>?</>
+            ) : (
+              <>؟ <span className="text-[#38FFE5]">CyberXbytes</span> لماذا تنضم إلي</>
+            )}
           </h3>
 
           <div className="mt-40 grid gap-10 md:gap-0 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
-            <div className="flex flex-col items-center gap-7 ">
+            <div className="flex flex-col items-center gap-7">
               <Image
                 className="w-[100px] h-[100px]"
                 src="/icon3.png"
@@ -182,14 +224,14 @@ export default function Home() {
                 alt="image"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                مساحة مفتوحة
+                {isEnglish ? "Open Space" : "مساحة مفتوحة"}
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
-                مارس الأنشطة و حل التحديات في أي وقت
+              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+                {isEnglish ? "Practice activities and solve challenges anytime" : "مارس الأنشطة و حل التحديات في أي وقت"}
               </p>
             </div>
 
-            <div className="flex flex-col items-center gap-7 ">
+            <div className="flex flex-col items-center gap-7">
               <Image
                 className="w-[100px] h-[100px]"
                 src="/icon2.png"
@@ -198,13 +240,14 @@ export default function Home() {
                 alt="image"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                تصنيف عالمي
+                {isEnglish ? "Global Ranking" : "تصنيف عالمي"}
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
-                نافس للوصول إالى أعلي المراكز
+              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+                {isEnglish ? "Compete to reach the highest ranks" : "نافس للوصول إالى أعلي المراكز"}
               </p>
             </div>
-            <div className="flex flex-col items-center gap-7 ">
+
+            <div className="flex flex-col items-center gap-7">
               <Image
                 className="w-[100px] h-[100px]"
                 src="/icon1.png"
@@ -213,59 +256,10 @@ export default function Home() {
                 alt="image"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                بيئة لعب تنافسية
+                {isEnglish ? "Competitive Gaming Environment" : "بيئة لعب تنافسية"}
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
-                واجه تحديات تحاكي الهجمات الحقيقية
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-10 lg:mt-40 grid gap-10 md:gap-0 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
-            <div className="flex flex-col items-center gap-7 ">
-              <Image
-                className="w-[100px] h-[100px]"
-                src="/icon6.png"
-                height={100}
-                width={100}
-                alt="image"
-              />
-              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                تحاكي الواقع
-              </h4>
-              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
-                اختبر نفسك في سيناريوهات عملية
-              </p>
-            </div>
-
-            <div className="flex flex-col items-center gap-7 ">
-              <Image
-                className="w-[100px] h-[100px]"
-                src="/icon5.png"
-                height={100}
-                width={100}
-                alt="image"
-              />
-              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                فرصة للتعلم
-              </h4>
-              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
-                استمتع بتحديات مصممة لتعزيز مهاراتك
-              </p>
-            </div>
-            <div className="flex flex-col items-center gap-7 ">
-              <Image
-                className="w-[100px] h-[100px]"
-                src="/icon4.png"
-                height={100}
-                width={100}
-                alt="image"
-              />
-              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                مجتمع تفاعلى
-              </h4>
-              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
-                شارك انجازاتك وتعلم من الخبراء
+              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+                {isEnglish ? "Face challenges that simulate real attacks" : "واجه تحديات تحاكي الهجمات الحقيقية"}
               </p>
             </div>
           </div>
@@ -276,12 +270,11 @@ export default function Home() {
         {/* third section */}
         <div className="mt-40 px-4">
           <h3 className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal">
-            <span className="text-[#38FFE5]">CyberXbytes</span> التحديات
-            المتوفرة في
+            <span className="text-[#38FFE5]">CyberXbytes</span> {isEnglish ? "Challenges" : "التحديات المتوفرة في"}
           </h3>
 
           <div className="mt-40 grid gap-10 md:gap-10 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
-            <div className="flex flex-col items-center gap-7 ">
+            <div className="flex flex-col items-center gap-7">
               <Image
                 className="w-[100px] h-[100px]"
                 src="/icon3-1.png"
@@ -290,16 +283,18 @@ export default function Home() {
                 alt="image"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                تطبيقات الويب
+                {isEnglish ? "Web Applications" : "تطبيقات الويب"}
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
-                تحديات أمان تطبيقات الويب تختبر مهاراتك في اكتشاف واستغلال
-                الثغرات في مواقع الإنترنت، مثل SQL Injection, XSS, CSRF، وغيرها
-                من الهجمات الشائعة في أمن التطبيقات.
+              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+                {isEnglish ? (
+                  "Challenges that test your skills in discovering and exploiting vulnerabilities in web applications, such as SQL Injection, XSS, CSRF, and other common attacks in application security."
+                ) : (
+                  "تحديات أمان تطبيقات الويب تختبر مهاراتك في اكتشاف واستغلال الثغرات في مواقع الإنترنت، مثل SQL Injection, XSS, CSRF، وغيرها من الهجمات الشائعة في أمن التطبيقات."
+                )}
               </p>
             </div>
 
-            <div className="flex flex-col items-center gap-7 ">
+            <div className="flex flex-col items-center gap-7">
               <Image
                 className="w-[100px] h-[100px]"
                 src="/icon2-1.png"
@@ -308,14 +303,18 @@ export default function Home() {
                 alt="image"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                الهندسة العكسية{" "}
+                {isEnglish ? "Reverse Engineering" : "الهندسة العكسية"}
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
-                ستتعلم في هذه التحديات كيف تفكك الأكواد التنفيذية وتحللها لفهم
-                كيفية عملها{" "}
+              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+                {isEnglish ? (
+                  "You will learn in these challenges how to disassemble and analyze executable codes to understand how they work."
+                ) : (
+                  "ستتعلم في هذه التحديات كيف تفكك الأكواد التنفيذية وتحللها لفهم كيفية عملها"
+                )}
               </p>
             </div>
-            <div className="flex flex-col items-center gap-7 ">
+
+            <div className="flex flex-col items-center gap-7">
               <Image
                 className="w-[100px] h-[100px]"
                 src="/icon1-1.png"
@@ -324,18 +323,20 @@ export default function Home() {
                 alt="image"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                التشفير وفك التشفير
+                {isEnglish ? "Cryptography and Decryption" : "التشفير وفك التشفير"}
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
-                ستختبر تحديات التشفير قدرتك على تحليل وكسر الأنظمة المشفرة
-                باستخدام أساليب مثل RSA, AES, Hash Cracking وغيرها من خوارزميات
-                التشفير.
+              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+                {isEnglish ? (
+                  "You will test your skills in analyzing and breaking encrypted systems using techniques such as RSA, AES, Hash Cracking, and other encryption algorithms."
+                ) : (
+                  "ستختبر تحديات التشفير قدرتك على تحليل وكسر الأنظمة المشفرة باستخدام أساليب مثل RSA, AES, Hash Cracking وغيرها من خوارزميات التشفير."
+                )}
               </p>
             </div>
           </div>
 
           <div className="mt-10 lg:mt-40 grid gap-10 md:gap-10 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
-            <div className="flex flex-col items-center gap-7 ">
+            <div className="flex flex-col items-center gap-7">
               <Image
                 className="w-[100px] h-[100px]"
                 src="/icon6-1.png"
@@ -344,16 +345,18 @@ export default function Home() {
                 alt="image"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                متنوع
+                {isEnglish ? "Miscellaneous" : "متنوع"}
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
-                يضم هذا القسم مجموعة من التحديات التي لا تنتمي إلى فئة معينة،
-                مثل OSINT (البحث المفتوح عن المعلومات)، تحليل البروتوكولات،
-                واختبار المعرفة العامة في مجال الأمن السيبراني.
+              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+                {isEnglish ? (
+                  "This section includes a collection of challenges that do not belong to a specific category, such as OSINT (Open Source Intelligence), protocol analysis, and testing general knowledge in cybersecurity."
+                ) : (
+                  "يضم هذا القسم مجموعة من التحديات التي لا تنتمي إلى فئة معينة، مثل OSINT (البحث المفتوح عن المعلومات)، تحليل البروتوكولات، واختبار المعرفة العامة في مجال الأمن السيبراني."
+                )}
               </p>
             </div>
 
-            <div className="flex flex-col items-center gap-7 ">
+            <div className="flex flex-col items-center gap-7">
               <Image
                 className="w-[100px] h-[100px]"
                 src="/icon5-1.png"
@@ -362,15 +365,22 @@ export default function Home() {
                 alt="image"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                <span className="text-[#38FFE5]">CyberXbytes </span> تعلم مع
+                {isEnglish ? (
+                  <>Learn with <span className="text-[#38FFE5]">CyberXbytes</span></>
+                ) : (
+                  <><span className="text-[#38FFE5]">CyberXbytes </span> تعلم مع</>
+                )}
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
-                تقدم تحديات تعليمية 101 في مختلف مجالات الأمن السيبراني،
-                لمساعدتك على فهم الأساسيات وصقل مهاراتك من خلال تجارب عملية
-                مبسطة تناسب جميع المستويات
+              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+                {isEnglish ? (
+                  "We offer educational challenges 101 in various fields of cybersecurity, to help you understand the basics and refine your skills through practical experiences that suit all levels."
+                ) : (
+                  "تقدم تحديات تعليمية 101 في مختلف مجالات الأمن السيبراني، لمساعدتك على فهم الأساسيات وصقل مهاراتك من خلال تجارب عملية مبسطة تناسب جميع المستويات"
+                )}
               </p>
             </div>
-            <div className="flex flex-col items-center gap-7 ">
+
+            <div className="flex flex-col items-center gap-7">
               <Image
                 className="w-[100px] h-[100px]"
                 src="/icon4-1.png"
@@ -379,17 +389,20 @@ export default function Home() {
                 alt="image"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                التحليل الجنائي الرقمي
+                {isEnglish ? "Digital Forensics" : "التحليل الجنائي الرقمي"}
               </h4>
-              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
-                تشمل التحديات تحليل الملفات، الذاكرة، الشبكات، وسجلات الأنظمة
-                للكشف عن الأنشطة المشبوهة.
+              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+                {isEnglish ? (
+                  "These challenges include file analysis, memory analysis, network analysis, and system log analysis to detect suspicious activities."
+                ) : (
+                  "تشمل التحديات تحليل الملفات، الذاكرة، الشبكات، وسجلات الأنظمة للكشف عن الأنشطة المشبوهة."
+                )}
               </p>
             </div>
           </div>
         </div>
 
-        {/* numbers section  */}
+        {/* numbers section */}
         <div className="grid md:grid-cols-3 grid-cols-1 mt-20 place-items-center max-w-7xl mx-auto gap-10 px-4">
           <div className="w-[200px] text-center">
             <div className="h-[100px] bg-[#0A1214] shadow-[inset_0_2px_15px_rgba(51,51,51,0.7)] text-white rounded-2xl relative flex items-center justify-center">
@@ -410,59 +423,121 @@ export default function Home() {
 
         <hr className="text-white my-14 mt-36 mx-4 lg:mx-20" />
 
-        {/* footer  */}
+        {/* footer */}
         <div className="relative grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 mt-20 place-items-start max-w-7xl mx-auto px-4 gap-10">
-          <div className="w-full ">
-            <h5 className="text-white text-right text-2xl font-medium">
-              انضم إلى مجتمعنا
+          <div className="w-full">
+            <h5 className={`text-white ${isEnglish ? 'text-left' : 'text-right'} text-2xl font-medium`}>
+              {isEnglish ? "Join Our Community" : "انضم إلى مجتمعنا"}
             </h5>
-            <p className="text-white text-right mt-2 text-2xl">
-              <span className="text-[#38FFE5]"> CyberXbytes </span> كن جزاءا
-              من مجتمع
+            <p className={`text-white ${isEnglish ? 'text-left' : 'text-right'} mt-2 text-2xl`}>
+              {isEnglish ? (
+                <>Be part of the <span className="text-[#38FFE5]">CyberXbytes</span> community</>
+              ) : (
+                <><span className="text-[#38FFE5]">CyberXbytes</span> كن جزاءا من مجتمع</>
+              )}
             </p>
-            <ul className="flex flex-col gap-5 mt-6">
-              <li className="flex items-center gap-2 text-white justify-end ">
-                Twitter: @CyberXbytes
-                <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
-                  <FaDiscord />
-                </span>
+            <ul className={`flex flex-col gap-5 mt-6 ${isEnglish ? '' : 'items-end'}`}>
+              <li className={`flex items-center gap-2 text-white ${isEnglish ? 'justify-start' : 'justify-end'}`}>
+                {isEnglish ? (
+                  <>
+                    <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                      <FaDiscord />
+                    </span>
+                    Twitter: @CyberXbytes
+                  </>
+                ) : (
+                  <>
+                    Twitter: @CyberXbytes
+                    <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                      <FaDiscord />
+                    </span>
+                  </>
+                )}
               </li>
 
-              <li className="flex items-center gap-2 text-white justify-end">
-                Telegram: @CyberXbytesSupport
-                <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
-                  <FaTelegramPlane />
-                </span>
+              <li className={`flex items-center gap-2 text-white ${isEnglish ? 'justify-start' : 'justify-end'}`}>
+                {isEnglish ? (
+                  <>
+                    <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                      <FaTelegramPlane />
+                    </span>
+                    Telegram: @CyberXbytesSupport
+                  </>
+                ) : (
+                  <>
+                    Telegram: @CyberXbytesSupport
+                    <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                      <FaTelegramPlane />
+                    </span>
+                  </>
+                )}
               </li>
             </ul>
           </div>
 
           <div className="w-full flex flex-col lg:flex-row items-start justify-between gap-10 lg:gap-4">
-            <div className="w-full ">
-              <h5 className="text-white text-right text-2xl font-medium">
-                تواصل معنا
+            <div className="w-full">
+              <h5 className={`text-white ${isEnglish ? 'text-left' : 'text-right'} text-2xl font-medium`}>
+                {isEnglish ? "Contact Us" : "تواصل معنا"}
               </h5>
-              <p className="text-white text-right mt-2 text-2xl">
-                إذا كان لديك أي استفسار أو رغبت في التواصل معنا
+              <p className={`text-white ${isEnglish ? 'text-left' : 'text-right'} mt-2 text-2xl`}>
+                {isEnglish ? 
+                  "If you have any inquiries or wish to contact us" 
+                  : 
+                  "إذا كان لديك أي استفسار أو رغبت في التواصل معنا"
+                }
               </p>
-              <ul className="flex flex-col gap-5 mt-6">
-                <li className="flex items-center gap-2 text-white justify-end ">
-                  @CyberXbytesSupport
-                  <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
-                    <FaTwitter />
-                  </span>
+              <ul className={`flex flex-col gap-5 mt-6 ${isEnglish ? '' : 'items-end'}`}>
+                <li className={`flex items-center gap-2 text-white ${isEnglish ? 'justify-start' : 'justify-end'}`}>
+                  {isEnglish ? (
+                    <>
+                      <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                        <FaTwitter />
+                      </span>
+                      @CyberXbytesSupport
+                    </>
+                  ) : (
+                    <>
+                      @CyberXbytesSupport
+                      <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                        <FaTwitter />
+                      </span>
+                    </>
+                  )}
                 </li>
-                <li className="flex items-center gap-2 text-white justify-end">
-                  @CyberXbytesSupport
-                  <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
-                    <MdOutlineEmail />
-                  </span>
+                <li className={`flex items-center gap-2 text-white ${isEnglish ? 'justify-start' : 'justify-end'}`}>
+                  {isEnglish ? (
+                    <>
+                      <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                        <MdOutlineEmail />
+                      </span>
+                      @CyberXbytesSupport
+                    </>
+                  ) : (
+                    <>
+                      @CyberXbytesSupport
+                      <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                        <MdOutlineEmail />
+                      </span>
+                    </>
+                  )}
                 </li>
-                <li className="flex items-center gap-2 text-white justify-end">
-                  Telegram: @CyberXbytesSupport
-                  <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
-                    <FaTelegramPlane />
-                  </span>
+                <li className={`flex items-center gap-2 text-white ${isEnglish ? 'justify-start' : 'justify-end'}`}>
+                  {isEnglish ? (
+                    <>
+                      <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                        <FaTelegramPlane />
+                      </span>
+                      Telegram: @CyberXbytesSupport
+                    </>
+                  ) : (
+                    <>
+                      Telegram: @CyberXbytesSupport
+                      <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                        <FaTelegramPlane />
+                      </span>
+                    </>
+                  )}
                 </li>
               </ul>
             </div>
@@ -483,8 +558,16 @@ export default function Home() {
         <hr className="text-white mt-14 mx-4 lg:mx-20" />
 
         <div className="px-4 lg:px-20">
-          <p className="text-white text-right mt-10 mb-5 flex items-center justify-end gap-1">
-            CyberXbytes.com {new Date().getFullYear()} <FaRegCopyright />
+          <p className={`text-white ${isEnglish ? 'text-left' : 'text-right'} mt-10 mb-5 flex items-center ${isEnglish ? 'justify-start' : 'justify-end'} gap-1`}>
+            {isEnglish ? (
+              <>
+                <FaRegCopyright /> CyberXbytes.com {new Date().getFullYear()}
+              </>
+            ) : (
+              <>
+                CyberXbytes.com {new Date().getFullYear()} <FaRegCopyright />
+              </>
+            )}
           </p>
         </div>
       </div>
