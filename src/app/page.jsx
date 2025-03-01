@@ -1,5 +1,60 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { useInView } from "react-intersection-observer";
+import { FaTwitter } from "react-icons/fa";
+import { MdOutlineEmail } from "react-icons/md";
+import { FaTelegramPlane } from "react-icons/fa";
+import { FaDiscord } from "react-icons/fa6";
+import { FaRegCopyright } from "react-icons/fa6";
+
+const NumberAnimation = ({ end }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const { ref, inView } = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
+
+  useEffect(() => {
+    if (inView) {
+      setIsVisible(true);
+    }
+  }, [inView]);
+
+  // Generate intermediate numbers for animation
+  const generateNumbers = () => {
+    const result = [];
+    const steps = 10;
+    for (let i = steps; i >= 0; i--) {
+      result.push(Math.floor(end * (i / steps)));
+    }
+    return result;
+  };
+
+  const numbers = generateNumbers();
+
+  return (
+    <div
+      ref={ref}
+      className="text-4xl font-bold relative h-[1em] overflow-hidden"
+    >
+      <div
+        className={`transition-transform duration-[1200ms] ease-in-out flex flex-col items-center`}
+        style={{
+          transform: isVisible
+            ? "translateY(0)"
+            : `translateY(-${(numbers.length - 1) * 100}%)`,
+        }}
+      >
+        {numbers.map((num, index) => (
+          <div key={index} className="h-[1em] flex items-center justify-center">
+            +{num}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default function Home() {
   useEffect(() => {
@@ -15,18 +70,19 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="fixed inset-0 overflow-hidden bg-black ">
+    <main className="relative bg-black min-h-screen overflow-hidden">
       {/* Base grid without blur */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#38FFE520_1px,transparent_1px),linear-gradient(to_bottom,#38FFE520_1px,transparent_1px)] bg-[size:50px_50px]" />
+      <div className="fixed inset-0 bg-[linear-gradient(to_right,#38FFE520_1px,transparent_1px),linear-gradient(to_bottom,#38FFE520_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none" />
 
       {/* LED elements */}
-      <div className="absolute top-[-100px] left-[-100px] w-[650px] h-[310px] bg-[#38FFE5] opacity-40 blur-[200px] z-[5]" />
-      <div className="absolute top-[-200px] right-[-60px] w-[650px] h-[310px] bg-[#38FFE5] opacity-40 blur-[200px] z-[5]" />
-      {/* <div className="absolute right-[-100px] top-[30%] w-[310px] h-[650px] bg-[#38FFE5] opacity-30 blur-[100px] z-[5]" /> */}
+      <div className="absolute top-[-100px] left-[-100px] w-[650px] h-[310px] bg-[#38FFE5] opacity-40 blur-[200px] z-[1] pointer-events-none" />
+      <div className="absolute top-[-200px] right-[-60px] w-[650px] h-[310px] bg-[#38FFE5] opacity-40 blur-[200px] z-[1] pointer-events-none" />
+      <div className="absolute bottom-[-50px] right-[-60px] w-[750px] h-[510px] bg-[#38FFE5] opacity-40 blur-[200px] z-[1] pointer-events-none" />
+      <div className="absolute bottom-[-50px] left-[-100px] w-[650px] h-[510px] bg-[#38FFE5] opacity-40 blur-[200px] z-[1] pointer-events-none" />
 
       {/* Blurred overlay with dynamic hole */}
       <div
-        className="absolute inset-0 backdrop-blur-lg bg-black/5 z-10"
+        className="fixed inset-0 backdrop-blur-lg bg-black/5 z-[2] pointer-events-none"
         style={{
           maskImage:
             "radial-gradient(circle at var(--mouse-x) var(--mouse-y), transparent 100px, black 300px)",
@@ -34,6 +90,402 @@ export default function Home() {
             "radial-gradient(circle at var(--mouse-x) var(--mouse-y), transparent 100px, black 300px)",
         }}
       />
+
+      <div className="relative z-[3]">
+        {/* header  */}
+        <div className="flex items-cente flex-row-reverse justify-between">
+          <div className="flex items-center justify-end mt-8 mr-16 gap-4">
+            <h1 className="text-white text-2xl font-bold font-Tajawal">
+              CyberXbytes
+            </h1>
+            <Image
+              src="/logo.png"
+              width={100}
+              height={100}
+              className="w-[40px] h-[58px]"
+              alt="logo"
+            />
+          </div>
+
+          <div className="flex items-center mt-8 ml-16 gap-8">
+            <button className="text-white cursor-pointer hover:bg-[#38FFE5] transition-all duration-400 hover:text-black border-2 border-white font-medium py-2 px-4 rounded">
+              تسجيل الدخول
+            </button>
+            <button className="text-white cursor-pointer text-lg font-bold font-Tajawal">
+              English
+            </button>
+          </div>
+        </div>
+        {/* end of the header  */}
+
+        {/* section one  */}
+        <div className="mt-20 ">
+          <h2 className="text-white text-7xl text-center mt-28 font-extrabold font-Tajawal">
+            ابدأ التحدي الآن
+          </h2>
+          <p className="text-white text-center leading-20 text-4xl lg:px-28 lg:w-[910px] mt-20 mx-auto font-Tajawal">
+            انضم إلينا في <span className="text-[#38FFE5]"> CyberXbytes </span>{" "}
+            لتختبر مهارتك في عالم الأمن السيبراني و تتنافس مع نخبه من المحترفين
+            و الهواة فى بيئة لعب مشوقة مليئة بالتحديات
+          </p>
+
+          <div className="flex justify-center mt-14 ">
+            <button className="bg-[#38FFE5] cursor-pointer text-black font-bold font-Tajawal py-4 px-8 rounded-lg hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300">
+              انضم الآن
+            </button>
+          </div>
+        </div>
+
+        {/* second section  */}
+
+        <div>
+          <h3 className="text-white text-5xl text-center mt-28 font-extrabold font-Tajawal">
+            ؟ <span className="text-[#38FFE5]">CyberXbytes</span> ما هدف
+          </h3>
+          <p className="text-white text-center font-bold text-4xl mt-16 font-Tajawal">
+            تطوير المهارات وصقل المواهب
+          </p>
+          <p className="text-white text-center font-medium  lg:w-[932px] mx-auto text-4xl mt-16 font-Tajawal">
+            نهدف إلي إنشاء بيئة تفاعلية تسهم فى تأهيل الجيل القادم من محترفي
+            الأمن السيبراني عبر التحديات الواقعية والألعاب التعليمية التي تجعل
+            التعلم ممتعا وفعالا.
+          </p>
+
+          <h3 className="text-white text-4xl text-center mt-28 font-bold font-Tajawal">
+            استقطاب المواهب ونشر التحديات
+          </h3>
+
+          <p
+            dir="rtl"
+            className="text-white text-center font-medium  lg:w-[932px] mx-auto text-4xl mt-16 font-Tajawal"
+          >
+            في <span className="text-[#38FFE5]">CyberXbytes</span>.نفتح المجال
+            للمحترفين والمبدعين لإضافة تحدياتهم الخاصة بعد مراجعتها, مما يتيح
+            للمجتمع فرصة للتعلم من خبرات متنوعة, ويخلق فضاء ديناميكيا لنشر
+            المعرفة و تعزيز التعاون بين المختصين.
+          </p>
+        </div>
+
+        {/* third section */}
+        <div className="mt-40">
+          <h3 className="text-white text-5xl text-center mt-28 font-extrabold font-Tajawal">
+            ؟ <span className="text-[#38FFE5]">CyberXbytes</span> لماذا تنضم إلي
+          </h3>
+
+          <div className="mt-40 grid gap-10 md:gap-0 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto">
+            <div className="flex flex-col items-center gap-7 ">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon3.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+                مساحة مفتوحة
+              </h4>
+              <p className="text-[#BCC9DB] text-center  text-2xl font-Tajawal">
+                مارس الأنشطة و حل التحديات في أي وقت
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-7 ">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon2.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+                تصنيف عالمي
+              </h4>
+              <p className="text-[#BCC9DB] text-center  text-2xl font-Tajawal">
+                نافس للوصول إالى أعلي المراكز
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-7 ">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon1.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+                بيئة لعب تنافسية
+              </h4>
+              <p className="text-[#BCC9DB] text-center  text-2xl font-Tajawal">
+                واجه تحديات تحاكي الهجمات الحقيقية
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-10 lg:mt-40 grid gap-10 md:gap-0 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto">
+            <div className="flex flex-col items-center gap-7 ">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon6.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+                تحاكي الواقع
+              </h4>
+              <p className="text-[#BCC9DB] text-center  text-2xl font-Tajawal">
+                اختبر نفسك في سيناريوهات عملية
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-7 ">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon5.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+                فرصة للتعلم
+              </h4>
+              <p className="text-[#BCC9DB] text-center  text-2xl font-Tajawal">
+                استمتع بتحديات مصممة لتعزيز مهاراتك
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-7 ">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon4.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+                مجتمع تفاعلى
+              </h4>
+              <p className="text-[#BCC9DB] text-center  text-2xl font-Tajawal">
+                شارك انجازاتك وتعلم من الخبراء
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* forth section */}
+
+        {/* third section */}
+        <div className="mt-40">
+          <h3 className="text-white text-5xl text-center mt-28 font-extrabold font-Tajawal">
+            <span className="text-[#38FFE5]">CyberXbytes</span> التحديات
+            المتوفرة في
+          </h3>
+
+          <div className="mt-40 grid gap-10 md:gap-10 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto">
+            <div className="flex flex-col items-center gap-7 ">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon3-1.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+                تطبيقات الويب
+              </h4>
+              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
+                تحديات أمان تطبيقات الويب تختبر مهاراتك في اكتشاف واستغلال
+                الثغرات في مواقع الإنترنت، مثل SQL Injection, XSS, CSRF، وغيرها
+                من الهجمات الشائعة في أمن التطبيقات.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-7 ">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon2-1.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+                الهندسة العكسية{" "}
+              </h4>
+              <p className="text-[#BCC9DB] text-center  text-2xl font-Tajawal">
+                ستتعلم في هذه التحديات كيف تفكك الأكواد التنفيذية وتحللها لفهم
+                كيفية عملها{" "}
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-7 ">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon1-1.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+                التشفير وفك التشفير
+              </h4>
+              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
+                ستختبر تحديات التشفير قدرتك على تحليل وكسر الأنظمة المشفرة
+                باستخدام أساليب مثل RSA, AES, Hash Cracking وغيرها من خوارزميات
+                التشفير.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-10 lg:mt-40 grid gap-10 md:gap-10 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto">
+            <div className="flex flex-col items-center gap-7 ">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon6-1.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+                متنوع
+              </h4>
+              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
+                يضم هذا القسم مجموعة من التحديات التي لا تنتمي إلى فئة معينة،
+                مثل OSINT (البحث المفتوح عن المعلومات)، تحليل البروتوكولات،
+                واختبار المعرفة العامة في مجال الأمن السيبراني.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-7 ">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon5-1.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+                <span className="text-[#38FFE5]">CyberXbytes </span> تعلم مع
+              </h4>
+              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
+                تقدم تحديات تعليمية 101 في مختلف مجالات الأمن السيبراني،
+                لمساعدتك على فهم الأساسيات وصقل مهاراتك من خلال تجارب عملية
+                مبسطة تناسب جميع المستويات
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-7 ">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon4-1.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-4xl font-Tajawal">
+                التحليل الجنائي الرقمي
+              </h4>
+              <p className="text-[#BCC9DB] text-center  text-lg font-Tajawal">
+                تشمل التحديات تحليل الملفات، الذاكرة، الشبكات، وسجلات الأنظمة
+                للكشف عن الأنشطة المشبوهة.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* numbers section  */}
+        <div className="grid md:grid-cols-3 grid-cols-1 mt-20 place-items-center max-w-7xl mx-auto gap-10">
+          <div className="w-[200px] text-center">
+            <div className="h-[100px] bg-[#0A1214] shadow-[inset_0_2px_15px_rgba(51,51,51,0.7)] text-white rounded-2xl relative flex items-center justify-center">
+              <NumberAnimation end={1000} />
+            </div>
+          </div>
+          <div className="w-[200px] text-center">
+            <div className="h-[100px] bg-[#0A1214] shadow-[inset_0_2px_15px_rgba(51,51,51,0.7)] text-white rounded-2xl relative flex items-center justify-center">
+              <NumberAnimation end={120} />
+            </div>
+          </div>
+          <div className="w-[200px] text-center">
+            <div className="h-[100px] bg-[#0A1214] shadow-[inset_0_2px_15px_rgba(51,51,51,0.7)] text-white rounded-2xl relative flex items-center justify-center">
+              <NumberAnimation end={4} />
+            </div>
+          </div>
+        </div>
+
+        <hr className="text-white my-14 mt-36 mx-20" />
+
+        {/* footer  */}
+        <div className="grid lg:grid-cols-3 md:grid-cols-2 grid-cols-1 mt-20 place-items-start max-w-7xl mx-auto gap-28">
+          <div>
+            <h5 className="text-white text-right text-2xl font-medium">
+              انضم إلى مجتمعنا
+            </h5>
+            <p className="text-white text-right mt-2 text-2xl">
+              <span className="text-[#38FFE5]"> CyberXbytes </span> كن جزاءا من
+              مجتمع
+            </p>
+            <ul className="flex flex-col gap-5 mt-6">
+              <li className="flex items-center gap-2 text-white justify-end ">
+                Twitter: @CyberXbytes
+                <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                  <FaDiscord />
+                </span>
+              </li>
+
+              <li className="flex items-center gap-2 text-white justify-end">
+                Telegram: @CyberXbytesSupport
+                <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                  <FaTelegramPlane />
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h5 className="text-white text-right text-2xl font-medium">
+              تواصل معنا
+            </h5>
+            <p className="text-white text-right mt-2 text-2xl">
+              إذا كان لديك أي استفسار أو رغبت في التواصل معنا
+            </p>
+            <ul className="flex flex-col gap-5 mt-6">
+              <li className="flex items-center gap-2 text-white justify-end ">
+                @CyberXbytesSupport
+                <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                  <FaTwitter />
+                </span>
+              </li>
+              <li className="flex items-center gap-2 text-white justify-end">
+                @CyberXbytesSupport
+                <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                  <MdOutlineEmail />
+                </span>
+              </li>
+              <li className="flex items-center gap-2 text-white justify-end">
+                Telegram: @CyberXbytesSupport
+                <span className="bg-[#38FFE5] py-2 px-2 rounded-full">
+                  <FaTelegramPlane />
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <Image
+              src="/big logo.png"
+              alt="logo"
+              className="w-[120px] h-[174px]"
+              height={174}
+              width={120}
+              quality={100}
+            />
+          </div>
+        </div>
+
+        <hr className="text-white mt-14 mx-20" />
+
+        <div>
+          <p className="text-white text-right mt-10 mb-5 mx-20 flex items-center justify-end gap-1">
+            CyberXbytes.com {new Date().getFullYear()} <FaRegCopyright />
+          </p>
+        </div>
+      </div>
     </main>
   );
 }
