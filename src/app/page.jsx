@@ -412,7 +412,7 @@ export default function Home() {
 
         {/* footer  */}
         <div className="relative grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 mt-20 place-items-start max-w-7xl mx-auto px-4 gap-10">
-          <div className="w-full">
+          <div className="w-full ">
             <h5 className="text-white text-right text-2xl font-medium">
               انضم إلى مجتمعنا
             </h5>
@@ -438,7 +438,7 @@ export default function Home() {
           </div>
 
           <div className="w-full flex flex-col lg:flex-row items-start justify-between gap-10 lg:gap-4">
-            <div className="w-full lg:w-2/3">
+            <div className="w-full ">
               <h5 className="text-white text-right text-2xl font-medium">
                 تواصل معنا
               </h5>
