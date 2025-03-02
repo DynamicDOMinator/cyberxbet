@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
-
-
-
+/* Move reCAPTCHA badge to left side and make it less intrusive */
+.grecaptcha-badge {
+  left: 0 !important;
+  right: auto !important;
+  visibility: hidden;
+}
