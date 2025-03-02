@@ -153,7 +153,7 @@ export default function Login() {
                   setValidationErrors(prev => ({ ...prev, email: "" }));
                 }}
                 value={email}
-                className={`bg-black py-2.5 sm:py-3 hover:border-2 border-2 ${validationErrors.email ? 'border-red-500' : 'border-transparent'} transition-all duration-50 text-white rounded-xl px-3`}
+                className={`bg-black py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${validationErrors.email ? 'border-red-500' : 'border-transparent'} transition-all duration-50 text-white rounded-xl px-3`}
                 type="text"
               />
               {validationErrors.email && (
@@ -172,7 +172,7 @@ export default function Login() {
                     setValidationErrors(prev => ({ ...prev, password: "" }));
                   }}
                   value={password}
-                  className={`bg-black w-full py-2.5 sm:py-3 hover:border-2 border-2 ${validationErrors.password ? 'border-red-500' : 'border-transparent'} transition-all duration-50 text-white rounded-xl px-3`}
+                  className={`bg-black w-full py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${validationErrors.password ? 'border-red-500' : 'border-transparent'} transition-all duration-50 text-white rounded-xl px-3`}
                   type={showPassword ? "text" : "password"}
                 />
                 <button
