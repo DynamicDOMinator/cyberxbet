@@ -225,7 +225,7 @@ export default function Login() {
           </p>
 
           <p dir="rtl" className="text-white text-center text-sm sm:text-base mt-12 sm:mt-16 lg:mt-20 mb-4">
-            هذا الموقع محمي بواسطة reCAPTCHA و Google
+            هذا الموقع محمي بواسطة reCAPTCHA 
             <span className="text-[#38FFE5] cursor-pointer">
               {" "}
               سياسة الخصوصية{" "}

@@ -289,7 +289,7 @@ export default function Home() {
           <div className="mt-40 grid gap-10 md:gap-10 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
             <div className="flex flex-col items-center gap-7">
               <Image
-                className="w-[100px] h-[100px]"
+                className="w-[200px] h-[200px]"
                 src="/icon3-1.png"
                 height={100}
                 width={100}
@@ -307,7 +307,7 @@ export default function Home() {
 
             <div className="flex flex-col items-center gap-7">
               <Image
-                className="w-[100px] h-[100px]"
+                className="w-[200px] h-[200px]"
                 src="/icon2-1.png"
                 height={100}
                 width={100}
@@ -325,7 +325,7 @@ export default function Home() {
 
             <div className="flex flex-col items-center gap-7">
               <Image
-                className="w-[100px] h-[100px]"
+                className="w-[200px] h-[200px]"
                 src="/icon1-1.png"
                 height={100}
                 width={100}
@@ -347,7 +347,7 @@ export default function Home() {
           <div className="mt-10 lg:mt-40 grid gap-10 md:gap-10 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
             <div className="flex flex-col items-center gap-7">
               <Image
-                className="w-[100px] h-[100px]"
+                className="w-[200px] h-[200px]"
                 src="/icon6-1.png"
                 height={100}
                 width={100}
@@ -365,7 +365,7 @@ export default function Home() {
 
             <div className="flex flex-col items-center gap-7">
               <Image
-                className="w-[100px] h-[100px]"
+                className="w-[200px] h-[200px]"
                 src="/icon5-1.png"
                 height={100}
                 width={100}
@@ -392,7 +392,7 @@ export default function Home() {
 
             <div className="flex flex-col items-center gap-7">
               <Image
-                className="w-[100px] h-[100px]"
+                className="w-[200px] h-[200px]"
                 src="/icon4-1.png"
                 height={100}
                 width={100}
@@ -411,21 +411,28 @@ export default function Home() {
         </div>
 
         {/* numbers section */}
-        <div className="grid md:grid-cols-3 grid-cols-1 mt-20 place-items-center max-w-7xl mx-auto gap-10 px-4">
+      
+       <div className="grid md:grid-cols-3 grid-cols-1 mt-20 place-items-center max-w-7xl mx-auto gap-10 px-4">
           <div className="w-[200px] text-center">
-            <div className="h-[100px] bg-[#0A1214] shadow-[inset_0_2px_15px_rgba(51,51,51,0.7)] text-white rounded-2xl relative flex items-center justify-center">
+            <div className="h-[100px]   text-white rounded-2xl relative flex items-center justify-center">
               <NumberAnimation end={1000} />
+              
             </div>
+            <p className="text-white text-center font-medium mt-3 text-2xl lg:text-2xl font-Tajawal">عدد المستخدمين
+            </p>
           </div>
           <div className="w-[200px] text-center">
-            <div className="h-[100px] bg-[#0A1214] shadow-[inset_0_2px_15px_rgba(51,51,51,0.7)] text-white rounded-2xl relative flex items-center justify-center">
+            <div className="h-[100px]   text-white rounded-2xl relative flex items-center justify-center">
               <NumberAnimation end={120} />
             </div>
+            <p className="text-white text-center font-medium mt-3 text-2xl lg:text-2xl font-Tajawal">عدد التحديات 
+            </p>
           </div>
           <div className="w-[200px] text-center">
-            <div className="h-[100px] bg-[#0A1214] shadow-[inset_0_2px_15px_rgba(51,51,51,0.7)] text-white rounded-2xl relative flex items-center justify-center">
+            <div className="h-[100px]   text-white rounded-2xl relative flex items-center justify-center">
               <NumberAnimation end={4} />
             </div>
+            <p className="text-white text-center mt-3 text-2xl font-medium lg:text-2xl font-Tajawal">عدد الفعاليات</p>
           </div>
         </div>
 
