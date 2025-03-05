@@ -478,21 +478,25 @@ export default function Home() {
               <NumberAnimation end={1000} />
               
             </div>
-            <p className="text-white text-center font-medium mt-3 text-2xl lg:text-2xl font-Tajawal">عدد المستخدمين
+            <p className="text-white text-center font-medium mt-3 text-2xl lg:text-2xl font-Tajawal">
+              {isEnglish?" Users":" المستخدمين"}
             </p>
           </div>
           <div className="w-[200px] text-center">
             <div className="h-[100px]   text-white rounded-2xl relative flex items-center justify-center">
               <NumberAnimation end={120} />
             </div>
-            <p className="text-white text-center font-medium mt-3 text-2xl lg:text-2xl font-Tajawal">عدد التحديات 
+            <p className="text-white text-center font-medium mt-3 text-2xl lg:text-2xl font-Tajawal">
+            {isEnglish?" Challenges":"تحديات"}
             </p>
           </div>
           <div className="w-[200px] text-center">
             <div className="h-[100px]   text-white rounded-2xl relative flex items-center justify-center">
               <NumberAnimation end={4} />
             </div>
-            <p className="text-white text-center mt-3 text-2xl font-medium lg:text-2xl font-Tajawal">عدد الفعاليات</p>
+            <p className="text-white text-center mt-3 text-2xl font-medium lg:text-2xl font-Tajawal">
+              {isEnglish?" Active Events":" الفعاليات"}
+            </p>
           </div>
         </div>
 
