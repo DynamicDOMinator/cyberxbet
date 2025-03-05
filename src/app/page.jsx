@@ -150,7 +150,7 @@ export default function Home() {
 
         {/* second section  */}
         <div>
-          <h3 className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal px-4">
+          <h3 className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal">
             {isEnglish ? (
               <>
                 What is the goal of{" "}
@@ -228,12 +228,12 @@ export default function Home() {
                 alt="image"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                {isEnglish ? "Open Space" : "مساحة مفتوحة"}
+                {isEnglish ? "Practice Environment" : "تحاكي الواقع"}
               </h4>
               <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
                 {isEnglish
-                  ? "Practice activities and solve challenges anytime"
-                  : "مارس الأنشطة و حل التحديات في أي وقت"}
+                  ? "Access a secure environment to practice and learn"
+                  : "اختبر نفسك في سيناريوهات عملية"}
               </p>
             </div>
 
@@ -246,12 +246,12 @@ export default function Home() {
                 alt="image"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                {isEnglish ? "Global Ranking" : "تصنيف عالمي"}
+                {isEnglish ? "Leaderboard System" : "فرصة للتعلم"}
               </h4>
               <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
                 {isEnglish
-                  ? "Compete to reach the highest ranks"
-                  : "نافس للوصول إالى أعلي المراكز"}
+                  ? "Compete globally and track your progress"
+                  : "استمتع بتحديات مصممة لتعزيز مهاراتك"}
               </p>
             </div>
 
@@ -265,17 +265,77 @@ export default function Home() {
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish
-                  ? "Competitive Gaming Environment"
-                  : "بيئة لعب تنافسية"}
+                  ? "Interactive Community"
+                  : "مجتمع تفاعلى"}
               </h4>
               <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
                 {isEnglish
-                  ? "Face challenges that simulate real attacks"
-                  : "واجه تحديات تحاكي الهجمات الحقيقية"}
+                  ? "Share achievements and learn from experts"
+                  : "شارك انجازاتك وتعلم من الخبراء"}
               </p>
             </div>
           </div>
         </div>
+
+
+        <div className="mt-40 grid gap-10 md:gap-0 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
+            <div className="flex flex-col items-center gap-7">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon6.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
+                {isEnglish ? "Practice Environment" : "تحاكي الواقع"}
+              </h4>
+              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+                {isEnglish
+                  ? "Access a secure environment to practice and learn"
+                  : "اختبر نفسك في سيناريوهات عملية"}
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-7">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon5.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
+                {isEnglish ? "Leaderboard System" : "فرصة للتعلم"}
+              </h4>
+              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+                {isEnglish
+                  ? "Compete globally and track your progress"
+                  : "استمتع بتحديات مصممة لتعزيز مهاراتك"}
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center gap-7">
+              <Image
+                className="w-[100px] h-[100px]"
+                src="/icon4.png"
+                height={100}
+                width={100}
+                alt="image"
+              />
+              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
+                {isEnglish
+                  ? "Interactive Community"
+                  : "مجتمع تفاعلى"}
+              </h4>
+              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+                {isEnglish
+                  ? "Share achievements and learn from experts"
+                  : "شارك انجازاتك وتعلم من الخبراء"}
+              </p>
+            </div>
+          </div>
+
 
         {/* forth section */}
 
@@ -438,8 +498,8 @@ export default function Home() {
 
         <hr className="text-white my-14 mt-36 mx-4 lg:mx-20" />
 
-        {/* footer */}
-        <div className="relative grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 mt-20 place-items-start max-w-7xl mx-auto px-4 gap-10">
+          {/* footer */}
+          <div className="relative grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 mt-20 place-items-start max-w-7xl mx-auto px-4 gap-10">
           <div className="w-full">
             <h5
               className={`text-white ${
