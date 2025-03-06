@@ -218,9 +218,11 @@ export default function Login() {
               <span className="text-[#38FFE5] cursor-pointer">{isEnglish ? "Sign up" : "تسجيل"}</span>
             </Link>
           </p>
-          <p className="text-[#38FFE5] text-center font-bold text-xl sm:text-2xl">
-            {isEnglish ? "Forgot password" : "نسيت كلمة المرور"}
-          </p>
+          <Link href="/forgot-password">
+            <p className="text-[#38FFE5] text-center font-bold text-xl sm:text-2xl cursor-pointer">
+              {isEnglish ? "Forgot password" : "نسيت كلمة المرور"}
+            </p>
+          </Link>
 
           <p dir="rtl" className="text-white text-center text-sm sm:text-base mt-12 sm:mt-16 lg:mt-20 mb-4">
             {isEnglish ? "This site is protected by reCAPTCHA and the Google" : "هذا الموقع محمي بواسطة reCAPTCHA و"}{" "}
