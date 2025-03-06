@@ -9,6 +9,7 @@ import { FaDiscord } from "react-icons/fa";
 import { FaRegCopyright } from "react-icons/fa";
 import Link from "next/link";
 import Logo from "@/app/components/Logo";
+
 const NumberAnimation = ({ end }) => {
   const [isVisible, setIsVisible] = useState(false);
   const { ref, inView } = useInView({
@@ -123,7 +124,7 @@ export default function Home() {
           <h2 className="text-white text-4xl lg:text-7xl text-center mt-28 font-extrabold font-Tajawal">
             {isEnglish ? "Start the Challenge Now" : "ابدأ التحدي الآن"}
           </h2>
-          <p className="text-white text-center leading-20 text-2xl lg:text-4xl px-4 lg:px-28 lg:w-[910px] mt-20 mx-auto font-Tajawal">
+          <p  className="text-white text-center leading-20 text-2xl lg:text-4xl px-4 lg:px-28 lg:w-[910px] mt-20 mx-auto font-Tajawal">
             {isEnglish ? (
               <>
                 Join us at <span className="text-[#38FFE5]">CyberXbytes</span>{" "}
@@ -141,10 +142,12 @@ export default function Home() {
             )}
           </p>
 
-          <div className="flex justify-center mt-14">
+          <div className="flex justify-center mt-14"> 
+            <Link href="/signup">
             <button className="bg-[#38FFE5] cursor-pointer text-black font-bold font-Tajawal py-4 px-8 rounded-lg hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300">
               {isEnglish ? "Join Now" : "انضم الآن"}
             </button>
+            </Link>
           </div>
         </div>
 
