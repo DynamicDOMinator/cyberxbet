@@ -3,22 +3,65 @@
 import Link from "next/link";
 import Logo from "@/app/components/Logo";
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { BiLoaderAlt } from "react-icons/bi";
+import Select from "react-select";
+import countryList from "react-select-country-list";
 
-export default function Login() {
+export default function Signup() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [country, setCountry] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
   const [validationErrors, setValidationErrors] = useState({
     email: "",
+    username: "",
     password: "",
+    country: "",
   });
   const [isEnglish, setIsEnglish] = useState(false);
+
+  const countries = useMemo(() => countryList().getData(), []);
+
+  const customStyles = {
+    control: (provided) => ({
+      ...provided,
+      backgroundColor: "black",
+      borderColor: validationErrors.country ? "#ef4444" : "transparent",
+      "&:hover": {
+        borderColor: "#6b7280",
+        borderWidth: "2px",
+      },
+      padding: "2px",
+      borderRadius: "0.75rem",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected ? "#38FFE5" : state.isFocused ? "#374151" : "black",
+      color: state.isSelected ? "black" : "white",
+      "&:hover": {
+        backgroundColor: "#374151",
+      },
+    }),
+    menu: (provided) => ({
+      ...provided,
+      backgroundColor: "black",
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: "white",
+    }),
+    input: (provided) => ({
+      ...provided,
+      color: "white",
+    }),
+  };
+
   const toggleLanguage = () => {
     setIsEnglish(!isEnglish);
   };
@@ -50,12 +93,22 @@ export default function Login() {
   const validateForm = () => {
     const errors = {
       email: "",
+      username: "",
       password: "",
+      country: "",
     };
     let isValid = true;
 
     if (!email.trim()) {
       errors.email = isEnglish ? "Email is required" : "البريد الإلكتروني مطلوب";
+      isValid = false;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      errors.email = isEnglish ? "Invalid email format" : "صيغة البريد الإلكتروني غير صحيحة";
+      isValid = false;
+    }
+
+    if (!username.trim()) {
+      errors.username = isEnglish ? "Username is required" : "اسم المستخدم مطلوب";
       isValid = false;
     }
 
@@ -67,13 +120,18 @@ export default function Login() {
       isValid = false;
     }
 
+    if (!country) {
+      errors.country = isEnglish ? "Country is required" : "البلد مطلوب";
+      isValid = false;
+    }
+
     setValidationErrors(errors);
     return isValid;
   };
 
-  const login = async () => {
+  const signup = async () => {
     setError("");
-    setValidationErrors({ email: "", password: "" });
+    setValidationErrors({ email: "", username: "", password: "", country: "" });
 
     if (!validateForm()) {
       return;
@@ -87,7 +145,7 @@ export default function Login() {
     try {
       setLoading(true);
 
-      const token = await window.grecaptcha.execute("6Ldx3eYqAAAAAGgdL0IHdBAljwDlx_NcJ28HFtqc", { action: "login" }).catch((error) => {
+      const token = await window.grecaptcha.execute("6Ldx3eYqAAAAAGgdL0IHdBAljwDlx_NcJ28HFtqc", { action: "signup" }).catch((error) => {
         console.error("reCAPTCHA execution error:", error);
         throw new Error(isEnglish ? "reCAPTCHA verification failed. Please try again." : "فشل التحقق من reCAPTCHA. يرجى المحاولة مرة أخرى.");
       });
@@ -97,25 +155,35 @@ export default function Login() {
         throw new Error("API URL not configured. Please check .env.local file.");
       }
 
-      const response = await axios.post(`${apiUrl}/auth/login`, { email, password, recaptchaToken: token });
-      console.log(response.data);
+      const response = await axios.post(`${apiUrl}/auth/register`, { 
+       email: email, 
+        name:username, 
+        password:password, 
+        country: country.value,
+      });
+    
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("Signup error:", error);
       if (error.response?.data?.errors) {
         const backendErrors = error.response.data.errors;
         setValidationErrors((prev) => ({
           ...prev,
           ...Object.keys(backendErrors).reduce((acc, key) => {
-            acc[key] = backendErrors[key][0]; // Take first error message for each field
+            acc[key] = backendErrors[key][0];
             return acc;
           }, {}),
         }));
       } else {
-        setError(error.response?.data?.error || error.message || (isEnglish ? "An error occurred during login" : "حدث خطأ أثناء تسجيل الدخول"));
+        setError(error.response?.data?.error || error.message || (isEnglish ? "An error occurred during signup" : "حدث خطأ أثناء التسجيل"));
       }
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    signup();
   };
 
   return (
@@ -137,15 +205,18 @@ export default function Login() {
       <div className="min-h-screen pt-10 flex items-center justify-center px-4 sm:px-6 md:px-8">
         <div className="bg-[#131619] px-6 sm:px-12 md:px-20 lg:px-28 rounded-2xl flex flex-col gap-4 w-full max-w-[720px] mx-auto">
           <h1 className="text-white text-2xl sm:text-3xl md:text-[36px] lg:text-[40px] pt-8 sm:pt-12 lg:pt-16 font-extrabold font-Tajawal text-center">
-            {isEnglish ? "Login to Your Account" : "تسجيل الدخول إلي حسابك"}
+            {isEnglish ? "Create Free Account" : "أنشئ حسابك المجاني"}
           </h1>
-          <form dir={isEnglish ? "ltr" : "rtl"} className="flex flex-col gap-8 sm:gap-10 lg:gap-14 mt-10 sm:mt-14 lg:mt-20" onSubmit={(e) => {
-            e.preventDefault();
-            login();
-          }}>
+          <p className="text-white text-2xl sm:text-3xl md:text-[36px] lg:text-[40px] pt-1 font-extrabold font-Tajawal text-center">
+            {isEnglish ? (
+              <>Join <span className="text-[#38FFE5]">CyberXbytes</span></>
+            ) : (
+              <><span className="text-[#38FFE5]">CyberXbytes</span> أنضم إلي</>
+            )}</p>
+          <form dir={isEnglish ? "ltr" : "rtl"} className="flex flex-col gap-8 sm:gap-10 lg:gap-14 mt-10 sm:mt-14 lg:mt-20" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-1">
               <label className="text-white text-sm sm:text-base font-normal">
-                {isEnglish ? "Email or Username" : "البريد الإلكتروني أو اسم المستخدم"}
+                {isEnglish ? "Email" : "البريد الإلكتروني"}
               </label>
               <input
                 onChange={(e) => {
@@ -154,10 +225,58 @@ export default function Login() {
                 }}
                 value={email}
                 className={`bg-black py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${validationErrors.email ? "border-red-500" : "border-transparent"} transition-all duration-50 text-white rounded-xl px-3`}
-                type="text"
+                type="email"
               />
               {validationErrors.email && (
                 <span className="text-red-500 text-xs sm:text-sm mt-1">{validationErrors.email}</span>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-white text-sm sm:text-base font-normal">
+                {isEnglish ? "Username" : "اسم المستخدم"}
+              </label>
+              <input
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setValidationErrors((prev) => ({ ...prev, username: "" }));
+                }}
+                value={username}
+                className={`bg-black py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${validationErrors.username ? "border-red-500" : "border-transparent"} transition-all duration-50 text-white rounded-xl px-3`}
+                type="text"
+              />
+              {validationErrors.username && (
+                <span className="text-red-500 text-xs sm:text-sm mt-1">{validationErrors.username}</span>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-white text-sm sm:text-base font-normal">
+                {isEnglish ? "Country" : "البلد"}
+              </label>
+              <Select
+                options={countries}
+                value={country}
+                onChange={(value) => {
+                  setCountry(value);
+                  setValidationErrors((prev) => ({ ...prev, country: "" }));
+                }}
+                styles={customStyles}
+                className="country-select"
+                placeholder={isEnglish ? "Select your country" : "اختر بلدك"}
+                formatOptionLabel={({ label, value }) => (
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={`https://flagcdn.com/24x18/${value.toLowerCase()}.png`}
+                      alt={label}
+                      className="w-6 h-4 object-cover"
+                    />
+                    <span>{label}</span>
+                  </div>
+                )}
+              />
+              {validationErrors.country && (
+                <span className="text-red-500 text-xs sm:text-sm mt-1">{validationErrors.country}</span>
               )}
             </div>
 
@@ -188,38 +307,30 @@ export default function Login() {
               )}
             </div>
 
-            {error && (
-              <div className="text-red-500 text-sm sm:text-base text-center mt-2 sm:mt-4" dir="rtl">
-                {error}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={loading || !recaptchaLoaded}
-              className={`bg-[#38FFE5] py-3 sm:py-4 w-full sm:w-2/3 rounded-xl mx-auto text-black text-xl sm:text-2xl font-bold hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300 ${(loading || !recaptchaLoaded) ? "opacity-70 cursor-not-allowed" : ""} flex items-center justify-center gap-2`}
-            >
-              {loading ? (
-                <>
-                  <BiLoaderAlt className="animate-spin text-xl sm:text-2xl" />
-                  <span>{isEnglish ? "Logging in..." : "جاري تسجيل الدخول..."}</span>
-                </>
-              ) : !recaptchaLoaded ? (
-                isEnglish ? "Loading..." : "جاري التحميل..."
-              ) : (
-                isEnglish ? "Login" : "تسجيل الدخول"
-              )}
-            </button>
+            <div className="flex flex-col gap-4">
+              <button
+                disabled={loading}
+                type="submit"
+                className="bg-[#38FFE5] hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300 text-black font-bold py-2.5 sm:py-3 rounded-xl flex items-center justify-center"
+              >
+                {loading ? (
+                  <>
+                    <BiLoaderAlt className="animate-spin" size={24} />
+                    <span>{isEnglish ? "Creating account..." : "جاري إنشاء الحساب..."}</span>
+                  </>
+                ) : (
+                  isEnglish ? "Create Account" : "إنشاء حساب"
+                )}
+              </button>
+              {error && <p className="text-red-500 text-center text-sm">{error}</p>}
+            </div>
           </form>
 
           <p className="text-white text-center font-bold text-xl sm:text-2xl mt-8 sm:mt-12 lg:mt-16">
-            {isEnglish ? "Don't have an account?" : "ليس لديك حساب؟"}{" "}
-            <Link href="/signup">
-              <span className="text-[#38FFE5] cursor-pointer">{isEnglish ? "Sign up" : "تسجيل"}</span>
+            {isEnglish ? "Already have an account?" : "لديك حساب بالفعل؟"}{" "}
+            <Link href="/login">
+              <span className="text-[#38FFE5] cursor-pointer">{isEnglish ? "Login" : "تسجيل الدخول"}</span>
             </Link>
-          </p>
-          <p className="text-[#38FFE5] text-center font-bold text-xl sm:text-2xl">
-            {isEnglish ? "Forgot password" : "نسيت كلمة المرور"}
           </p>
 
           <p dir="rtl" className="text-white text-center text-sm sm:text-base mt-12 sm:mt-16 lg:mt-20 mb-4">
@@ -227,7 +338,7 @@ export default function Login() {
             <span className="text-[#38FFE5] cursor-pointer">
               {isEnglish ? "Privacy Policy" : "سياسة الخصوصية"}
             </span>
-            {" and "}
+            {isEnglish ? " and " : " و"}{" "}
             <span className="text-[#38FFE5] cursor-pointer">
               {isEnglish ? "Terms of Service" : "شروط الخدمة"}
             </span>
