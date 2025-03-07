@@ -35,7 +35,11 @@ export default function Login() {
     };
     script.onerror = (error) => {
       console.error("Error loading reCAPTCHA:", error);
-      setError(isEnglish ? "An error occurred while loading reCAPTCHA. Please refresh the page." : "حدث خطأ في تحميل reCAPTCHA. يرجى تحديث الصفحة.");
+      setError(
+        isEnglish
+          ? "An error occurred while loading reCAPTCHA. Please refresh the page."
+          : "حدث خطأ في تحميل reCAPTCHA. يرجى تحديث الصفحة."
+      );
     };
     document.head.appendChild(script);
 
@@ -55,15 +59,21 @@ export default function Login() {
     let isValid = true;
 
     if (!email.trim()) {
-      errors.email = isEnglish ? "Email is required" : "البريد الإلكتروني مطلوب";
+      errors.email = isEnglish
+        ? "Email is required"
+        : "البريد الإلكتروني مطلوب";
       isValid = false;
     }
 
     if (!password.trim()) {
-      errors.password = isEnglish ? "Password is required" : "كلمة المرور مطلوبة";
+      errors.password = isEnglish
+        ? "Password is required"
+        : "كلمة المرور مطلوبة";
       isValid = false;
     } else if (password.length < 6) {
-      errors.password = isEnglish ? "Password must be at least 6 characters" : "يجب ألا تقل كلمة المرور عن 6 أحرف";
+      errors.password = isEnglish
+        ? "Password must be at least 6 characters"
+        : "يجب ألا تقل كلمة المرور عن 6 أحرف";
       isValid = false;
     }
 
@@ -80,24 +90,42 @@ export default function Login() {
     }
 
     if (!recaptchaLoaded || !window.grecaptcha) {
-      setError(isEnglish ? "Please wait until reCAPTCHA is fully loaded" : "يرجى الانتظار حتى يتم تحميل reCAPTCHA بالكامل");
+      setError(
+        isEnglish
+          ? "Please wait until reCAPTCHA is fully loaded"
+          : "يرجى الانتظار حتى يتم تحميل reCAPTCHA بالكامل"
+      );
       return;
     }
 
     try {
       setLoading(true);
 
-      const token = await window.grecaptcha.execute("6Ldx3eYqAAAAAGgdL0IHdBAljwDlx_NcJ28HFtqc", { action: "login" }).catch((error) => {
-        console.error("reCAPTCHA execution error:", error);
-        throw new Error(isEnglish ? "reCAPTCHA verification failed. Please try again." : "فشل التحقق من reCAPTCHA. يرجى المحاولة مرة أخرى.");
-      });
+      const token = await window.grecaptcha
+        .execute("6Ldx3eYqAAAAAGgdL0IHdBAljwDlx_NcJ28HFtqc", {
+          action: "login",
+        })
+        .catch((error) => {
+          console.error("reCAPTCHA execution error:", error);
+          throw new Error(
+            isEnglish
+              ? "reCAPTCHA verification failed. Please try again."
+              : "فشل التحقق من reCAPTCHA. يرجى المحاولة مرة أخرى."
+          );
+        });
 
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       if (!apiUrl) {
-        throw new Error("API URL not configured. Please check .env.local file.");
+        throw new Error(
+          "API URL not configured. Please check .env.local file."
+        );
       }
 
-      const response = await axios.post(`${apiUrl}/auth/login`, { email, password, recaptchaToken: token });
+      const response = await axios.post(`${apiUrl}/auth/login`, {
+        email,
+        password,
+        recaptchaToken: token,
+      });
       console.log(response.data);
     } catch (error) {
       console.error("Login error:", error);
@@ -111,7 +139,13 @@ export default function Login() {
           }, {}),
         }));
       } else {
-        setError(error.response?.data?.error || error.message || (isEnglish ? "An error occurred during login" : "حدث خطأ أثناء تسجيل الدخول"));
+        setError(
+          error.response?.data?.error ||
+            error.message ||
+            (isEnglish
+              ? "An error occurred during login"
+              : "حدث خطأ أثناء تسجيل الدخول")
+        );
       }
     } finally {
       setLoading(false);
@@ -128,7 +162,10 @@ export default function Login() {
               {isEnglish ? "Login" : "تسجيل الدخول"}
             </button>
           </Link>
-          <button onClick={toggleLanguage} className="text-white cursor-pointer text-lg font-bold font-Tajawal">
+          <button
+            onClick={toggleLanguage}
+            className="text-white cursor-pointer text-lg font-bold font-Tajawal"
+          >
             {isEnglish ? "عربي" : "English"}
           </button>
         </div>
@@ -139,13 +176,19 @@ export default function Login() {
           <h1 className="text-white text-2xl sm:text-3xl md:text-[36px] lg:text-[40px] pt-8 sm:pt-12 lg:pt-16 font-extrabold font-Tajawal text-center">
             {isEnglish ? "Login to Your Account" : "تسجيل الدخول إلي حسابك"}
           </h1>
-          <form dir={isEnglish ? "ltr" : "rtl"} className="flex flex-col gap-8 sm:gap-10 lg:gap-14 mt-10 sm:mt-14 lg:mt-20" onSubmit={(e) => {
-            e.preventDefault();
-            login();
-          }}>
+          <form
+            dir={isEnglish ? "ltr" : "rtl"}
+            className="flex flex-col gap-8 sm:gap-10 lg:gap-14 mt-10 sm:mt-14 lg:mt-20"
+            onSubmit={(e) => {
+              e.preventDefault();
+              login();
+            }}
+          >
             <div className="flex flex-col gap-1">
               <label className="text-white text-sm sm:text-base font-normal">
-                {isEnglish ? "Email or Username" : "البريد الإلكتروني أو اسم المستخدم"}
+                {isEnglish
+                  ? "Email or Username"
+                  : "البريد الإلكتروني أو اسم المستخدم"}
               </label>
               <input
                 onChange={(e) => {
@@ -153,11 +196,17 @@ export default function Login() {
                   setValidationErrors((prev) => ({ ...prev, email: "" }));
                 }}
                 value={email}
-                className={`bg-black py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${validationErrors.email ? "border-red-500" : "border-transparent"} transition-all duration-50 text-white rounded-xl px-3`}
+                className={`bg-black py-2.5 sm:py-4 hover:border-2 hover:border-gray-500 ${
+                  validationErrors.email
+                    ? "border-red-500"
+                    : "border-transparent"
+                } transition-all duration-500 text-white rounded-xl px-3`}
                 type="text"
               />
               {validationErrors.email && (
-                <span className="text-red-500 text-xs sm:text-sm mt-1">{validationErrors.email}</span>
+                <span className="text-red-500 text-xs sm:text-sm mt-1">
+                  {validationErrors.email}
+                </span>
               )}
             </div>
 
@@ -172,24 +221,39 @@ export default function Login() {
                     setValidationErrors((prev) => ({ ...prev, password: "" }));
                   }}
                   value={password}
-                  className={`bg-black w-full py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${validationErrors.password ? "border-red-500" : "border-transparent"} transition-all duration-50 text-white rounded-xl px-3`}
+                  className={`bg-black w-full py-2.5 sm:py-4 hover:border-2 hover:border-gray-500 ${
+                    validationErrors.password
+                      ? "border-red-500"
+                      : "border-transparent"
+                  } transition-all duration-500 text-white rounded-xl px-3`}
                   type={showPassword ? "text" : "password"}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className={`absolute ${isEnglish ? 'right-3' : 'left-3'} top-1/2 -translate-y-1/2 text-gray-400 hover:text-white`}
+                  className={`absolute ${
+                    isEnglish ? "right-3" : "left-3"
+                  } top-1/2 -translate-y-1/2 text-gray-400 hover:text-white`}
                 >
-                  {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
+                  {showPassword ? (
+                    <AiOutlineEyeInvisible size={20} />
+                  ) : (
+                    <AiOutlineEye size={20} />
+                  )}
                 </button>
               </div>
               {validationErrors.password && (
-                <span className="text-red-500 text-xs sm:text-sm mt-1">{validationErrors.password}</span>
+                <span className="text-red-500 text-xs sm:text-sm mt-1">
+                  {validationErrors.password}
+                </span>
               )}
             </div>
 
             {error && (
-              <div className="text-red-500 text-sm sm:text-base text-center mt-2 sm:mt-4" dir="rtl">
+              <div
+                className="text-red-500 text-sm sm:text-base text-center mt-2 sm:mt-4"
+                dir="rtl"
+              >
                 {error}
               </div>
             )}
@@ -197,17 +261,29 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading || !recaptchaLoaded}
-              className={`bg-[#38FFE5] py-3 sm:py-4 w-full sm:w-2/3 rounded-xl mx-auto text-black text-xl sm:text-2xl font-bold hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300 ${(loading || !recaptchaLoaded) ? "opacity-70 cursor-not-allowed" : ""} flex items-center justify-center gap-2`}
+              className={`bg-[#38FFE5] py-3 sm:py-4 w-full sm:w-2/3 rounded-xl mx-auto text-black text-xl sm:text-2xl font-bold hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300 ${
+                loading || !recaptchaLoaded
+                  ? "opacity-70 cursor-not-allowed"
+                  : ""
+              } flex items-center justify-center gap-2`}
             >
               {loading ? (
                 <>
                   <BiLoaderAlt className="animate-spin text-xl sm:text-2xl" />
-                  <span>{isEnglish ? "Logging in..." : "جاري تسجيل الدخول..."}</span>
+                  <span>
+                    {isEnglish ? "Logging in..." : "جاري تسجيل الدخول..."}
+                  </span>
                 </>
               ) : !recaptchaLoaded ? (
-                isEnglish ? "Loading..." : "جاري التحميل..."
+                isEnglish ? (
+                  "Loading..."
+                ) : (
+                  "جاري التحميل..."
+                )
+              ) : isEnglish ? (
+                "Login"
               ) : (
-                isEnglish ? "Login" : "تسجيل الدخول"
+                "تسجيل الدخول"
               )}
             </button>
           </form>
@@ -215,7 +291,9 @@ export default function Login() {
           <p className="text-white text-center font-bold text-xl sm:text-2xl mt-8 sm:mt-12 lg:mt-16">
             {isEnglish ? "Don't have an account?" : "ليس لديك حساب؟"}{" "}
             <Link href="/signup">
-              <span className="text-[#38FFE5] cursor-pointer">{isEnglish ? "Sign up" : "تسجيل"}</span>
+              <span className="text-[#38FFE5] cursor-pointer">
+                {isEnglish ? "Sign up" : "تسجيل"}
+              </span>
             </Link>
           </p>
           <Link href="/forgot-password">
@@ -224,14 +302,19 @@ export default function Login() {
             </p>
           </Link>
 
-          <p dir="rtl" className="text-white text-center text-sm sm:text-base mt-12 sm:mt-16 lg:mt-20 mb-4">
-            {isEnglish ? "This site is protected by reCAPTCHA and the Google" : "هذا الموقع محمي بواسطة reCAPTCHA و"}{" "}
-            <span className="text-[#38FFE5] cursor-pointer">
-              {isEnglish ? "Privacy Policy" : "سياسة الخصوصية"}
+          <p
+            dir="rtl"
+            className="text-white text-center text-sm sm:text-base mt-12 sm:mt-16 lg:mt-20 mb-4"
+          >
+            {isEnglish
+              ? "This site is protected by reCAPTCHA and the Google"
+              : " هذا الموقع محمي بواسطة reCAPTCHA "}
+            <span className="text-[#38FFE5] cursor-pointer pl-1">
+              {isEnglish ? "Privacy Policy " : "  سياسة الخصوصية"}
             </span>
-            {" and "}
-            <span className="text-[#38FFE5] cursor-pointer">
-              {isEnglish ? "Terms of Service" : "شروط الخدمة"}
+             {isEnglish? " and " : "و"}   
+             <span className="text-[#38FFE5] cursor-pointer">
+              {isEnglish ? " Terms of Service" : " شروط الخدمة"}
             </span>
           </p>
         </div>
