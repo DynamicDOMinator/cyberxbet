@@ -6,7 +6,7 @@ import axios from "axios";
 import { useState, useEffect, useMemo } from "react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { BiLoaderAlt } from "react-icons/bi";
-import Select from "react-select";
+import CountrySelect from "@/app/components/CountrySelect";
 import countryList from "react-select-country-list";
 
 export default function Signup() {
@@ -31,7 +31,7 @@ export default function Signup() {
   const customStyles = {
     control: (provided) => ({
       ...provided,
-      backgroundColor: "black",
+      backgroundColor: "#0B0D0F",
       borderColor: validationErrors.country ? "#ef4444" : "transparent",
       "&:hover": {
         borderColor: "#6b7280",
@@ -248,7 +248,6 @@ export default function Signup() {
 
       <div className="min-h-screen pt-10 flex items-center justify-center px-4 sm:px-6 md:px-8">
         <div className="bg-[#131619] px-6 sm:px-12 md:px-20 lg:px-28 rounded-2xl flex flex-col gap-4 w-full max-w-[720px] mx-auto">
-         
           <h1 className="text-white text-2xl pt-10 sm:text-3xl md:text-[36px] lg:text-[40px] pt-1 font-extrabold font-Tajawal text-center">
             {isEnglish ? (
               <>
@@ -275,7 +274,7 @@ export default function Signup() {
                   setValidationErrors((prev) => ({ ...prev, email: "" }));
                 }}
                 value={email}
-                className={`bg-black py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${
+                className={`bg-[#0B0D0F] py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${
                   validationErrors.email
                     ? "border-red-500"
                     : "border-transparent"
@@ -299,7 +298,7 @@ export default function Signup() {
                   setValidationErrors((prev) => ({ ...prev, username: "" }));
                 }}
                 value={username}
-                className={`bg-black py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${
+                className={`bg-[#0B0D0F] py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${
                   validationErrors.username
                     ? "border-red-500"
                     : "border-transparent"
@@ -317,26 +316,15 @@ export default function Signup() {
               <label className="text-white text-sm sm:text-base font-normal">
                 {isEnglish ? "Country" : "البلد"}
               </label>
-              <Select
-                options={countries}
+              <CountrySelect
+                countries={countries}
                 value={country}
                 onChange={(value) => {
                   setCountry(value);
                   setValidationErrors((prev) => ({ ...prev, country: "" }));
                 }}
-                styles={customStyles}
-                className="country-select"
-                placeholder={isEnglish ? "Select your country" : "اختر بلدك"}
-                formatOptionLabel={({ label, value }) => (
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={`https://flagcdn.com/24x18/${value.toLowerCase()}.png`}
-                      alt={label}
-                      className="w-6 h-4 object-cover"
-                    />
-                    <span>{label}</span>
-                  </div>
-                )}
+                customStyles={customStyles}
+                isEnglish={isEnglish}
               />
               {validationErrors.country && (
                 <span className="text-red-500 text-xs sm:text-sm mt-1">
@@ -356,7 +344,7 @@ export default function Signup() {
                     setValidationErrors((prev) => ({ ...prev, password: "" }));
                   }}
                   value={password}
-                  className={`bg-black w-full py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${
+                  className={`bg-[#0B0D0F] w-full py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${
                     validationErrors.password
                       ? "border-red-500"
                       : "border-transparent"

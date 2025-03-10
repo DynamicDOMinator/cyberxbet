@@ -498,7 +498,7 @@ export default function Home() {
               <NumberAnimation end={4} />
             </div>
             <p className="text-white text-center mt-3 text-2xl font-medium lg:text-2xl font-Tajawal">
-              {isEnglish?" Active Events":" الفعاليات"}
+              {isEnglish?"Events":" الفعاليات"}
             </p>
           </div>
         </div>

@@ -196,7 +196,7 @@ export default function Login() {
                   setValidationErrors((prev) => ({ ...prev, email: "" }));
                 }}
                 value={email}
-                className={`bg-black py-2.5 sm:py-4 hover:border-2 hover:border-gray-500 ${
+                className={`bg-[#0B0D0F] py-2.5 sm:py-4 hover:border-2 hover:border-gray-500 ${
                   validationErrors.email
                     ? "border-red-500"
                     : "border-transparent"
@@ -221,7 +221,7 @@ export default function Login() {
                     setValidationErrors((prev) => ({ ...prev, password: "" }));
                   }}
                   value={password}
-                  className={`bg-black w-full py-2.5 sm:py-4 hover:border-2 hover:border-gray-500 ${
+                  className={`bg-[#0B0D0F] w-full py-2.5 sm:py-4 hover:border-2 hover:border-gray-500 ${
                     validationErrors.password
                       ? "border-red-500"
                       : "border-transparent"
