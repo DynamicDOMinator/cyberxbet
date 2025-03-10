@@ -153,7 +153,7 @@ export default function Login() {
   };
 
   return (
-    <div className="bg-black relative pb-20 min-h-screen">
+    <div className="bg-[#0B0D0F] relative pb-20 min-h-screen">
       <div className="flex items-center flex-col lg:flex-row-reverse justify-between">
         <Logo />
         <div className="flex items-center mt-8 lg:ml-16 gap-8 px-4">
@@ -214,7 +214,7 @@ export default function Login() {
               <label className="text-white text-sm sm:text-base font-normal">
                 {isEnglish ? "Password" : "كلمة المرور"}
               </label>
-              <div className="relative">
+              <div className="relative"> 
                 <input
                   onChange={(e) => {
                     setPassword(e.target.value);

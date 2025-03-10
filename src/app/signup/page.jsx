@@ -228,7 +228,7 @@ export default function Signup() {
   };
 
   return (
-    <div className="bg-black relative pb-20 min-h-screen">
+    <div className="bg-[#0B0D0F] relative pb-20 min-h-screen">
       <div className="flex items-center flex-col lg:flex-row-reverse justify-between">
         <Logo />
         <div className="flex items-center mt-8 lg:ml-16 gap-8 px-4">
@@ -248,10 +248,8 @@ export default function Signup() {
 
       <div className="min-h-screen pt-10 flex items-center justify-center px-4 sm:px-6 md:px-8">
         <div className="bg-[#131619] px-6 sm:px-12 md:px-20 lg:px-28 rounded-2xl flex flex-col gap-4 w-full max-w-[720px] mx-auto">
-          <h1 className="text-white text-2xl sm:text-3xl md:text-[36px] lg:text-[40px] pt-8 sm:pt-12 lg:pt-16 font-extrabold font-Tajawal text-center">
-            {isEnglish ? "Create Free Account" : "أنشئ حسابك المجاني"}
-          </h1>
-          <p className="text-white text-2xl sm:text-3xl md:text-[36px] lg:text-[40px] pt-1 font-extrabold font-Tajawal text-center">
+         
+          <h1 className="text-white text-2xl pt-10 sm:text-3xl md:text-[36px] lg:text-[40px] pt-1 font-extrabold font-Tajawal text-center">
             {isEnglish ? (
               <>
                 Join <span className="text-[#38FFE5]">CyberXbytes</span>
@@ -261,7 +259,7 @@ export default function Signup() {
                 <span className="text-[#38FFE5]">CyberXbytes</span> أنضم إلي
               </>
             )}
-          </p>
+          </h1>
           <form
             dir={isEnglish ? "ltr" : "rtl"}
             className="flex flex-col gap-8 sm:gap-10 lg:gap-14 mt-10 sm:mt-14 lg:mt-20"
