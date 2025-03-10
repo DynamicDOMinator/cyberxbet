@@ -78,7 +78,7 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="relative bg-black min-h-screen overflow-hidden">
+    <main className="relative bg-[#0B0D0F] min-h-screen overflow-hidden">
       {/* Base grid without blur */}
       <div className="fixed inset-0 bg-[linear-gradient(to_right,#38FFE520_1px,transparent_1px),linear-gradient(to_bottom,#38FFE520_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none" />
 
