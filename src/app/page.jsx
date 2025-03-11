@@ -9,6 +9,8 @@ import { FaDiscord } from "react-icons/fa";
 import { FaRegCopyright } from "react-icons/fa";
 import Link from "next/link";
 import Logo from "@/app/components/Logo";
+import AOS from "aos";
+import "aos/dist/aos.css";
 
 const NumberAnimation = ({ end }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -72,6 +74,14 @@ export default function Home() {
     };
 
     document.addEventListener("mousemove", handleMouseMove);
+
+    // Initialize AOS
+    AOS.init({
+      duration: 1000,
+      once: false,
+      mirror: true,
+    });
+
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
     };
@@ -90,7 +100,7 @@ export default function Home() {
 
       {/* Blurred overlay with dynamic hole */}
       <div
-        className="fixed inset-0 backdrop-blur-lg bg-black/5 z-[2] pointer-events-none"
+        className="fixed inset-0 backdrop-blur-[200px] bg-[#0B0D0F]/20  pointer-events-none"
         style={{
           maskImage:
             "radial-gradient(circle at var(--mouse-x) var(--mouse-y), transparent 100px, black 300px)",
@@ -101,8 +111,11 @@ export default function Home() {
 
       <div className="relative z-[3]">
         {/* header  */}
-        <div className="flex items-center flex-col lg:flex-row-reverse justify-between">
-         <Logo/>
+        <div
+          className="flex items-center flex-col lg:flex-row-reverse justify-between"
+          data-aos="fade-down"
+        >
+          <Logo />
           <div className="flex items-center mt-8 lg:ml-16 gap-8 px-4">
             <Link href="/login">
               <button className="text-white cursor-pointer hover:bg-[#38FFE5] transition-all duration-400 hover:text-black border-2 border-white font-medium py-2 px-4 rounded">
@@ -121,10 +134,17 @@ export default function Home() {
 
         {/* section one  */}
         <div className="mt-20 px-4">
-          <h2 className="text-white text-4xl lg:text-7xl text-center mt-28 font-extrabold font-Tajawal">
+          <h2
+            className="text-white text-4xl lg:text-7xl text-center mt-28 font-extrabold font-Tajawal"
+            data-aos="fade-up"
+          >
             {isEnglish ? "Start the Challenge Now" : "ابدأ التحدي الآن"}
           </h2>
-          <p  className="text-white text-center leading-20 text-2xl lg:text-4xl px-4 lg:px-28 lg:w-[910px] mt-20 mx-auto font-Tajawal">
+          <p
+            className="text-white text-center leading-20 text-2xl lg:text-4xl px-4 lg:px-28 lg:w-[910px] mt-20 mx-auto font-Tajawal"
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
             {isEnglish ? (
               <>
                 Join us at <span className="text-[#38FFE5]">CyberXbytes</span>{" "}
@@ -142,18 +162,25 @@ export default function Home() {
             )}
           </p>
 
-          <div className="flex justify-center mt-14"> 
+          <div
+            className="flex justify-center mt-14"
+            data-aos="zoom-in"
+            data-aos-delay="400"
+          >
             <Link href="/signup">
-            <button className="bg-[#38FFE5] cursor-pointer text-black font-bold font-Tajawal py-4 px-8 rounded-lg hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300">
-              {isEnglish ? "Join Now" : "انضم الآن"}
-            </button>
+              <button className="bg-[#38FFE5] cursor-pointer text-black font-bold font-Tajawal py-4 px-8 rounded-lg hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300">
+                {isEnglish ? "Join Now" : "انضم الآن"}
+              </button>
             </Link>
           </div>
         </div>
 
         {/* second section  */}
         <div>
-          <h3 className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal">
+          <h3
+            className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal"
+            data-aos="fade-up"
+          >
             {isEnglish ? (
               <>
                 What is the goal of{" "}
@@ -165,18 +192,29 @@ export default function Home() {
               </>
             )}
           </h3>
-          <p className="text-white text-center font-bold text-2xl lg:text-4xl mt-16 font-Tajawal px-4">
+          <p
+            className="text-white text-center font-bold text-2xl lg:text-4xl mt-16 font-Tajawal px-4"
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
             {isEnglish
               ? "Developing Skills and Refining Talents"
               : "تطوير المهارات وصقل المواهب"}
           </p>
-          <p className="text-white text-center font-medium px-4 lg:w-[932px] mx-auto text-2xl lg:text-4xl mt-16 font-Tajawal">
+          <p
+            className="text-white text-center font-medium px-4 lg:w-[932px] mx-auto text-2xl lg:text-4xl mt-16 font-Tajawal"
+            data-aos="fade-up"
+            data-aos-delay="300"
+          >
             {isEnglish
               ? "We aim to create an interactive environment that contributes to preparing the next generation of cybersecurity professionals through realistic challenges and educational games that make learning fun and effective."
               : "نهدف إلي إنشاء بيئة تفاعلية تسهم فى تأهيل الجيل القادم من محترفي الأمن السيبراني عبر التحديات الواقعية والألعاب التعليمية التي تجعل التعلم ممتعا وفعالا."}
           </p>
 
-          <h3 className="text-white text-2xl lg:text-4xl text-center mt-28 font-bold font-Tajawal px-4">
+          <h3
+            className="text-white text-2xl lg:text-4xl text-center mt-28 font-bold font-Tajawal px-4"
+            data-aos="fade-up"
+          >
             {isEnglish
               ? "Attracting Talent and Spreading Challenges"
               : "استقطاب المواهب ونشر التحديات"}
@@ -185,6 +223,8 @@ export default function Home() {
           <p
             dir={isEnglish ? "ltr" : "rtl"}
             className="text-white text-center font-medium px-4 lg:w-[932px] mx-auto text-2xl lg:text-4xl mt-16 font-Tajawal"
+            data-aos="fade-up"
+            data-aos-delay="200"
           >
             {isEnglish ? (
               <>
@@ -208,7 +248,10 @@ export default function Home() {
 
         {/* third section */}
         <div className="mt-40 px-4">
-          <h3 className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal">
+          <h3
+            className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal"
+            data-aos="fade-up"
+          >
             {isEnglish ? (
               <>
                 Why join <span className="text-[#38FFE5]">CyberXbytes</span>?
@@ -221,8 +264,12 @@ export default function Home() {
             )}
           </h3>
 
-          <div className="mt-40 grid gap-10 md:gap-0 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
-            <div className="flex flex-col items-center gap-7">
+          <div className="mt-40 grid gap-10 md:gap-10 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
+            <div
+              className="flex flex-col items-center gap-7"
+              data-aos="fade-up"
+              data-aos-delay="100"
+            >
               <Image
                 className="w-[100px] h-[100px]"
                 src="/icon3.png"
@@ -240,7 +287,11 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="flex flex-col items-center gap-7">
+            <div
+              className="flex flex-col items-center gap-7"
+              data-aos="fade-up"
+              data-aos-delay="200"
+            >
               <Image
                 className="w-[100px] h-[100px]"
                 src="/icon2.png"
@@ -258,7 +309,11 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="flex flex-col items-center gap-7">
+            <div
+              className="flex flex-col items-center gap-7"
+              data-aos="fade-up"
+              data-aos-delay="300"
+            >
               <Image
                 className="w-[100px] h-[100px]"
                 src="/icon1.png"
@@ -267,9 +322,7 @@ export default function Home() {
                 alt="image"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                {isEnglish
-                  ? "Interactive Community"
-                  : "مجتمع تفاعلى"}
+                {isEnglish ? "Interactive Community" : "مجتمع تفاعلى"}
               </h4>
               <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
                 {isEnglish
@@ -280,77 +333,93 @@ export default function Home() {
           </div>
         </div>
 
-
         <div className="mt-40 grid gap-10 md:gap-0 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
-            <div className="flex flex-col items-center gap-7">
-              <Image
-                className="w-[100px] h-[100px]"
-                src="/icon6.png"
-                height={100}
-                width={100}
-                alt="image"
-              />
-              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                {isEnglish ? "Practice Environment" : "تحاكي الواقع"}
-              </h4>
-              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
-                {isEnglish
-                  ? "Access a secure environment to practice and learn"
-                  : "اختبر نفسك في سيناريوهات عملية"}
-              </p>
-            </div>
-
-            <div className="flex flex-col items-center gap-7">
-              <Image
-                className="w-[100px] h-[100px]"
-                src="/icon5.png"
-                height={100}
-                width={100}
-                alt="image"
-              />
-              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                {isEnglish ? "Leaderboard System" : "فرصة للتعلم"}
-              </h4>
-              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
-                {isEnglish
-                  ? "Compete globally and track your progress"
-                  : "استمتع بتحديات مصممة لتعزيز مهاراتك"}
-              </p>
-            </div>
-
-            <div className="flex flex-col items-center gap-7">
-              <Image
-                className="w-[100px] h-[100px]"
-                src="/icon4.png"
-                height={100}
-                width={100}
-                alt="image"
-              />
-              <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                {isEnglish
-                  ? "Interactive Community"
-                  : "مجتمع تفاعلى"}
-              </h4>
-              <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
-                {isEnglish
-                  ? "Share achievements and learn from experts"
-                  : "شارك انجازاتك وتعلم من الخبراء"}
-              </p>
-            </div>
+          <div
+            className="flex flex-col items-center gap-7"
+            data-aos="fade-up"
+            data-aos-delay="100"
+          >
+            <Image
+              className="w-[100px] h-[100px]"
+              src="/icon6.png"
+              height={100}
+              width={100}
+              alt="image"
+            />
+            <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
+              {isEnglish ? "Practice Environment" : "تحاكي الواقع"}
+            </h4>
+            <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+              {isEnglish
+                ? "Access a secure environment to practice and learn"
+                : "اختبر نفسك في سيناريوهات عملية"}
+            </p>
           </div>
 
+          <div
+            className="flex flex-col items-center gap-7"
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
+            <Image
+              className="w-[100px] h-[100px]"
+              src="/icon5.png"
+              height={100}
+              width={100}
+              alt="image"
+            />
+            <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
+              {isEnglish ? "Leaderboard System" : "فرصة للتعلم"}
+            </h4>
+            <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+              {isEnglish
+                ? "Compete globally and track your progress"
+                : "استمتع بتحديات مصممة لتعزيز مهاراتك"}
+            </p>
+          </div>
+
+          <div
+            className="flex flex-col items-center gap-7"
+            data-aos="fade-up"
+            data-aos-delay="300"
+          >
+            <Image
+              className="w-[100px] h-[100px]"
+              src="/icon4.png"
+              height={100}
+              width={100}
+              alt="image"
+            />
+            <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
+              {isEnglish ? "Interactive Community" : "مجتمع تفاعلى"}
+            </h4>
+            <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
+              {isEnglish
+                ? "Share achievements and learn from experts"
+                : "شارك انجازاتك وتعلم من الخبراء"}
+            </p>
+          </div>
+        </div>
 
         {/* forth section */}
 
         {/* third section */}
         <div className="mt-40 px-4">
-          <h3 className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal">
-            <span className="text-[#38FFE5]">CyberXbytes</span>{" "}
+          <h3
+            dir={isEnglish ? "ltr" : "rtl"}
+            className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal"
+            data-aos="fade-up"
+          >
             {isEnglish ? "Challenges" : "التحديات المتوفرة في"}
+            <span className="text-[#38FFE5]"> CyberXbytes</span>{" "}
           </h3>
 
           <div className="mt-40 grid gap-10 md:gap-10 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
-            <div className="flex flex-col items-center gap-7">
+            <div
+              className="flex flex-col items-center gap-7"
+              data-aos="flip-left"
+              data-aos-delay="100"
+            >
               <Image
                 className="w-[200px] h-[200px]"
                 src="/icon3-1.png"
@@ -368,7 +437,11 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="flex flex-col items-center gap-7">
+            <div
+              className="flex flex-col items-center gap-7"
+              data-aos="flip-left"
+              data-aos-delay="200"
+            >
               <Image
                 className="w-[200px] h-[200px]"
                 src="/icon2-1.png"
@@ -386,7 +459,11 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="flex flex-col items-center gap-7">
+            <div
+              className="flex flex-col items-center gap-7"
+              data-aos="flip-left"
+              data-aos-delay="300"
+            >
               <Image
                 className="w-[200px] h-[200px]"
                 src="/icon1-1.png"
@@ -408,7 +485,11 @@ export default function Home() {
           </div>
 
           <div className="mt-10 lg:mt-40 grid gap-10 md:gap-10 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
-            <div className="flex flex-col items-center gap-7">
+            <div
+              className="flex flex-col items-center gap-7"
+              data-aos="flip-left"
+              data-aos-delay="100"
+            >
               <Image
                 className="w-[200px] h-[200px]"
                 src="/icon6-1.png"
@@ -426,7 +507,11 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="flex flex-col items-center gap-7">
+            <div
+              className="flex flex-col items-center gap-7"
+              data-aos="flip-left"
+              data-aos-delay="200"
+            >
               <Image
                 className="w-[200px] h-[200px]"
                 src="/icon5-1.png"
@@ -453,7 +538,11 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="flex flex-col items-center gap-7">
+            <div
+              className="flex flex-col items-center gap-7"
+              data-aos="flip-left"
+              data-aos-delay="300"
+            >
               <Image
                 className="w-[200px] h-[200px]"
                 src="/icon4-1.png"
@@ -474,40 +563,47 @@ export default function Home() {
         </div>
 
         {/* numbers section */}
-      
-       <div className="grid md:grid-cols-3 grid-cols-1 mt-20 place-items-center max-w-7xl mx-auto gap-10 px-4">
-          <div className="w-[200px] text-center">
-            <div className="h-[100px]   text-white rounded-2xl relative flex items-center justify-center">
+
+        <div className="grid md:grid-cols-3 grid-cols-1 mt-20 place-items-center max-w-7xl mx-auto gap-10 px-4">
+          <div className="w-[200px] text-center" data-aos="zoom-in">
+            <div className="h-[100px] text-white rounded-2xl relative flex items-center justify-center">
               <NumberAnimation end={1000} />
-              
             </div>
             <p className="text-white text-center font-medium mt-3 text-2xl lg:text-2xl font-Tajawal">
-              {isEnglish?" Users":" المستخدمين"}
+              {isEnglish ? " Users" : " المستخدمين"}
             </p>
           </div>
-          <div className="w-[200px] text-center">
-            <div className="h-[100px]   text-white rounded-2xl relative flex items-center justify-center">
+          <div
+            className="w-[200px] text-center"
+            data-aos="zoom-in"
+            data-aos-delay="200"
+          >
+            <div className="h-[100px] text-white rounded-2xl relative flex items-center justify-center">
               <NumberAnimation end={120} />
             </div>
             <p className="text-white text-center font-medium mt-3 text-2xl lg:text-2xl font-Tajawal">
-            {isEnglish?" Challenges":"تحديات"}
+              {isEnglish ? " Challenges" : "تحديات"}
             </p>
           </div>
-          <div className="w-[200px] text-center">
-            <div className="h-[100px]   text-white rounded-2xl relative flex items-center justify-center">
+          <div
+            className="w-[200px] text-center"
+            data-aos="zoom-in"
+            data-aos-delay="400"
+          >
+            <div className="h-[100px] text-white rounded-2xl relative flex items-center justify-center">
               <NumberAnimation end={4} />
             </div>
             <p className="text-white text-center mt-3 text-2xl font-medium lg:text-2xl font-Tajawal">
-              {isEnglish?"Events":" الفعاليات"}
+              {isEnglish ? "Events" : " الفعاليات"}
             </p>
           </div>
         </div>
 
         <hr className="text-white my-14 mt-36 mx-4 lg:mx-20" />
 
-          {/* footer */}
-          <div className="relative grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 mt-20 place-items-start max-w-7xl mx-auto px-4 gap-10">
-          <div className="w-full">
+        {/* footer */}
+        <div className="relative grid lg:grid-cols-2 md:grid-cols-2 grid-cols-1 mt-20 place-items-start max-w-7xl mx-auto px-4 gap-10">
+          <div className="w-full" data-aos="fade-right">
             <h5
               className={`text-white ${
                 isEnglish ? "text-left" : "text-right"
@@ -583,7 +679,10 @@ export default function Home() {
             </ul>
           </div>
 
-          <div className="w-full flex flex-col lg:flex-row items-start justify-between gap-10 lg:gap-4">
+          <div
+            className="w-full flex flex-col lg:flex-row items-start justify-between gap-10 lg:gap-4"
+            data-aos="fade-left"
+          >
             <div className="w-full">
               <h5
                 className={`text-white ${
@@ -672,7 +771,10 @@ export default function Home() {
               </ul>
             </div>
 
-            <div className="w-full lg:w-1/3 flex justify-center lg:justify-end mt-10 lg:mt-0">
+            <div
+              className="w-full lg:w-1/3 flex justify-center lg:justify-end mt-10 lg:mt-0"
+              data-aos="zoom-in"
+            >
               <Image
                 src="/big logo.png"
                 alt="logo"
