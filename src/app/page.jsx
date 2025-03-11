@@ -62,26 +62,20 @@ const NumberAnimation = ({ end }) => {
 
 export default function Home() {
   const [isEnglish, setIsEnglish] = useState(false);
+  const [isAOSInitialized, setIsAOSInitialized] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const toggleLanguage = () => {
     setIsEnglish(!isEnglish);
   };
 
   useEffect(() => {
-    // Initialize AOS with optimized settings
-    AOS.init({
-      duration: 800, // Reduced from 1000
-      // once: true, // Changed to true to prevent re-animation
-      mirror: false, // Disabled mirroring
+    setIsMounted(true);
 
-      // offset: 50, // Reduced offset for earlier triggering
-    });
-
+    // Only handle mouse move events
     let rafId;
     const handleMouseMove = (e) => {
-      // Throttle mouse move updates
       if (rafId) return;
-
       rafId = requestAnimationFrame(() => {
         document.documentElement.style.setProperty(
           "--mouse-x",
@@ -101,6 +95,10 @@ export default function Home() {
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, []);
+
+  if (!isMounted) {
+    return null;
+  }
 
   return (
     <main className="relative bg-[#0B0D0F] min-h-screen overflow-hidden">
