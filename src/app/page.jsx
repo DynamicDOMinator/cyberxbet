@@ -269,8 +269,8 @@ export default function Home() {
               </>
             ) : (
               <>
-                 لماذا تنضم إلي{" "}
-                <span className="text-[#38FFE5]"> CyberXbytes </span>؟ 
+                لماذا تنضم إلي{" "}
+                <span className="text-[#38FFE5]"> CyberXbytes </span>؟
               </>
             )}
           </h3>
@@ -282,13 +282,15 @@ export default function Home() {
               data-aos-delay="100"
             >
               <Image
-                priority={true}
-                className="w-[100px] h-[100px]"
                 src="/icon3.png"
-                height={100}
+                alt="Feature icon"
                 width={100}
-                alt="image"
+                height={100}
+                className="w-[100px] h-[100px]"
+                quality={75}
+                format="webp"
                 loading="eager"
+                sizes="(max-width: 640px) 100px, 100px"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Practice Environment" : "تحاكي الواقع"}
@@ -306,13 +308,15 @@ export default function Home() {
               data-aos-delay="200"
             >
               <Image
-                priority={true}
-                className="w-[100px] h-[100px]"
                 src="/icon2.png"
-                height={100}
+                alt="Feature icon"
                 width={100}
-                alt="image"
+                height={100}
+                className="w-[100px] h-[100px]"
+                quality={75}
+                format="webp"
                 loading="eager"
+                sizes="(max-width: 640px) 100px, 100px"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Leaderboard System" : "فرصة للتعلم"}
@@ -330,13 +334,15 @@ export default function Home() {
               data-aos-delay="300"
             >
               <Image
-                priority={true}
-                className="w-[100px] h-[100px]"
                 src="/icon1.png"
-                height={100}
+                alt="Feature icon"
                 width={100}
-                alt="image"
+                height={100}
+                className="w-[100px] h-[100px]"
+                quality={75}
+                format="webp"
                 loading="eager"
+                sizes="(max-width: 640px) 100px, 100px"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Interactive Community" : "مجتمع تفاعلى"}
@@ -357,13 +363,15 @@ export default function Home() {
             data-aos-delay="100"
           >
             <Image
-              priority={true}
-              className="w-[100px] h-[100px]"
               src="/icon6.png"
-              height={100}
+              alt="Feature icon"
               width={100}
-              alt="image"
+              height={100}
+              className="w-[100px] h-[100px]"
+              quality={75}
+              format="webp"
               loading="eager"
+              sizes="(max-width: 640px) 100px, 100px"
             />
             <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
               {isEnglish ? "Practice Environment" : "تحاكي الواقع"}
@@ -381,13 +389,15 @@ export default function Home() {
             data-aos-delay="200"
           >
             <Image
-              priority={true}
-              className="w-[100px] h-[100px]"
               src="/icon5.png"
-              height={100}
+              alt="Feature icon"
               width={100}
-              alt="image"
+              height={100}
+              className="w-[100px] h-[100px]"
+              quality={75}
+              format="webp"
               loading="eager"
+              sizes="(max-width: 640px) 100px, 100px"
             />
             <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
               {isEnglish ? "Leaderboard System" : "فرصة للتعلم"}
@@ -405,13 +415,15 @@ export default function Home() {
             data-aos-delay="300"
           >
             <Image
-              priority={true}
-              className="w-[100px] h-[100px]"
               src="/icon4.png"
-              height={100}
+              alt="Feature icon"
               width={100}
-              alt="image"
+              height={100}
+              className="w-[100px] h-[100px]"
+              quality={75}
+              format="webp"
               loading="eager"
+              sizes="(max-width: 640px) 100px, 100px"
             />
             <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
               {isEnglish ? "Interactive Community" : "مجتمع تفاعلى"}
@@ -444,13 +456,15 @@ export default function Home() {
               data-aos-delay="100"
             >
               <Image
-                className="w-[200px] h-[200px]"
                 src="/icon3-1.png"
-                height={200}
+                alt="Challenge icon"
                 width={200}
-                alt="image"
-                loading="lazy"
+                height={200}
+                className="w-[200px] h-[200px]"
                 quality={75}
+                format="webp"
+                loading="lazy"
+                sizes="(max-width: 640px) 200px, 200px"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Web Applications" : "تطبيقات الويب"}
@@ -468,13 +482,15 @@ export default function Home() {
               data-aos-delay="200"
             >
               <Image
-                className="w-[200px] h-[200px]"
                 src="/icon2-1.png"
-                height={200}
+                alt="Challenge icon"
                 width={200}
-                alt="image"
-                loading="lazy"
+                height={200}
+                className="w-[200px] h-[200px]"
                 quality={75}
+                format="webp"
+                loading="lazy"
+                sizes="(max-width: 640px) 200px, 200px"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Reverse Engineering" : "الهندسة العكسية"}
@@ -492,13 +508,15 @@ export default function Home() {
               data-aos-delay="300"
             >
               <Image
-                className="w-[200px] h-[200px]"
                 src="/icon1-1.png"
-                height={200}
+                alt="Challenge icon"
                 width={200}
-                alt="image"
-                loading="lazy"
+                height={200}
+                className="w-[200px] h-[200px]"
                 quality={75}
+                format="webp"
+                loading="lazy"
+                sizes="(max-width: 640px) 200px, 200px"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish
@@ -520,13 +538,15 @@ export default function Home() {
               data-aos-delay="100"
             >
               <Image
-                className="w-[200px] h-[200px]"
                 src="/icon6-1.png"
-                height={200}
+                alt="Challenge icon"
                 width={200}
-                alt="image"
-                loading="lazy"
+                height={200}
+                className="w-[200px] h-[200px]"
                 quality={75}
+                format="webp"
+                loading="lazy"
+                sizes="(max-width: 640px) 200px, 200px"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Miscellaneous" : "متنوع"}
@@ -544,13 +564,15 @@ export default function Home() {
               data-aos-delay="200"
             >
               <Image
-                className="w-[200px] h-[200px]"
                 src="/icon5-1.png"
-                height={200}
+                alt="Challenge icon"
                 width={200}
-                alt="image"
-                loading="lazy"
+                height={200}
+                className="w-[200px] h-[200px]"
                 quality={75}
+                format="webp"
+                loading="lazy"
+                sizes="(max-width: 640px) 200px, 200px"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? (
@@ -577,13 +599,15 @@ export default function Home() {
               data-aos-delay="300"
             >
               <Image
-                className="w-[200px] h-[200px]"
                 src="/icon4-1.png"
-                height={200}
+                alt="Challenge icon"
                 width={200}
-                alt="image"
-                loading="lazy"
+                height={200}
+                className="w-[200px] h-[200px]"
                 quality={75}
+                format="webp"
+                loading="lazy"
+                sizes="(max-width: 640px) 200px, 200px"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Digital Forensics" : "التحليل الجنائي الرقمي"}
