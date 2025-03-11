@@ -71,10 +71,10 @@ export default function Home() {
     // Initialize AOS with optimized settings
     AOS.init({
       duration: 800, // Reduced from 1000
-      once: true, // Changed to true to prevent re-animation
+      // once: true, // Changed to true to prevent re-animation
       mirror: false, // Disabled mirroring
-      disable: "mobile", // Disable on mobile devices
-      offset: 50, // Reduced offset for earlier triggering
+     
+      // offset: 50, // Reduced offset for earlier triggering
     });
 
     const handleMouseMove = (e) => {
