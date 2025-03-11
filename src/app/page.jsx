@@ -68,23 +68,31 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // Initialize AOS with optimized settings
+    AOS.init({
+      duration: 800, // Reduced from 1000
+      once: true, // Changed to true to prevent re-animation
+      mirror: false, // Disabled mirroring
+      disable: "mobile", // Disable on mobile devices
+      offset: 50, // Reduced offset for earlier triggering
+    });
+
     const handleMouseMove = (e) => {
-      document.documentElement.style.setProperty("--mouse-x", `${e.clientX}px`);
-      document.documentElement.style.setProperty("--mouse-y", `${e.clientY}px`);
+      // Throttle mouse move updates
+      requestAnimationFrame(() => {
+        document.documentElement.style.setProperty(
+          "--mouse-x",
+          `${e.clientX}px`
+        );
+        document.documentElement.style.setProperty(
+          "--mouse-y",
+          `${e.clientY}px`
+        );
+      });
     };
 
     document.addEventListener("mousemove", handleMouseMove);
-
-    // Initialize AOS
-    AOS.init({
-      duration: 1000,
-      once: false,
-      mirror: true,
-    });
-
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-    };
+    return () => document.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   return (
@@ -271,11 +279,13 @@ export default function Home() {
               data-aos-delay="100"
             >
               <Image
+                priority={true}
                 className="w-[100px] h-[100px]"
                 src="/icon3.png"
                 height={100}
                 width={100}
                 alt="image"
+                loading="eager"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Practice Environment" : "تحاكي الواقع"}
@@ -293,11 +303,13 @@ export default function Home() {
               data-aos-delay="200"
             >
               <Image
+                priority={true}
                 className="w-[100px] h-[100px]"
                 src="/icon2.png"
                 height={100}
                 width={100}
                 alt="image"
+                loading="eager"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Leaderboard System" : "فرصة للتعلم"}
@@ -315,11 +327,13 @@ export default function Home() {
               data-aos-delay="300"
             >
               <Image
+                priority={true}
                 className="w-[100px] h-[100px]"
                 src="/icon1.png"
                 height={100}
                 width={100}
                 alt="image"
+                loading="eager"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Interactive Community" : "مجتمع تفاعلى"}
@@ -340,11 +354,13 @@ export default function Home() {
             data-aos-delay="100"
           >
             <Image
+              priority={true}
               className="w-[100px] h-[100px]"
               src="/icon6.png"
               height={100}
               width={100}
               alt="image"
+              loading="eager"
             />
             <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
               {isEnglish ? "Practice Environment" : "تحاكي الواقع"}
@@ -362,11 +378,13 @@ export default function Home() {
             data-aos-delay="200"
           >
             <Image
+              priority={true}
               className="w-[100px] h-[100px]"
               src="/icon5.png"
               height={100}
               width={100}
               alt="image"
+              loading="eager"
             />
             <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
               {isEnglish ? "Leaderboard System" : "فرصة للتعلم"}
@@ -384,11 +402,13 @@ export default function Home() {
             data-aos-delay="300"
           >
             <Image
+              priority={true}
               className="w-[100px] h-[100px]"
               src="/icon4.png"
               height={100}
               width={100}
               alt="image"
+              loading="eager"
             />
             <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
               {isEnglish ? "Interactive Community" : "مجتمع تفاعلى"}
@@ -423,9 +443,11 @@ export default function Home() {
               <Image
                 className="w-[200px] h-[200px]"
                 src="/icon3-1.png"
-                height={100}
-                width={100}
+                height={200}
+                width={200}
                 alt="image"
+                loading="lazy"
+                quality={75}
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Web Applications" : "تطبيقات الويب"}
@@ -445,9 +467,11 @@ export default function Home() {
               <Image
                 className="w-[200px] h-[200px]"
                 src="/icon2-1.png"
-                height={100}
-                width={100}
+                height={200}
+                width={200}
                 alt="image"
+                loading="lazy"
+                quality={75}
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Reverse Engineering" : "الهندسة العكسية"}
@@ -467,9 +491,11 @@ export default function Home() {
               <Image
                 className="w-[200px] h-[200px]"
                 src="/icon1-1.png"
-                height={100}
-                width={100}
+                height={200}
+                width={200}
                 alt="image"
+                loading="lazy"
+                quality={75}
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish
@@ -493,9 +519,11 @@ export default function Home() {
               <Image
                 className="w-[200px] h-[200px]"
                 src="/icon6-1.png"
-                height={100}
-                width={100}
+                height={200}
+                width={200}
                 alt="image"
+                loading="lazy"
+                quality={75}
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Miscellaneous" : "متنوع"}
@@ -515,9 +543,11 @@ export default function Home() {
               <Image
                 className="w-[200px] h-[200px]"
                 src="/icon5-1.png"
-                height={100}
-                width={100}
+                height={200}
+                width={200}
                 alt="image"
+                loading="lazy"
+                quality={75}
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? (
@@ -546,9 +576,11 @@ export default function Home() {
               <Image
                 className="w-[200px] h-[200px]"
                 src="/icon4-1.png"
-                height={100}
-                width={100}
+                height={200}
+                width={200}
                 alt="image"
+                loading="lazy"
+                quality={75}
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Digital Forensics" : "التحليل الجنائي الرقمي"}
