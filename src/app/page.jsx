@@ -77,9 +77,12 @@ export default function Home() {
       // offset: 50, // Reduced offset for earlier triggering
     });
 
+    let rafId;
     const handleMouseMove = (e) => {
       // Throttle mouse move updates
-      requestAnimationFrame(() => {
+      if (rafId) return;
+
+      rafId = requestAnimationFrame(() => {
         document.documentElement.style.setProperty(
           "--mouse-x",
           `${e.clientX}px`
@@ -88,11 +91,15 @@ export default function Home() {
           "--mouse-y",
           `${e.clientY}px`
         );
+        rafId = null;
       });
     };
 
     document.addEventListener("mousemove", handleMouseMove);
-    return () => document.removeEventListener("mousemove", handleMouseMove);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   return (
@@ -287,10 +294,11 @@ export default function Home() {
                 width={100}
                 height={100}
                 className="w-[100px] h-[100px]"
+                priority={false}
                 quality={75}
-                format="webp"
-                loading="eager"
+                loading="lazy"
                 sizes="(max-width: 640px) 100px, 100px"
+                format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Practice Environment" : "تحاكي الواقع"}
@@ -313,10 +321,11 @@ export default function Home() {
                 width={100}
                 height={100}
                 className="w-[100px] h-[100px]"
+                priority={false}
                 quality={75}
-                format="webp"
-                loading="eager"
+                loading="lazy"
                 sizes="(max-width: 640px) 100px, 100px"
+                format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Leaderboard System" : "فرصة للتعلم"}
@@ -339,10 +348,11 @@ export default function Home() {
                 width={100}
                 height={100}
                 className="w-[100px] h-[100px]"
+                priority={false}
                 quality={75}
-                format="webp"
-                loading="eager"
+                loading="lazy"
                 sizes="(max-width: 640px) 100px, 100px"
+                format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Interactive Community" : "مجتمع تفاعلى"}
@@ -368,10 +378,11 @@ export default function Home() {
               width={100}
               height={100}
               className="w-[100px] h-[100px]"
+              priority={false}
               quality={75}
-              format="webp"
-              loading="eager"
+              loading="lazy"
               sizes="(max-width: 640px) 100px, 100px"
+              format="webp"
             />
             <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
               {isEnglish ? "Practice Environment" : "تحاكي الواقع"}
@@ -394,10 +405,11 @@ export default function Home() {
               width={100}
               height={100}
               className="w-[100px] h-[100px]"
+              priority={false}
               quality={75}
-              format="webp"
-              loading="eager"
+              loading="lazy"
               sizes="(max-width: 640px) 100px, 100px"
+              format="webp"
             />
             <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
               {isEnglish ? "Leaderboard System" : "فرصة للتعلم"}
@@ -420,10 +432,11 @@ export default function Home() {
               width={100}
               height={100}
               className="w-[100px] h-[100px]"
+              priority={false}
               quality={75}
-              format="webp"
-              loading="eager"
+              loading="lazy"
               sizes="(max-width: 640px) 100px, 100px"
+              format="webp"
             />
             <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
               {isEnglish ? "Interactive Community" : "مجتمع تفاعلى"}
@@ -461,10 +474,11 @@ export default function Home() {
                 width={200}
                 height={200}
                 className="w-[200px] h-[200px]"
+                priority={false}
                 quality={75}
-                format="webp"
                 loading="lazy"
                 sizes="(max-width: 640px) 200px, 200px"
+                format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Web Applications" : "تطبيقات الويب"}
@@ -487,10 +501,11 @@ export default function Home() {
                 width={200}
                 height={200}
                 className="w-[200px] h-[200px]"
+                priority={false}
                 quality={75}
-                format="webp"
                 loading="lazy"
                 sizes="(max-width: 640px) 200px, 200px"
+                format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Reverse Engineering" : "الهندسة العكسية"}
@@ -513,10 +528,11 @@ export default function Home() {
                 width={200}
                 height={200}
                 className="w-[200px] h-[200px]"
+                priority={false}
                 quality={75}
-                format="webp"
                 loading="lazy"
                 sizes="(max-width: 640px) 200px, 200px"
+                format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish
@@ -543,10 +559,11 @@ export default function Home() {
                 width={200}
                 height={200}
                 className="w-[200px] h-[200px]"
+                priority={false}
                 quality={75}
-                format="webp"
                 loading="lazy"
                 sizes="(max-width: 640px) 200px, 200px"
+                format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Miscellaneous" : "متنوع"}
@@ -569,10 +586,11 @@ export default function Home() {
                 width={200}
                 height={200}
                 className="w-[200px] h-[200px]"
+                priority={false}
                 quality={75}
-                format="webp"
                 loading="lazy"
                 sizes="(max-width: 640px) 200px, 200px"
+                format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? (
@@ -604,10 +622,11 @@ export default function Home() {
                 width={200}
                 height={200}
                 className="w-[200px] h-[200px]"
+                priority={false}
                 quality={75}
-                format="webp"
                 loading="lazy"
                 sizes="(max-width: 640px) 200px, 200px"
+                format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
                 {isEnglish ? "Digital Forensics" : "التحليل الجنائي الرقمي"}
