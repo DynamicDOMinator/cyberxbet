@@ -12,6 +12,7 @@
     "@hcaptcha/react-hcaptcha": "^1.12.0",
     "aos": "^2.3.4",
     "axios": "^1.8.1",
+    "critters": "^0.0.23",
     "next": "15.2.0",
     "react": "^19.0.0",
     "react-countup": "^6.5.3",

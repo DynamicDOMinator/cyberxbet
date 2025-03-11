@@ -6,7 +6,7 @@ const nextConfig = {
     minimumCacheTTL: 60,
   },
   experimental: {
-    optimizeCss: true,
+    optimizeCss: false,
   },
 };
 
