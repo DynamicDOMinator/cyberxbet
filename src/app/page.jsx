@@ -73,7 +73,7 @@ export default function Home() {
       duration: 800, // Reduced from 1000
       // once: true, // Changed to true to prevent re-animation
       mirror: false, // Disabled mirroring
-     
+
       // offset: 50, // Reduced offset for earlier triggering
     });
 
@@ -123,7 +123,7 @@ export default function Home() {
           className="flex items-center flex-col lg:flex-row-reverse justify-between"
           data-aos="fade-down"
         >
-          <Logo />
+          <Logo priority={true} />
           <div className="flex items-center mt-8 lg:ml-16 gap-8 px-4">
             <Link href="/login">
               <button className="text-white cursor-pointer hover:bg-[#38FFE5] transition-all duration-400 hover:text-black border-2 border-white font-medium py-2 px-4 rounded">
@@ -142,44 +142,46 @@ export default function Home() {
 
         {/* section one  */}
         <div className="mt-20 px-4">
-          <h2
+          <h1
             className="text-white text-4xl lg:text-7xl text-center mt-28 font-extrabold font-Tajawal"
             data-aos="fade-up"
           >
             {isEnglish ? "Start the Challenge Now" : "ابدأ التحدي الآن"}
-          </h2>
-          <p
-            className="text-white text-center leading-20 text-2xl lg:text-4xl px-4 lg:px-28 lg:w-[910px] mt-20 mx-auto font-Tajawal"
-            data-aos="fade-up"
-            data-aos-delay="200"
-          >
-            {isEnglish ? (
-              <>
-                Join us at <span className="text-[#38FFE5]">CyberXbytes</span>{" "}
-                to test your skills in the cybersecurity world and compete with
-                elite professionals and enthusiasts in an exciting gaming
-                environment full of challenges
-              </>
-            ) : (
-              <>
-                انضم إلينا في{" "}
-                <span className="text-[#38FFE5]">CyberXbytes</span> لتختبر
-                مهارتك في عالم الأمن السيبراني و تتنافس مع نخبه من المحترفين و
-                الهواة فى بيئة لعب مشوقة مليئة بالتحديات
-              </>
-            )}
-          </p>
+          </h1>
+          <div className="w-full max-w-[910px] mx-auto">
+            <p
+              className="text-white text-center leading-20 text-2xl lg:text-4xl px-4 lg:px-28 mt-20 font-Tajawal"
+              data-aos="fade-up"
+              data-aos-delay="200"
+            >
+              {isEnglish ? (
+                <>
+                  Join us at <span className="text-[#38FFE5]">CyberXbytes</span>{" "}
+                  to test your skills in the cybersecurity world and compete
+                  with elite professionals and enthusiasts in an exciting gaming
+                  environment full of challenges
+                </>
+              ) : (
+                <>
+                  انضم إلينا في{" "}
+                  <span className="text-[#38FFE5]">CyberXbytes</span> لتختبر
+                  مهارتك في عالم الأمن السيبراني و تتنافس مع نخبه من المحترفين و
+                  الهواة فى بيئة لعب مشوقة مليئة بالتحديات
+                </>
+              )}
+            </p>
 
-          <div
-            className="flex justify-center mt-14"
-            data-aos="zoom-in"
-            data-aos-delay="400"
-          >
-            <Link href="/signup">
-              <button className="bg-[#38FFE5] cursor-pointer text-black font-bold font-Tajawal py-4 px-8 rounded-lg hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300">
-                {isEnglish ? "Join Now" : "انضم الآن"}
-              </button>
-            </Link>
+            <div
+              className="flex justify-center mt-14"
+              data-aos="zoom-in"
+              data-aos-delay="400"
+            >
+              <Link href="/signup">
+                <button className="bg-[#38FFE5] cursor-pointer text-black font-bold font-Tajawal py-4 px-8 rounded-lg hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300">
+                  {isEnglish ? "Join Now" : "انضم الآن"}
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -257,17 +259,18 @@ export default function Home() {
         {/* third section */}
         <div className="mt-40 px-4">
           <h3
+            dir={isEnglish ? "ltr" : "rtl"}
             className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal"
             data-aos="fade-up"
           >
             {isEnglish ? (
               <>
-                Why join <span className="text-[#38FFE5]">CyberXbytes</span>?
+                Why join <span className="text-[#38FFE5]">CyberXbytes </span>?
               </>
             ) : (
               <>
-                ؟ <span className="text-[#38FFE5]">CyberXbytes</span> لماذا تنضم
-                إلي
+                 لماذا تنضم إلي{" "}
+                <span className="text-[#38FFE5]"> CyberXbytes </span>؟ 
               </>
             )}
           </h3>
