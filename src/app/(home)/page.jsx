@@ -278,7 +278,7 @@ export default function Home() {
             )}
           </h3>
 
-          <div className="mt-40 grid gap-10 md:gap-10 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
+          <div className="mt-40 grid gap-10 md:gap-0 lg:grid-cols-3 md:grid-cols-2 grid-cols-1 max-w-7xl mx-auto px-4">
             <div
               className="flex flex-col items-center gap-7"
               data-aos="fade-up"
@@ -287,13 +287,13 @@ export default function Home() {
               <Image
                 src="/icon3.png"
                 alt="Feature icon"
-                width={100}
-                height={100}
-                className="w-[100px] h-[100px]"
+                width={120}
+                height={120}
+                className="w-[120px] h-[120px]"
                 priority={false}
-                quality={75}
+                quality={100}
                 loading="lazy"
-                sizes="(max-width: 640px) 100px, 100px"
+                sizes="(max-width: 640px) 120px, 120px"
                 format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
@@ -314,13 +314,13 @@ export default function Home() {
               <Image
                 src="/icon2.png"
                 alt="Feature icon"
-                width={100}
-                height={100}
-                className="w-[100px] h-[100px]"
+                width={120}
+                height={120}
+                className="w-[120px] h-[120px]"
                 priority={false}
-                quality={75}
+                quality={100}
                 loading="lazy"
-                sizes="(max-width: 640px) 100px, 100px"
+                sizes="(max-width: 640px) 120px, 120px"
                 format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
@@ -341,13 +341,13 @@ export default function Home() {
               <Image
                 src="/icon1.png"
                 alt="Feature icon"
-                width={100}
-                height={100}
-                className="w-[100px] h-[100px]"
+                width={120}
+                height={120}
+                className="w-[120px] h-[120px]"
                 priority={false}
-                quality={75}
+                quality={100}
                 loading="lazy"
-                sizes="(max-width: 640px) 100px, 100px"
+                sizes="(max-width: 640px) 120px, 120px"
                 format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
@@ -371,13 +371,13 @@ export default function Home() {
             <Image
               src="/icon6.png"
               alt="Feature icon"
-              width={100}
-              height={100}
-              className="w-[100px] h-[100px]"
+              width={120}
+              height={120}
+              className="w-[120px] h-[120px]"
               priority={false}
-              quality={75}
+              quality={100}
               loading="lazy"
-              sizes="(max-width: 640px) 100px, 100px"
+              sizes="(max-width: 640px) 120px, 120px"
               format="webp"
             />
             <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
@@ -398,13 +398,13 @@ export default function Home() {
             <Image
               src="/icon5.png"
               alt="Feature icon"
-              width={100}
-              height={100}
-              className="w-[100px] h-[100px]"
+              width={120}
+              height={120}
+              className="w-[120px] h-[120px]"
               priority={false}
-              quality={75}
+              quality={100}
               loading="lazy"
-              sizes="(max-width: 640px) 100px, 100px"
+              sizes="(max-width: 640px) 120px, 120px"
               format="webp"
             />
             <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
@@ -425,13 +425,13 @@ export default function Home() {
             <Image
               src="/icon4.png"
               alt="Feature icon"
-              width={100}
-              height={100}
-              className="w-[100px] h-[100px]"
+              width={120}
+              height={120}
+              className="w-[120px] h-[120px]"
               priority={false}
-              quality={75}
+              quality={100}
               loading="lazy"
-              sizes="(max-width: 640px) 100px, 100px"
+              sizes="(max-width: 640px) 120px, 120px"
               format="webp"
             />
             <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
@@ -467,13 +467,13 @@ export default function Home() {
               <Image
                 src="/icon3-1.png"
                 alt="Challenge icon"
-                width={200}
-                height={200}
-                className="w-[200px] h-[200px]"
+                width={164}
+                height={164}
+                className="w-[164px] h-[164px]"
                 priority={false}
-                quality={75}
+                quality={100}
                 loading="lazy"
-                sizes="(max-width: 640px) 200px, 200px"
+                sizes="(max-width: 640px) 164px, 164px"
                 format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
@@ -494,13 +494,13 @@ export default function Home() {
               <Image
                 src="/icon2-1.png"
                 alt="Challenge icon"
-                width={200}
-                height={200}
-                className="w-[200px] h-[200px]"
+                width={164}
+                height={164}
+                className="w-[164px] h-[164px]"
                 priority={false}
-                quality={75}
+                quality={100}
                 loading="lazy"
-                sizes="(max-width: 640px) 200px, 200px"
+                sizes="(max-width: 640px) 164px, 164px"
                 format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
@@ -521,13 +521,13 @@ export default function Home() {
               <Image
                 src="/icon1-1.png"
                 alt="Challenge icon"
-                width={200}
-                height={200}
-                className="w-[200px] h-[200px]"
+                width={164}
+                height={164}
+                className="w-[164px] h-[164px]"
                 priority={false}
-                quality={75}
+                quality={100}
                 loading="lazy"
-                sizes="(max-width: 640px) 200px, 200px"
+                sizes="(max-width: 640px) 164px, 164px"
                 format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
@@ -552,13 +552,13 @@ export default function Home() {
               <Image
                 src="/icon6-1.png"
                 alt="Challenge icon"
-                width={200}
-                height={200}
-                className="w-[200px] h-[200px]"
+                width={164}
+                height={164}
+                className="w-[164px] h-[164px]"
                 priority={false}
-                quality={75}
+                quality={100}
                 loading="lazy"
-                sizes="(max-width: 640px) 200px, 200px"
+                sizes="(max-width: 640px) 164px, 164px"
                 format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
@@ -579,13 +579,13 @@ export default function Home() {
               <Image
                 src="/icon5-1.png"
                 alt="Challenge icon"
-                width={200}
-                height={200}
-                className="w-[200px] h-[200px]"
+                width={164}
+                height={164}
+                className="w-[164px] h-[164px]"
                 priority={false}
-                quality={75}
+                    quality={100}
                 loading="lazy"
-                sizes="(max-width: 640px) 200px, 200px"
+                sizes="(max-width: 640px) 164px, 164px"
                 format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
@@ -615,13 +615,13 @@ export default function Home() {
               <Image
                 src="/icon4-1.png"
                 alt="Challenge icon"
-                width={200}
-                height={200}
-                className="w-[200px] h-[200px]"
+                width={164}
+                height={164}
+                className="w-[164px] h-[164px]"
                 priority={false}
-                quality={75}
+                quality={100}
                 loading="lazy"
-                sizes="(max-width: 640px) 200px, 200px"
+                sizes="(max-width: 640px) 164px, 164px"
                 format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
