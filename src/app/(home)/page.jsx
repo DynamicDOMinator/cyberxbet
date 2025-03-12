@@ -9,8 +9,6 @@ import { FaDiscord } from "react-icons/fa";
 import { FaRegCopyright } from "react-icons/fa";
 import Link from "next/link";
 import Logo from "@/app/components/Logo";
-import AOS from "aos";
-import "aos/dist/aos.css";
 
 const NumberAnimation = ({ end }) => {
   const [isVisible, setIsVisible] = useState(false);
