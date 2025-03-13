@@ -850,9 +850,9 @@ export default function Home() {
               data-aos="zoom-in"
             >
               <Image
-                src="/big logo.png"
+                src="/logo3.png"
                 alt="logo"
-                className="w-[100px] h-[145px] lg:w-[100px] lg:h-[145px]"
+                className="w-[100px] mt-16 h-[145px] lg:w-[200px] lg:h-[150px]"
                 height={145}
                 width={100}
                 quality={100}
