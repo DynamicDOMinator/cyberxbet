@@ -11,7 +11,7 @@ export default function Logo () {
               src="/logo3.png"
               width={100}
               height={100}
-              className="w-[40px] h-[58px] "
+              className="w-[50px] h-[50px] "
               alt="logo"
             />
             </Link>
