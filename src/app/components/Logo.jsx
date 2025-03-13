@@ -12,7 +12,7 @@ export default function Logo () {
               alt="logo"
             />
             
-            <h1 className="text-white text-2xl font-bold font-Tajawal">
+            <h1 className="text-white pt-1 lg:pt-0 text-2xl font-bold font-Tajawal">
               CyberXbytes
             </h1>
            
