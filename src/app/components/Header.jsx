@@ -42,7 +42,7 @@ export default function Header() {
   }, [isEnglish]);
 
   return (
-    <header className="relative">
+    <header className="relative bg-[#0B0D0F]">
       <style>{gradientAnimation}</style>
       <div
         className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-black via-[#38FFE540] to-black"
@@ -57,19 +57,20 @@ export default function Header() {
       >
         <div className="flex items-center justify-between gap-10 w-full">
           {/* Logo Section */}
-          <div className="flex items-center justify-end gap-4">
-            <Link href="/">
-              <Image
-                src="/logo.png"
-                width={100}
-                height={100}
-                className="w-[40px] h-[58px]"
-                alt="logo"
-              />
-            </Link>
+          <div className="flex items-center justify-end ">
+          
             <h1 className="text-white text-xl md:text-2xl font-bold font-Tajawal">
               CyberXbytes
             </h1>
+            <Link href="/">
+              <Image
+                src="/logo3.png"
+                width={100}
+                height={100}
+                className="w-[50px] h-[50px]"
+                alt="logo"
+              />
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}

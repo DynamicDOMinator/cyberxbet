@@ -7,8 +7,8 @@ export default function Home() {
   return (
     <div>
       {/* ads section  */}
-      <div className="mt-28 px-16">
-        <h2 className={`${isEnglish ? "text-left" : "text-right"} text-[18px] font-semibold`}>
+      <div className="pt-28 px-16 bg-[#0B0D0F]">
+        <h2 className={`${isEnglish ? "text-left" : "text-right"} text-white text-[18px] font-semibold`}>
           {isEnglish ? "Advertisements" : "الاعلانات"}
         </h2>
 
