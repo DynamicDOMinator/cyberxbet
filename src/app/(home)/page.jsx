@@ -852,7 +852,7 @@ export default function Home() {
               <Image
                 src="/logo3.png"
                 alt="logo"
-                className="w-[100px] mt-16 h-[145px] lg:w-[200px] lg:h-[150px]"
+                className="w-[150px] lg:mt-16 h-[150px] lg:w-[200px] lg:h-[150px]"
                 height={145}
                 width={100}
                 quality={100}
