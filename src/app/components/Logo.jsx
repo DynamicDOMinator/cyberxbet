@@ -8,7 +8,7 @@ export default function Logo () {
             </h1>
             <Link href="/">
             <Image
-              src="/logo.png"
+              src="/logo3.png"
               width={100}
               height={100}
               className="w-[40px] h-[58px] "
