@@ -583,7 +583,7 @@ export default function Home() {
                 height={164}
                 className="w-[164px] h-[164px]"
                 priority={false}
-                    quality={100}
+                quality={100}
                 loading="lazy"
                 sizes="(max-width: 640px) 164px, 164px"
                 format="webp"

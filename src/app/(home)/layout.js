@@ -7,7 +7,10 @@ const tajawal = Tajawal({
   weight: ["200", "300", "400", "500", "700", "800", "900"],
   display: "swap",
 });
-
+const metadata = {
+  title: "CyberXbytes",
+  description: "CyberXbytes",
+};
 export default function HomeLayout({ children }) {
   return (
     <html lang="en" className="dark" style={{ colorScheme: "dark" }}>
