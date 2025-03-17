@@ -9,6 +9,11 @@ const tajawal = Tajawal({
   display: "swap",
 });
 
+export const metadata = {
+  title: "CyberXbytes",
+  description: "CyberXbytes",
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="dark" style={{ colorScheme: "dark" }}>

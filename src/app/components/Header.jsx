@@ -57,12 +57,15 @@ export default function Header() {
       >
         <div className="flex items-center justify-between gap-10 w-full">
           {/* Logo Section */}
-          <div className="flex items-center justify-end ">
-          
+          <div
+            className={`flex items-center ${
+              isEnglish ? "flex-row-reverse" : ""
+            } justify-end`}
+          >
             <h1 className="text-white text-xl md:text-2xl font-bold font-Tajawal">
               CyberXbytes
             </h1>
-            <Link href="/">
+            <Link href="/home">
               <Image
                 src="/logo3.png"
                 width={100}
