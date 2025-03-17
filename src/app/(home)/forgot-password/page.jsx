@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Logo from "@/app/components/Logo";
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BiLoaderAlt } from "react-icons/bi";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
@@ -25,7 +25,13 @@ export default function ForgotPassword() {
     confirmPassword: "",
   });
   const [isEnglish, setIsEnglish] = useState(false);
-  
+
+  // Add these new state variables for OTP inputs
+  const [otpValues, setOtpValues] = useState(["", "", "", "", "", ""]);
+  const otpRefs = Array(6)
+    .fill(0)
+    .map(() => useRef(null));
+
   const toggleLanguage = () => {
     setIsEnglish(!isEnglish);
   };
@@ -42,7 +48,11 @@ export default function ForgotPassword() {
     };
     script.onerror = (error) => {
       console.error("Error loading reCAPTCHA:", error);
-      setError(isEnglish ? "An error occurred while loading reCAPTCHA. Please refresh the page." : "حدث خطأ في تحميل reCAPTCHA. يرجى تحديث الصفحة.");
+      setError(
+        isEnglish
+          ? "An error occurred while loading reCAPTCHA. Please refresh the page."
+          : "حدث خطأ في تحميل reCAPTCHA. يرجى تحديث الصفحة."
+      );
     };
     document.head.appendChild(script);
 
@@ -57,149 +67,222 @@ export default function ForgotPassword() {
   const validateEmail = () => {
     let isValid = true;
     if (!email.trim()) {
-      setValidationErrors(prev => ({
+      setValidationErrors((prev) => ({
         ...prev,
-        email: isEnglish ? "Email is required" : "البريد الإلكتروني مطلوب"
+        email: isEnglish ? "Email is required" : "البريد الإلكتروني مطلوب",
       }));
       isValid = false;
     } else if (!/\S+@\S+\.\S+/.test(email)) {
-      setValidationErrors(prev => ({
+      setValidationErrors((prev) => ({
         ...prev,
-        email: isEnglish ? "Please enter a valid email address" : "يرجى إدخال عنوان بريد إلكتروني صالح"
+        email: isEnglish
+          ? "Please enter a valid email address"
+          : "يرجى إدخال عنوان بريد إلكتروني صالح",
       }));
       isValid = false;
     } else {
-      setValidationErrors(prev => ({ ...prev, email: "" }));
+      setValidationErrors((prev) => ({ ...prev, email: "" }));
     }
     return isValid;
   };
 
-  const validateOtp = () => {
-    let isValid = true;
-    if (!otp.trim()) {
-      setValidationErrors(prev => ({
-        ...prev,
-        otp: isEnglish ? "OTP code is required" : "رمز التحقق مطلوب"
-      }));
-      isValid = false;
-    } else if (otp.length !== 6 || !/^\d+$/.test(otp)) {
-      setValidationErrors(prev => ({
-        ...prev,
-        otp: isEnglish ? "Please enter a valid 6-digit OTP code" : "يرجى إدخال رمز تحقق صالح مكون من 6 أرقام"
-      }));
-      isValid = false;
-    } else {
-      setValidationErrors(prev => ({ ...prev, otp: "" }));
+  // Add this function to handle OTP input changes
+  const handleOtpChange = (index, value) => {
+    if (value.length > 1) {
+      value = value.charAt(0);
     }
-    return isValid;
+
+    if (!/^\d*$/.test(value)) {
+      return;
+    }
+
+    const newOtpValues = [...otpValues];
+    newOtpValues[index] = value;
+    setOtpValues(newOtpValues);
+
+    // Combine OTP values for the main otp state
+    setOtp(newOtpValues.join(""));
+
+    // Auto-focus next input if current input is filled
+    if (value && index < 5) {
+      otpRefs[index + 1].current.focus();
+    }
+  };
+
+  // Add this function to handle backspace in OTP inputs
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !otpValues[index] && index > 0) {
+      otpRefs[index - 1].current.focus();
+    }
+  };
+
+  // Updated handleOtpPaste function
+  const handleOtpPaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").trim();
+
+    // Check if pasted content is a valid number
+    if (!/^\d+$/.test(pastedData)) return;
+
+    // Get up to 6 digits from the pasted content
+    const digits = pastedData.substring(0, 6).split("");
+
+    // Create a new array with the pasted digits
+    const newOtpValues = [...otpValues];
+
+    // Fill in the digits - start at the beginning always
+    for (let i = 0; i < digits.length && i < 6; i++) {
+      newOtpValues[i] = digits[i];
+    }
+
+    // Update state
+    setOtpValues(newOtpValues);
+    setOtp(newOtpValues.join(""));
+
+    // Focus the appropriate input after pasting
+    if (digits.length < 6) {
+      otpRefs[Math.min(digits.length, 5)].current.focus();
+    } else {
+      otpRefs[5].current.focus();
+    }
   };
 
   const validatePassword = () => {
     let isValid = true;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
     if (!newPassword.trim()) {
-      setValidationErrors(prev => ({
+      setValidationErrors((prev) => ({
         ...prev,
-        newPassword: isEnglish ? "New password is required" : "كلمة المرور الجديدة مطلوبة"
+        newPassword: isEnglish
+          ? "New password is required"
+          : "كلمة المرور الجديدة مطلوبة",
       }));
       isValid = false;
-    } else if (newPassword.length < 6) {
-      setValidationErrors(prev => ({
+    } else if (newPassword.length < 8) {
+      setValidationErrors((prev) => ({
         ...prev,
-        newPassword: isEnglish ? "Password must be at least 6 characters" : "يجب ألا تقل كلمة المرور عن 6 أحرف"
+        newPassword: isEnglish
+          ? "Password must be at least 8 characters"
+          : "يجب أن تتكون كلمة المرور من 8 أحرف على الأقل",
+      }));
+      isValid = false;
+    } else if (!passwordRegex.test(newPassword)) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        newPassword: isEnglish
+          ? "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+          : "يجب أن تحتوي كلمة المرور على حرف كبير واحد وحرف صغير واحد ورقم واحد وحرف خاص واحد على الأقل",
       }));
       isValid = false;
     } else {
-      setValidationErrors(prev => ({ ...prev, newPassword: "" }));
+      setValidationErrors((prev) => ({ ...prev, newPassword: "" }));
     }
 
     if (!confirmPassword.trim()) {
-      setValidationErrors(prev => ({
+      setValidationErrors((prev) => ({
         ...prev,
-        confirmPassword: isEnglish ? "Please confirm your password" : "يرجى تأكيد كلمة المرور"
+        confirmPassword: isEnglish
+          ? "Please confirm your password"
+          : "يرجى تأكيد كلمة المرور",
       }));
       isValid = false;
     } else if (confirmPassword !== newPassword) {
-      setValidationErrors(prev => ({
+      setValidationErrors((prev) => ({
         ...prev,
-        confirmPassword: isEnglish ? "Passwords do not match" : "كلمات المرور غير متطابقة"
+        confirmPassword: isEnglish
+          ? "Passwords do not match"
+          : "كلمات المرور غير متطابقة",
       }));
       isValid = false;
     } else {
-      setValidationErrors(prev => ({ ...prev, confirmPassword: "" }));
+      setValidationErrors((prev) => ({ ...prev, confirmPassword: "" }));
     }
-    
+
     return isValid;
   };
 
-  const requestPasswordReset = async () => {
-    setError("");
-    
-    if (!validateEmail()) {
-      return;
-    }
-
-    if (!recaptchaLoaded || !window.grecaptcha) {
-      setError(isEnglish ? "Please wait until reCAPTCHA is fully loaded" : "يرجى الانتظار حتى يتم تحميل reCAPTCHA بالكامل");
-      return;
-    }
-
+  const requestPasswordReset = async (email) => {
     try {
       setLoading(true);
-
-      const token = await window.grecaptcha.execute("6Ldx3eYqAAAAAGgdL0IHdBAljwDlx_NcJ28HFtqc", { action: "forgot_password" }).catch((error) => {
-        console.error("reCAPTCHA execution error:", error);
-        throw new Error(isEnglish ? "reCAPTCHA verification failed. Please try again." : "فشل التحقق من reCAPTCHA. يرجى المحاولة مرة أخرى.");
-      });
-
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      if (!apiUrl) {
-        throw new Error("API URL not configured. Please check .env.local file.");
-      }
+      const response = await axios.post(
+        `${apiUrl}/auth/password/request-reset`,
+        { email: email }
+      );
 
-      // Send request to backend to send OTP to email
-      await axios.post(`${apiUrl}/auth/forgot-password`, { email, recaptchaToken: token });
-      
-      // Move to OTP verification step
-      setStep(2);
+      // If successful, move to OTP+Password step (skip OTP verification step)
+      console.log("Password reset requested:", response.data);
+      setStep(2); // Move directly to combined OTP + password step
+      return {
+        success: true,
+        message: response.data.message,
+      };
     } catch (error) {
       console.error("Password reset request error:", error);
-      setError(error.response?.data?.error || error.message || (isEnglish ? "An error occurred. Please try again." : "حدث خطأ. يرجى المحاولة مرة أخرى."));
+
+      // Handle different error types
+      if (error.response) {
+        // The server responded with a status code outside the 2xx range
+        console.error("Server error:", error.response.data);
+        setError(
+          error.response.data.message ||
+            (isEnglish
+              ? "An error occurred while requesting password reset"
+              : "حدث خطأ أثناء طلب إعادة تعيين كلمة المرور")
+        );
+      } else if (error.request) {
+        // The request was made but no response was received
+        console.error("No response received:", error.request);
+        setError(
+          isEnglish
+            ? "No response from server. Please try again later."
+            : "لا استجابة من الخادم. يرجى المحاولة مرة أخرى لاحقًا."
+        );
+      } else {
+        // Something happened in setting up the request
+        setError(
+          isEnglish
+            ? "Error setting up request. Please try again."
+            : "خطأ في إعداد الطلب. يرجى المحاولة مرة أخرى."
+        );
+      }
+      return {
+        success: false,
+        message: error.response?.data?.message || error.message,
+      };
     } finally {
       setLoading(false);
     }
   };
 
+  // Keep your original verifyOtp function but modify it to just validate and move to the next step
   const verifyOtp = async () => {
     setError("");
-    
-    if (!validateOtp()) {
+
+    // Combine OTP values to ensure we have the latest
+    const combinedOtp = otpValues.join("");
+    setOtp(combinedOtp);
+
+    if (combinedOtp.length !== 6 || !/^\d+$/.test(combinedOtp)) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        otp: isEnglish
+          ? "Please enter a valid 6-digit OTP code"
+          : "يرجى إدخال رمز تحقق صالح مكون من 6 أرقام",
+      }));
       return;
     }
 
-    try {
-      setLoading(true);
-
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      if (!apiUrl) {
-        throw new Error("API URL not configured. Please check .env.local file.");
-      }
-
-      // Verify OTP with backend
-      await axios.post(`${apiUrl}/auth/verify-otp`, { email, otp });
-      
-      // Move to new password step
-      setStep(3);
-    } catch (error) {
-      console.error("OTP verification error:", error);
-      setError(error.response?.data?.error || error.message || (isEnglish ? "Invalid OTP code. Please try again." : "رمز التحقق غير صالح. يرجى المحاولة مرة أخرى."));
-    } finally {
-      setLoading(false);
-    }
+    // Move to new password step without making API call to verify OTP
+    setStep(3);
   };
 
+  // Modify resetPassword to use all the collected data
   const resetPassword = async () => {
     setError("");
-    
+
     if (!validatePassword()) {
       return;
     }
@@ -207,22 +290,82 @@ export default function ForgotPassword() {
     try {
       setLoading(true);
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      if (!apiUrl) {
-        throw new Error("API URL not configured. Please check .env.local file.");
-      }
+      const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-      // Reset password with backend
-      await axios.post(`${apiUrl}/auth/reset-password`, { email, otp, newPassword });
-      
+      // Reset password with backend - sending email, OTP, and password in a single request
+      await axios.post(`${API_URL}/auth/password/reset`, {
+        email: email,
+        otp: otp, // Use the OTP that was stored from the previous step
+        password: newPassword,
+      });
+
       // Redirect to login page with success message
       window.location.href = "/login?reset=success";
     } catch (error) {
       console.error("Password reset error:", error);
-      setError(error.response?.data?.error || error.message || (isEnglish ? "An error occurred. Please try again." : "حدث خطأ. يرجى المحاولة مرة أخرى."));
+      setError(
+        error.response?.data?.error ||
+          error.message ||
+          (isEnglish
+            ? "An error occurred. Please try again."
+            : "حدث خطأ. يرجى المحاولة مرة أخرى.")
+      );
     } finally {
       setLoading(false);
     }
+  };
+
+  // Add this helper function to show password requirements in the UI
+  const renderPasswordRequirements = () => {
+    const requirements = [
+      {
+        met: newPassword.length >= 8,
+        text: isEnglish ? "At least 8 characters" : "8 أحرف على الأقل",
+      },
+      {
+        met: /[A-Z]/.test(newPassword),
+        text: isEnglish
+          ? "At least one uppercase letter"
+          : "حرف كبير واحد على الأقل",
+      },
+      {
+        met: /[a-z]/.test(newPassword),
+        text: isEnglish
+          ? "At least one lowercase letter"
+          : "حرف صغير واحد على الأقل",
+      },
+      {
+        met: /\d/.test(newPassword),
+        text: isEnglish ? "At least one number" : "رقم واحد على الأقل",
+      },
+      {
+        met: /[@$!%*?&]/.test(newPassword),
+        text: isEnglish
+          ? "At least one special character (@$!%*?&)"
+          : "حرف خاص واحد على الأقل (@$!%*?&)",
+      },
+    ];
+
+    return (
+      <div className="mt-2">
+        <p className="text-sm text-gray-400 mb-1">
+          {isEnglish ? "Password requirements:" : "متطلبات كلمة المرور:"}
+        </p>
+        <ul className="text-xs space-y-1">
+          {requirements.map((req, index) => (
+            <li
+              key={index}
+              className={`flex items-center gap-1 ${
+                req.met ? "text-green-500" : "text-gray-400"
+              }`}
+            >
+              {req.met ? <span>✓</span> : <span>○</span>}
+              {req.text}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
   };
 
   const renderStepContent = () => {
@@ -234,14 +377,20 @@ export default function ForgotPassword() {
               {isEnglish ? "Forgot Password" : "نسيت كلمة المرور"}
             </h1>
             <p className="text-gray-400 text-center mt-4">
-              {isEnglish 
-                ? "Enter your email address and we'll send you a verification code" 
+              {isEnglish
+                ? "Enter your email address and we'll send you a verification code"
                 : "أدخل عنوان بريدك الإلكتروني وسنرسل لك رمز التحقق"}
             </p>
-            <form dir={isEnglish ? "ltr" : "rtl"} className="flex flex-col gap-8 sm:gap-10 lg:gap-14 mt-10 sm:mt-14 lg:mt-20" onSubmit={(e) => {
-              e.preventDefault();
-              requestPasswordReset();
-            }}>
+            <form
+              dir={isEnglish ? "ltr" : "rtl"}
+              className="flex flex-col gap-8 sm:gap-10 lg:gap-14 mt-10 sm:mt-14 lg:mt-20"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (validateEmail()) {
+                  requestPasswordReset(email);
+                }
+              }}
+            >
               <div className="flex flex-col gap-1">
                 <label className="text-white text-sm sm:text-base font-normal">
                   {isEnglish ? "Email Address" : "البريد الإلكتروني"}
@@ -252,11 +401,17 @@ export default function ForgotPassword() {
                     setValidationErrors((prev) => ({ ...prev, email: "" }));
                   }}
                   value={email}
-                  className={`bg-black py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${validationErrors.email ? "border-red-500" : "border-transparent"} transition-all duration-50 text-white rounded-xl px-3`}
+                  className={`bg-black py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${
+                    validationErrors.email
+                      ? "border-red-500"
+                      : "border-transparent"
+                  } transition-all duration-50 text-white rounded-xl px-3`}
                   type="email"
                 />
                 {validationErrors.email && (
-                  <span className="text-red-500 text-xs sm:text-sm mt-1">{validationErrors.email}</span>
+                  <span className="text-red-500 text-xs sm:text-sm mt-1">
+                    {validationErrors.email}
+                  </span>
                 )}
               </div>
 
@@ -269,7 +424,11 @@ export default function ForgotPassword() {
               <button
                 type="submit"
                 disabled={loading || !recaptchaLoaded}
-                className={`bg-[#38FFE5] py-3 sm:py-4 w-full sm:w-2/3 rounded-xl mx-auto text-black text-xl sm:text-2xl font-bold hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300 ${(loading || !recaptchaLoaded) ? "opacity-70 cursor-not-allowed" : ""} flex items-center justify-center gap-2`}
+                className={`bg-[#38FFE5] py-3 sm:py-4 w-full sm:w-2/3 rounded-xl mx-auto text-black text-xl sm:text-2xl font-bold hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300 ${
+                  loading || !recaptchaLoaded
+                    ? "opacity-70 cursor-not-allowed"
+                    : ""
+                } flex items-center justify-center gap-2`}
               >
                 {loading ? (
                   <>
@@ -277,9 +436,15 @@ export default function ForgotPassword() {
                     <span>{isEnglish ? "Sending..." : "جاري الإرسال..."}</span>
                   </>
                 ) : !recaptchaLoaded ? (
-                  isEnglish ? "Loading..." : "جاري التحميل..."
+                  isEnglish ? (
+                    "Loading..."
+                  ) : (
+                    "جاري التحميل..."
+                  )
+                ) : isEnglish ? (
+                  "Send Verification Code"
                 ) : (
-                  isEnglish ? "Send Verification Code" : "إرسال رمز التحقق"
+                  "إرسال رمز التحقق"
                 )}
               </button>
             </form>
@@ -289,33 +454,49 @@ export default function ForgotPassword() {
         return (
           <>
             <h1 className="text-white text-2xl sm:text-3xl md:text-[36px] lg:text-[40px] pt-8 sm:pt-12 lg:pt-16 font-extrabold font-Tajawal text-center">
-              {isEnglish ? "Enter Verification Code" : "أدخل رمز التحقق"}
+              {isEnglish ? "Reset Password" : "إعادة تعيين كلمة المرور"}
             </h1>
-            <p className="text-gray-400 text-center mt-4">
-              {isEnglish 
-                ? `We've sent a 6-digit verification code to ${email}` 
-                : `لقد أرسلنا رمز تحقق مكون من 6 أرقام إلى ${email}`}
+            <p dir={isEnglish ? "ltr" : "rtl"} className="text-gray-400 text-center mt-4">
+              {isEnglish
+                ? `We've sent a 6-digit verification code to ${email}. Enter the code to continue.`
+                : ` لقد أرسلنا رمز تحقق مكون من 6 أرقام إلى.${email} أدخل الرمز للمتابعة`}
             </p>
-            <form dir={isEnglish ? "ltr" : "rtl"} className="flex flex-col gap-8 sm:gap-10 lg:gap-14 mt-10 sm:mt-14 lg:mt-20" onSubmit={(e) => {
-              e.preventDefault();
-              verifyOtp();
-            }}>
-              <div className="flex flex-col gap-1">
-                <label className="text-white text-sm sm:text-base font-normal">
+            <form
+              dir={isEnglish ? "ltr" : "rtl"}
+              className="flex flex-col gap-8 sm:gap-10 lg:gap-14 mt-10 sm:mt-14 lg:mt-20"
+              onSubmit={(e) => {
+                e.preventDefault();
+                verifyOtp();
+              }}
+            >
+              {/* OTP Input */}
+              <div className="flex flex-col gap-4">
+                <label className="text-white text-center text-sm sm:text-base font-normal">
                   {isEnglish ? "Verification Code" : "رمز التحقق"}
                 </label>
-                <input
-                  onChange={(e) => {
-                    setOtp(e.target.value.replace(/[^0-9]/g, ''));
-                    setValidationErrors((prev) => ({ ...prev, otp: "" }));
-                  }}
-                  value={otp}
-                  className={`bg-black py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${validationErrors.otp ? "border-red-500" : "border-transparent"} transition-all duration-50 text-white rounded-xl px-3`}
-                  type="text"
-                  maxLength={6}
-                />
+
+                <div className="flex justify-center gap-2 sm:gap-4">
+                  {otpValues.map((value, index) => (
+                    <input
+                      dir="ltr"
+                      key={index}
+                      ref={otpRefs[index]}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={value}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                      onPaste={handleOtpPaste}
+                      className="w-10 h-12 sm:w-12 sm:h-14 md:w-14 md:h-16 bg-black text-white text-center text-xl sm:text-2xl rounded-lg border-2 border-gray-700 focus:border-[#38FFE5] focus:outline-none"
+                    />
+                  ))}
+                </div>
+
                 {validationErrors.otp && (
-                  <span className="text-red-500 text-xs sm:text-sm mt-1">{validationErrors.otp}</span>
+                  <span className="text-red-500 text-xs sm:text-sm mt-1 text-center">
+                    {validationErrors.otp}
+                  </span>
                 )}
               </div>
 
@@ -329,15 +510,21 @@ export default function ForgotPassword() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`bg-[#38FFE5] py-3 sm:py-4 w-full sm:w-2/3 rounded-xl mx-auto text-black text-xl sm:text-2xl font-bold hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300 ${loading ? "opacity-70 cursor-not-allowed" : ""} flex items-center justify-center gap-2`}
+                  className={`bg-[#38FFE5] py-3 sm:py-4 w-full sm:w-2/3 rounded-xl mx-auto text-black text-xl sm:text-2xl font-bold hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300 ${
+                    loading ? "opacity-70 cursor-not-allowed" : ""
+                  } flex items-center justify-center gap-2`}
                 >
                   {loading ? (
                     <>
                       <BiLoaderAlt className="animate-spin text-xl sm:text-2xl" />
-                      <span>{isEnglish ? "Verifying..." : "جاري التحقق..."}</span>
+                      <span>
+                        {isEnglish ? "Verifying..." : "جاري التحقق..."}
+                      </span>
                     </>
+                  ) : isEnglish ? (
+                    "Verify OTP"
                   ) : (
-                    isEnglish ? "Verify Code" : "تحقق من الرمز"
+                    "تحقق الرمز"
                   )}
                 </button>
                 <button
@@ -355,29 +542,45 @@ export default function ForgotPassword() {
         return (
           <>
             <h1 className="text-white text-2xl sm:text-3xl md:text-[36px] lg:text-[40px] pt-8 sm:pt-12 lg:pt-16 font-extrabold font-Tajawal text-center">
-              {isEnglish ? "Create New Password" : "إنشاء كلمة مرور جديدة"}
+              {isEnglish ? "Reset Password" : "إعادة تعيين كلمة المرور"}
             </h1>
             <p className="text-gray-400 text-center mt-4">
-              {isEnglish 
-                ? "Your identity has been verified. Set your new password" 
-                : "تم التحقق من هويتك. قم بتعيين كلمة المرور الجديدة"}
+              {isEnglish
+                ? "Enter your new password to reset your account."
+                : "أدخل كلمة المرور الجديدة لإعادة تعيين حسابك."}
             </p>
-            <form dir={isEnglish ? "ltr" : "rtl"} className="flex flex-col gap-8 sm:gap-10 lg:gap-14 mt-10 sm:mt-14 lg:mt-20" onSubmit={(e) => {
-              e.preventDefault();
-              resetPassword();
-            }}>
+            <form
+              dir={isEnglish ? "ltr" : "rtl"}
+              className="flex flex-col gap-8 sm:gap-10 lg:gap-14 mt-10 sm:mt-14 lg:mt-20"
+              onSubmit={(e) => {
+                e.preventDefault();
+                resetPassword();
+              }}
+            >
+              {/* Password Input */}
               <div className="flex flex-col gap-1">
-                <label className="text-white text-sm sm:text-base font-normal">
+                <label
+                  className={`text-white ${
+                    isEnglish ? "text-left" : "text-right"
+                  } text-sm sm:text-base font-normal`}
+                >
                   {isEnglish ? "New Password" : "كلمة المرور الجديدة"}
                 </label>
                 <div className="relative">
                   <input
                     onChange={(e) => {
                       setNewPassword(e.target.value);
-                      setValidationErrors((prev) => ({ ...prev, newPassword: "" }));
+                      setValidationErrors((prev) => ({
+                        ...prev,
+                        newPassword: "",
+                      }));
                     }}
                     value={newPassword}
-                    className={`bg-black py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${validationErrors.newPassword ? "border-red-500" : "border-transparent"} transition-all duration-50 text-white rounded-xl px-3 w-full`}
+                    className={`bg-black py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${
+                      validationErrors.newPassword
+                        ? "border-red-500"
+                        : "border-transparent"
+                    } transition-all duration-50 text-white rounded-xl px-3 w-full`}
                     type={showPassword ? "text" : "password"}
                   />
                   <button
@@ -385,26 +588,45 @@ export default function ForgotPassword() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                   >
-                    {showPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
+                    {showPassword ? (
+                      <AiOutlineEyeInvisible size={20} />
+                    ) : (
+                      <AiOutlineEye size={20} />
+                    )}
                   </button>
                 </div>
+                {renderPasswordRequirements()}
                 {validationErrors.newPassword && (
-                  <span className="text-red-500 text-xs sm:text-sm mt-1">{validationErrors.newPassword}</span>
+                  <span className="text-red-500 text-xs sm:text-sm mt-1">
+                    {validationErrors.newPassword}
+                  </span>
                 )}
               </div>
 
+              {/* Confirm Password Input */}
               <div className="flex flex-col gap-1">
-                <label className="text-white text-sm sm:text-base font-normal">
+                <label
+                  className={`text-white ${
+                    isEnglish ? "text-left" : "text-right"
+                  } text-sm sm:text-base font-normal`}
+                >
                   {isEnglish ? "Confirm Password" : "تأكيد كلمة المرور"}
                 </label>
                 <div className="relative">
                   <input
                     onChange={(e) => {
                       setConfirmPassword(e.target.value);
-                      setValidationErrors((prev) => ({ ...prev, confirmPassword: "" }));
+                      setValidationErrors((prev) => ({
+                        ...prev,
+                        confirmPassword: "",
+                      }));
                     }}
                     value={confirmPassword}
-                    className={`bg-black py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${validationErrors.confirmPassword ? "border-red-500" : "border-transparent"} transition-all duration-50 text-white rounded-xl px-3 w-full`}
+                    className={`bg-black py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${
+                      validationErrors.confirmPassword
+                        ? "border-red-500"
+                        : "border-transparent"
+                    } transition-all duration-50 text-white rounded-xl px-3 w-full`}
                     type={showConfirmPassword ? "text" : "password"}
                   />
                   <button
@@ -412,11 +634,17 @@ export default function ForgotPassword() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                   >
-                    {showConfirmPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
+                    {showConfirmPassword ? (
+                      <AiOutlineEyeInvisible size={20} />
+                    ) : (
+                      <AiOutlineEye size={20} />
+                    )}
                   </button>
                 </div>
                 {validationErrors.confirmPassword && (
-                  <span className="text-red-500 text-xs sm:text-sm mt-1">{validationErrors.confirmPassword}</span>
+                  <span className="text-red-500 text-xs sm:text-sm mt-1">
+                    {validationErrors.confirmPassword}
+                  </span>
                 )}
               </div>
 
@@ -430,15 +658,21 @@ export default function ForgotPassword() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`bg-[#38FFE5] py-3 sm:py-4 w-full sm:w-2/3 rounded-xl mx-auto text-black text-xl sm:text-2xl font-bold hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300 ${loading ? "opacity-70 cursor-not-allowed" : ""} flex items-center justify-center gap-2`}
+                  className={`bg-[#38FFE5] py-3 sm:py-4 w-full sm:w-2/3 rounded-xl mx-auto text-black text-xl sm:text-2xl font-bold hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300 ${
+                    loading ? "opacity-70 cursor-not-allowed" : ""
+                  } flex items-center justify-center gap-2`}
                 >
                   {loading ? (
                     <>
                       <BiLoaderAlt className="animate-spin text-xl sm:text-2xl" />
-                      <span>{isEnglish ? "Resetting..." : "جاري إعادة التعيين..."}</span>
+                      <span>
+                        {isEnglish ? "Resetting..." : "جاري إعادة التعيين..."}
+                      </span>
                     </>
+                  ) : isEnglish ? (
+                    "Reset Password"
                   ) : (
-                    isEnglish ? "Reset Password" : "إعادة تعيين كلمة المرور"
+                    "إعادة تعيين كلمة المرور"
                   )}
                 </button>
                 <button
@@ -446,7 +680,7 @@ export default function ForgotPassword() {
                   onClick={() => setStep(2)}
                   className="text-gray-400 hover:text-white transition-colors mt-4"
                 >
-                  {isEnglish ? "Back to Verification" : "العودة إلى التحقق"}
+                  {isEnglish ? "Back to OTP" : "العودة إلى رمز التحقق"}
                 </button>
               </div>
             </form>
@@ -466,16 +700,19 @@ export default function ForgotPassword() {
               {isEnglish ? "Login" : "تسجيل الدخول"}
             </button>
           </Link>
-          <button onClick={toggleLanguage} className="text-white cursor-pointer text-lg font-bold font-Tajawal">
+          <button
+            onClick={toggleLanguage}
+            className="text-white cursor-pointer text-lg font-bold font-Tajawal"
+          >
             {isEnglish ? "عربي" : "English"}
           </button>
         </div>
       </div>
-      
+
       <div className="min-h-screen pt-10 flex items-center justify-center px-4 sm:px-6 md:px-8">
         <div className="bg-[#131619] px-6 sm:px-12 md:px-20 lg:px-28 rounded-2xl flex flex-col gap-4 w-full max-w-[720px] mx-auto">
           {renderStepContent()}
-          
+
           <p className="text-gray-400 text-center mt-8 mb-8">
             {isEnglish ? "Remember your password?" : "تتذكر كلمة المرور؟"}{" "}
             <Link href="/login" className="text-[#38FFE5] hover:underline">

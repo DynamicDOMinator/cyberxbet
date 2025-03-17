@@ -17,6 +17,7 @@
     "axios": "^1.8.1",
     "compression-webpack-plugin": "^11.1.0",
     "critters": "^0.0.23",
+    "js-cookie": "^3.0.5",
     "next": "15.2.0",
     "react": "^19.0.0",
     "react-countup": "^6.5.3",

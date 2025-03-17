@@ -2,6 +2,7 @@ import "./globals.css";
 import { Tajawal } from "next/font/google";
 import Script from "next/script";
 import { LanguageProvider } from "./context/LanguageContext";
+import { AuthProvider } from "./context/AuthContext";
 
 const tajawal = Tajawal({
   subsets: ["arabic"],
@@ -24,7 +25,9 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className={`${tajawal.className} bg-[#0B0D0F]`}>
-        <LanguageProvider>{children}</LanguageProvider>
+        <AuthProvider>
+          <LanguageProvider>{children}</LanguageProvider>
+        </AuthProvider>
       </body>
     </html>
   );

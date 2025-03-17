@@ -2,6 +2,7 @@
 
 import Select from "react-select";
 import countryList from "react-select-country-list";
+import { useId, useMemo } from "react";
 
 export default function CountrySelect({
   value,
@@ -9,10 +10,15 @@ export default function CountrySelect({
   customStyles,
   isEnglish,
 }) {
-  const countries = countryList().getData();
+  // Generate a stable ID for this component instance
+  const selectId = useId();
+
+  // Memoize the countries data to prevent unnecessary re-renders
+  const countries = useMemo(() => countryList().getData(), []);
 
   return (
     <Select
+      instanceId={selectId}
       options={countries}
       value={value}
       onChange={onChange}
@@ -20,7 +26,7 @@ export default function CountrySelect({
       className="country-select"
       placeholder={isEnglish ? "Select your country" : "اختر بلدك"}
       formatOptionLabel={({ label, value }) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ">
           <img
             src={`https://flagcdn.com/24x18/${value.toLowerCase()}.png`}
             alt={label}

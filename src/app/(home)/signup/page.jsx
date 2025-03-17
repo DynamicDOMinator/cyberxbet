@@ -3,13 +3,20 @@
 import Link from "next/link";
 import Logo from "@/app/components/Logo";
 import axios from "axios";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { BiLoaderAlt } from "react-icons/bi";
 import CountrySelect from "@/app/components/CountrySelect";
 import countryList from "react-select-country-list";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function Signup() {
+  const {
+    verifyOtp,
+    loading: authLoading,
+    error: authError,
+    setError: setAuthError,
+  } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -25,8 +32,49 @@ export default function Signup() {
     country: "",
   });
   const [isEnglish, setIsEnglish] = useState(false);
+  const [otpStep, setOtpStep] = useState(false);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [registrationId, setRegistrationId] = useState("");
+  const [expiresIn, setExpiresIn] = useState(0);
+  const [successMessage, setSuccessMessage] = useState("");
+  const otpInputRefs = useRef([]);
 
   const countries = useMemo(() => countryList().getData(), []);
+
+  const handleOtpChange = (index, value) => {
+    // Only allow numbers
+    if (value && !/^\d*$/.test(value)) return;
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    // Auto-focus next input if current input is filled
+    if (value && index < 5) {
+      otpInputRefs.current[index + 1].focus();
+    }
+  };
+
+  const handleKeyDown = (index, e) => {
+    // Move to previous input on backspace if current input is empty
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      otpInputRefs.current[index - 1].focus();
+    }
+  };
+
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text/plain").trim();
+
+    // Check if pasted content is a 6-digit number
+    if (/^\d{6}$/.test(pastedData)) {
+      const digits = pastedData.split("");
+      setOtp(digits);
+
+      // Focus the last input
+      otpInputRefs.current[5].focus();
+    }
+  };
 
   const customStyles = {
     control: (provided) => ({
@@ -38,7 +86,7 @@ export default function Signup() {
         borderWidth: "2px",
         transition: "all 500ms",
       },
-      padding: "2px",
+      padding: "11px",
       borderRadius: "0.75rem",
     }),
     option: (provided, state) => ({
@@ -193,10 +241,23 @@ export default function Signup() {
 
       const response = await axios.post(`${apiUrl}/auth/register`, {
         email: email,
-        name: username,
+        user_name: username,
         password: password,
         country: country.value,
+        name: "Ahmed",
       });
+
+      // Handle successful registration
+      if (response.data.registration_id) {
+        setRegistrationId(response.data.registration_id);
+        setExpiresIn(response.data.expires_in);
+        setSuccessMessage(
+          isEnglish
+            ? response.data.message
+            : "تم بدء التسجيل. يرجى التحقق من بريدك الإلكتروني باستخدام رمز التحقق المرسل."
+        );
+        setOtpStep(true);
+      }
     } catch (error) {
       console.error("Signup error:", error);
       if (error.response?.data?.errors) {
@@ -219,6 +280,50 @@ export default function Signup() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOtpSubmit = async (e) => {
+    e.preventDefault();
+    if (otp.join("").length === 6) {
+      const otpString = otp.join("");
+
+      try {
+        setLoading(true);
+        setError("");
+
+        const result = await verifyOtp(
+          {
+            registration_id: registrationId,
+            otp: otpString,
+          },
+          isEnglish
+        );
+
+        if (!result.success) {
+          setError(
+            result.error?.error ||
+              (isEnglish
+                ? "An error occurred during verification"
+                : "حدث خطأ أثناء التحقق")
+          );
+        }
+      } catch (error) {
+        console.error("OTP verification error:", error);
+        setError(
+          isEnglish
+            ? "An error occurred during verification"
+            : "حدث خطأ أثناء التحقق"
+        );
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setError(
+        isEnglish
+          ? "Please enter a valid 6-digit OTP"
+          : "الرجاء إدخال رمز تحقق صالح مكون من 6 أرقام"
+      );
     }
   };
 
@@ -259,155 +364,245 @@ export default function Signup() {
               </>
             )}
           </h1>
-          <form
-            dir={isEnglish ? "ltr" : "rtl"}
-            className="flex flex-col gap-8 sm:gap-10 lg:gap-14 mt-10 sm:mt-14 lg:mt-20"
-            onSubmit={handleSubmit}
-          >
-            <div className="flex flex-col gap-1">
-              <label className="text-white text-sm sm:text-base font-normal">
-                {isEnglish ? "Email" : "البريد الإلكتروني"}
-              </label>
-              <input
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setValidationErrors((prev) => ({ ...prev, email: "" }));
-                }}
-                value={email}
-                className={`bg-[#0B0D0F] py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${
-                  validationErrors.email
-                    ? "border-red-500"
-                    : "border-transparent"
-                } transition-all duration-500 text-white rounded-xl px-3`}
-                type="email"
-              />
-              {validationErrors.email && (
-                <span className="text-red-500 text-xs sm:text-sm mt-1">
-                  {validationErrors.email}
-                </span>
-              )}
-            </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-white text-sm sm:text-base font-normal">
-                {isEnglish ? "Username" : "اسم المستخدم"}
-              </label>
-              <input
-                onChange={(e) => {
-                  setUsername(e.target.value);
-                  setValidationErrors((prev) => ({ ...prev, username: "" }));
-                }}
-                value={username}
-                className={`bg-[#0B0D0F] py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${
-                  validationErrors.username
-                    ? "border-red-500"
-                    : "border-transparent"
-                } transition-all duration-500 text-white rounded-xl px-3`}
-                type="text"
-              />
-              {validationErrors.username && (
-                <span className="text-red-500 text-xs sm:text-sm mt-1">
-                  {validationErrors.username}
-                </span>
+          {otpStep ? (
+            <div className="flex flex-col gap-8 mt-10">
+              {successMessage && (
+                <div
+                  className="bg-[#1A2025] border border-[#38FFE5] text-white px-4 py-3 rounded-xl relative"
+                  role="alert"
+                >
+                  <span className="block sm:inline text-center">
+                    {successMessage}
+                  </span>
+                </div>
               )}
-            </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-white text-sm sm:text-base font-normal">
-                {isEnglish ? "Country" : "البلد"}
-              </label>
-              <CountrySelect
-                countries={countries}
-                value={country}
-                onChange={(value) => {
-                  setCountry(value);
-                  setValidationErrors((prev) => ({ ...prev, country: "" }));
-                }}
-                customStyles={customStyles}
-                isEnglish={isEnglish}
-              />
-              {validationErrors.country && (
-                <span className="text-red-500 text-xs sm:text-sm mt-1">
-                  {validationErrors.country}
-                </span>
-              )}
-            </div>
+              <p className="text-white text-center">
+                {isEnglish
+                  ? `Please enter the OTP sent to your email. It expires in ${Math.floor(
+                      expiresIn / 60
+                    )} minutes.`
+                  : `الرجاء إدخال رمز التحقق المرسل إلى بريدك الإلكتروني. ينتهي في ${Math.floor(
+                      expiresIn / 60
+                    )} دقائق.`}
+              </p>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-white text-sm sm:text-base font-normal">
-                {isEnglish ? "Password" : "كلمة المرور"}
-              </label>
-              <div className="relative">
+              <form onSubmit={handleOtpSubmit} className="flex flex-col gap-8">
+                <div className="flex flex-col gap-4">
+                  <label className="text-white  text-sm sm:text-base font-normal text-center">
+                    {isEnglish ? "OTP Code" : "رمز التحقق"}
+                  </label>
+
+                  <div
+                    dir="ltr"
+                    className="flex justify-center gap-2 sm:gap-4"
+                    onPaste={handlePaste}
+                  >
+                    {otp.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={(el) => (otpInputRefs.current[index] = el)}
+                        type="text"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => handleOtpChange(index, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(index, e)}
+                        className="w-10 h-12 sm:w-12 sm:h-14 text-center bg-[#0B0D0F] text-white text-xl font-bold rounded-lg border-2 border-gray-700 focus:border-[#38FFE5] focus:outline-none"
+                      />
+                    ))}
+                  </div>
+
+                  <p className="text-gray-400 text-xs text-center mt-2">
+                    {isEnglish
+                      ? "You can paste the full 6-digit code"
+                      : "يمكنك لصق الرمز المكون من 6 أرقام"}
+                  </p>
+                </div>
+
+                <button
+                  disabled={loading || otp.join("").length !== 6}
+                  type="submit"
+                  className={`${
+                    otp.join("").length === 6
+                      ? "bg-[#38FFE5] hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] text-black"
+                      : "bg-gray-700 text-gray-300 cursor-not-allowed"
+                  } transition-all duration-300 font-bold py-2.5 sm:py-3 rounded-xl flex items-center justify-center`}
+                >
+                  {loading ? (
+                    <>
+                      <BiLoaderAlt className="animate-spin" size={24} />
+                      <span className="ml-2">
+                        {isEnglish ? "Verifying..." : "جاري التحقق..."}
+                      </span>
+                    </>
+                  ) : isEnglish ? (
+                    "Verify OTP"
+                  ) : (
+                    "تحقق من الرمز"
+                  )}
+                </button>
+
+                {error && (
+                  <p className="text-red-500 text-center text-sm">{error}</p>
+                )}
+              </form>
+            </div>
+          ) : (
+            <form
+              dir={isEnglish ? "ltr" : "rtl"}
+              className="flex flex-col gap-8 sm:gap-10 lg:gap-14 mt-10 sm:mt-14 lg:mt-20"
+              onSubmit={handleSubmit}
+            >
+              <div className="flex flex-col gap-1">
+                <label className="text-white pb-4 text-sm sm:text-base font-normal">
+                  {isEnglish ? "Email" : "البريد الإلكتروني"}
+                </label>
                 <input
                   onChange={(e) => {
-                    setPassword(e.target.value);
-                    setValidationErrors((prev) => ({ ...prev, password: "" }));
+                    setEmail(e.target.value);
+                    setValidationErrors((prev) => ({ ...prev, email: "" }));
                   }}
-                  value={password}
-                  className={`bg-[#0B0D0F] w-full py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${
-                    validationErrors.password
+                  value={email}
+                  className={`bg-[#0B0D0F] py-2.5 sm:py-4 hover:border-2 hover:border-gray-500 ${
+                    validationErrors.email
                       ? "border-red-500"
                       : "border-transparent"
                   } transition-all duration-500 text-white rounded-xl px-3`}
-                  type={showPassword ? "text" : "password"}
+                  type="email"
                 />
+                {validationErrors.email && (
+                  <span className="text-red-500 text-xs sm:text-sm mt-1">
+                    {validationErrors.email}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-white pb-4 text-sm sm:text-base font-normal">
+                  {isEnglish ? "Username" : "اسم المستخدم"}
+                </label>
+                <input
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setValidationErrors((prev) => ({ ...prev, username: "" }));
+                  }}
+                  value={username}
+                  className={`bg-[#0B0D0F] py-2.5 sm:py-4 hover:border-2 hover:border-gray-500 ${
+                    validationErrors.username
+                      ? "border-red-500"
+                      : "border-transparent"
+                  } transition-all duration-500 text-white rounded-xl px-3`}
+                  type="text"
+                />
+                {validationErrors.username && (
+                  <span className="text-red-500 text-xs sm:text-sm mt-1">
+                    {validationErrors.username}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-white pb-4 text-sm sm:text-base font-normal">
+                  {isEnglish ? "Country" : "البلد"}
+                </label>
+                <CountrySelect
+                  countries={countries}
+                  value={country}
+                  onChange={(value) => {
+                    setCountry(value);
+                    setValidationErrors((prev) => ({ ...prev, country: "" }));
+                  }}
+                  customStyles={customStyles}
+                  isEnglish={isEnglish}
+                />
+                {validationErrors.country && (
+                  <span className="text-red-500 text-xs sm:text-sm mt-1">
+                    {validationErrors.country}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-white pb-4 text-sm sm:text-base font-normal">
+                  {isEnglish ? "Password" : "كلمة المرور"}
+                </label>
+                <div className="relative">
+                  <input
+                    dir="ltr"
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setValidationErrors((prev) => ({
+                        ...prev,
+                        password: "",
+                      }));
+                    }}
+                    value={password}
+                    className={`bg-[#0B0D0F] w-full py-2.5 sm:py-4 hover:border-2 hover:border-gray-500 ${
+                      validationErrors.password
+                        ? "border-red-500"
+                        : "border-transparent"
+                    } transition-all duration-500 text-white rounded-xl px-3`}
+                    type={showPassword ? "text" : "password"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className={`absolute ${
+                      isEnglish ? "left-3" : "right-3"
+                    } top-1/2 -translate-y-1/2 text-gray-400 hover:text-white`}
+                  >
+                    {showPassword ? (
+                      <AiOutlineEyeInvisible size={20} />
+                    ) : (
+                      <AiOutlineEye size={20} />
+                    )}
+                  </button>
+                </div>
+                {validationErrors.password && (
+                  <span className="text-red-500 text-xs sm:text-sm mt-1">
+                    {validationErrors.password}
+                  </span>
+                )}
+                {!isEnglish && (
+                  <div className="text-white text-xs sm:text-sm mt-2  p-2 rounded-md">
+                    يجب أن تحتوي كلمة المرور على الأقل على{" "}
+                    <span className="text-red-500">8 أحرف</span> وتتضمن
+                    <span className="text-red-500"> أحرفا كبيرة </span>,{" "}
+                    <span className="text-red-500">وصغيرة</span>,{" "}
+                    <span className="text-[#8BEFCB]">رقم واحد</span> و{" "}
+                    <span className="text-red-500">رمز</span>.
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-4">
                 <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className={`absolute ${
-                    isEnglish ? "right-3" : "left-3"
-                  } top-1/2 -translate-y-1/2 text-gray-400 hover:text-white`}
+                  disabled={loading}
+                  type="submit"
+                  className="bg-[#38FFE5] hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300 text-black font-bold py-2.5 sm:py-3 rounded-xl flex items-center justify-center"
                 >
-                  {showPassword ? (
-                    <AiOutlineEyeInvisible size={20} />
+                  {loading ? (
+                    <>
+                      <BiLoaderAlt className="animate-spin" size={24} />
+                      <span>
+                        {isEnglish
+                          ? "Creating account..."
+                          : "جاري إنشاء الحساب..."}
+                      </span>
+                    </>
+                  ) : isEnglish ? (
+                    "Create Account"
                   ) : (
-                    <AiOutlineEye size={20} />
+                    "إنشاء حساب"
                   )}
                 </button>
-              </div>
-              {validationErrors.password && (
-                <span className="text-red-500 text-xs sm:text-sm mt-1">
-                  {validationErrors.password}
-                </span>
-              )}
-              {!isEnglish && (
-                <div className="text-white text-xs sm:text-sm mt-2  p-2 rounded-md">
-                  يجب أن تحتوي كلمة المرور على الأقل على{" "}
-                  <span className="text-red-500">8 أحرف</span> وتتضمن
-                  <span className="text-red-500"> أحرفا كبيرة </span>,{" "}
-                  <span className="text-red-500">وصغيرة</span>,{" "}
-                  <span className="text-[#8BEFCB]">رقم واحد</span> و{" "}
-                  <span className="text-red-500">رمز</span>.
-                </div>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-4">
-              <button
-                disabled={loading}
-                type="submit"
-                className="bg-[#38FFE5] hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300 text-black font-bold py-2.5 sm:py-3 rounded-xl flex items-center justify-center"
-              >
-                {loading ? (
-                  <>
-                    <BiLoaderAlt className="animate-spin" size={24} />
-                    <span>
-                      {isEnglish
-                        ? "Creating account..."
-                        : "جاري إنشاء الحساب..."}
-                    </span>
-                  </>
-                ) : isEnglish ? (
-                  "Create Account"
-                ) : (
-                  "إنشاء حساب"
+                {error && (
+                  <p className="text-red-500 text-center text-sm">{error}</p>
                 )}
-              </button>
-              {error && (
-                <p className="text-red-500 text-center text-sm">{error}</p>
-              )}
-            </div>
-          </form>
+              </div>
+            </form>
+          )}
 
           <p className="text-white text-center font-bold text-xl sm:text-2xl mt-8 sm:mt-12 lg:mt-16">
             {isEnglish ? "Already have an account?" : "لديك حساب بالفعل؟"}{" "}

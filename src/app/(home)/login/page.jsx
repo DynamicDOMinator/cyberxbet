@@ -6,6 +6,7 @@ import axios from "axios";
 import { useState, useEffect } from "react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { BiLoaderAlt } from "react-icons/bi";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +20,12 @@ export default function Login() {
     password: "",
   });
   const [isEnglish, setIsEnglish] = useState(false);
+  const {
+    login: authLogin,
+    loading: authLoading,
+    error: authError,
+  } = useAuth();
+
   const toggleLanguage = () => {
     setIsEnglish(!isEnglish);
   };
@@ -114,39 +121,36 @@ export default function Login() {
           );
         });
 
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      if (!apiUrl) {
-        throw new Error(
-          "API URL not configured. Please check .env.local file."
-        );
-      }
+      const result = await authLogin(email, password, token, isEnglish);
 
-      const response = await axios.post(`${apiUrl}/auth/login`, {
-        email,
-        password,
-        recaptchaToken: token,
-      });
-      console.log(response.data);
+      if (!result.success) {
+        if (result.error?.errors) {
+          const backendErrors = result.error.errors;
+          setValidationErrors((prev) => ({
+            ...prev,
+            ...Object.keys(backendErrors).reduce((acc, key) => {
+              acc[key] = backendErrors[key][0]; // Take first error message for each field
+              return acc;
+            }, {}),
+          }));
+        } else {
+          setError(
+            result.error?.error ||
+              result.error?.message ||
+              (isEnglish
+                ? "An error occurred during login"
+                : "حدث خطأ أثناء تسجيل الدخول")
+          );
+        }
+      }
     } catch (error) {
       console.error("Login error:", error);
-      if (error.response?.data?.errors) {
-        const backendErrors = error.response.data.errors;
-        setValidationErrors((prev) => ({
-          ...prev,
-          ...Object.keys(backendErrors).reduce((acc, key) => {
-            acc[key] = backendErrors[key][0]; // Take first error message for each field
-            return acc;
-          }, {}),
-        }));
-      } else {
-        setError(
-          error.response?.data?.error ||
-            error.message ||
-            (isEnglish
-              ? "An error occurred during login"
-              : "حدث خطأ أثناء تسجيل الدخول")
-        );
-      }
+      setError(
+        error.message ||
+          (isEnglish
+            ? "An error occurred during login"
+            : "حدث خطأ أثناء تسجيل الدخول")
+      );
     } finally {
       setLoading(false);
     }
@@ -185,7 +189,7 @@ export default function Login() {
             }}
           >
             <div className="flex flex-col gap-1">
-              <label className="text-white text-sm sm:text-base font-normal">
+              <label className="text-white text-sm pb-4 sm:text-base font-normal">
                 {isEnglish
                   ? "Email or Username"
                   : "البريد الإلكتروني أو اسم المستخدم"}
@@ -211,11 +215,12 @@ export default function Login() {
             </div>
 
             <div className="flex flex-col gap-1">
-              <label className="text-white text-sm sm:text-base font-normal">
+              <label className="text-white text-sm pb-4 sm:text-base font-normal">
                 {isEnglish ? "Password" : "كلمة المرور"}
               </label>
-              <div className="relative"> 
+              <div className="relative">
                 <input
+                  dir="ltr"
                   onChange={(e) => {
                     setPassword(e.target.value);
                     setValidationErrors((prev) => ({ ...prev, password: "" }));
@@ -232,7 +237,7 @@ export default function Login() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className={`absolute ${
-                    isEnglish ? "right-3" : "left-3"
+                    isEnglish ? "right-3" : "right-3"
                   } top-1/2 -translate-y-1/2 text-gray-400 hover:text-white`}
                 >
                   {showPassword ? (
@@ -312,8 +317,8 @@ export default function Login() {
             <span className="text-[#38FFE5] cursor-pointer pl-1">
               {isEnglish ? "Privacy Policy " : "  سياسة الخصوصية"}
             </span>
-             {isEnglish? " and " : "و"}   
-             <span className="text-[#38FFE5] cursor-pointer">
+            {isEnglish ? " and " : "و"}
+            <span className="text-[#38FFE5] cursor-pointer">
               {isEnglish ? " Terms of Service" : " شروط الخدمة"}
             </span>
           </p>

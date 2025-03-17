@@ -17,7 +17,10 @@ import { CiSettings } from "react-icons/ci";
 import { MdLanguage } from "react-icons/md";
 import { RiLogoutCircleRLine } from "react-icons/ri";
 import { useLanguage } from "../context/LanguageContext";
-
+import axios from "axios";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useUserProfile } from "../context/UserProfileContext";
 const gradientAnimation = `
   @keyframes gradient {
     0% { background-position: 200% 0; }
@@ -32,17 +35,34 @@ export default function Header() {
   const [mobileChallengesOpen, setMobileChallengesOpen] = useState(false);
   const [mobileAddChallengeOpen, setMobileAddChallengeOpen] = useState(false);
   const [mobileUserMenuOpen, setMobileUserMenuOpen] = useState(false);
+  const [userName, setUserName] = useState("");
+  const router = useRouter();
+
+  
+  const userProfile = useUserProfile();
+
+  useEffect(() => {
+    setUserName(userProfile?.userName);
+  }, [userProfile]);
 
   useEffect(() => {
     setRandom(Math.floor(Math.random() * 1000));
   }, []);
 
-  useEffect(() => {
-    console.log("Language changed:", isEnglish);
-  }, [isEnglish]);
+  
+
+  const logout = async () => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const token = Cookies.get("token");
+    const response = await axios.post(`${apiUrl}/auth/logout`, { token });
+
+    Cookies.remove("token");
+    Cookies.remove("user");
+    router.push("/");
+  };
 
   return (
-    <header className="relative bg-[#0B0D0F]">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[#0B0D0F]">
       <style>{gradientAnimation}</style>
       <div
         className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-black via-[#38FFE540] to-black"
@@ -182,7 +202,7 @@ export default function Header() {
                   className="rounded-full"
                   alt="users"
                 />
-                <p>Ahmed elsayed</p>
+                <p>{userName}</p>
                 <ChevronDownIcon className="size-4 fill-white/60" />
               </MenuButton>
 
@@ -225,7 +245,8 @@ export default function Header() {
                 <MenuItem>
                   <button
                     dir={isEnglish ? "ltr" : "rtl"}
-                    className="group flex w-full text-[#FF1100] items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
+                    className="group flex w-full cursor-pointer text-[#FF1100] items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
+                    onClick={logout}
                   >
                     <RiLogoutCircleRLine className="size-4 fill-[#FF1100]" />
                     {isEnglish ? "Logout" : "تسجيل خروج"}
@@ -238,7 +259,7 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden absolute bg-black/20 top-full right-0 left-0 z-50">
+          <div className="lg:hidden absolute bg-black top-full right-0 left-0 z-50">
             <div className="flex flex-col p-4 space-y-4">
               <button
                 className={`text-white ${
@@ -360,7 +381,7 @@ export default function Header() {
                       height={20}
                       alt="users"
                     />
-                    <span>Ahmed elsayed</span>
+                    <span>{userName}</span>
                     <ChevronDownIcon
                       className={`w-5 h-5 transition-transform ${
                         mobileUserMenuOpen ? "rotate-180" : ""
@@ -399,6 +420,7 @@ export default function Header() {
                         </span>
                       </button>
                       <button
+                        onClick={logout}
                         dir={isEnglish ? "ltr" : "rtl"}
                         className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
                       >

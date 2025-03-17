@@ -1,10 +1,18 @@
-import Header from "@/app/components/Header";
+"use client";
+import { AuthProvider } from "../context/AuthContext";
+import { UserProfileProvider } from "../context/UserProfileContext";
+import { LanguageProvider } from "../context/LanguageContext";
+import Header from "../components/Header";
 
 export default function AppLayout({ children }) {
   return (
-    <div className="bg-[#0B0D0F]">
-      <Header />
-      {children}
-    </div>
+    <AuthProvider>
+      <UserProfileProvider>
+        <LanguageProvider>
+          <Header />
+          {children}
+        </LanguageProvider>
+      </UserProfileProvider>
+    </AuthProvider>
   );
 }
