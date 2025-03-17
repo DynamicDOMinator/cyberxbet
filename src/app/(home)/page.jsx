@@ -263,7 +263,7 @@ export default function Home() {
         <div className="mt-40 px-4">
           <h3
             dir={isEnglish ? "ltr" : "rtl"}
-            className="text-white text-1xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal"
+            className="text-white text-3xl lg:text-5xl text-center mt-28 font-extrabold font-Tajawal"
             data-aos="fade-up"
           >
             {isEnglish ? (
