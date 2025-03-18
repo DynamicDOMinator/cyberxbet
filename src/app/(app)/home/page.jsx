@@ -7,7 +7,7 @@ export default function Home() {
   const { isEnglish } = useLanguage();
 
   return (
-    <div className="max-w-[1440px] mx-auto pb-10 mt-20">
+    <div className="max-w-[2000px] mx-auto pb-10 mt-20">
       {/* ads section  */}
       <div className="lg:pt-28 pt-12 lg:px-16 px-5  ">
         <h1
