@@ -86,7 +86,7 @@ export default function ForgotPassword() {
     return isValid;
   };
 
-  // Add this function to handle OTP input changes
+  // Updated handleOtpChange function to support RTL when in Arabic
   const handleOtpChange = (index, value) => {
     if (value.length > 1) {
       value = value.charAt(0);
@@ -103,20 +103,40 @@ export default function ForgotPassword() {
     // Combine OTP values for the main otp state
     setOtp(newOtpValues.join(""));
 
-    // Auto-focus next input if current input is filled
-    if (value && index < 5) {
-      otpRefs[index + 1].current.focus();
+    // Auto-focus next input based on language direction
+    if (value) {
+      if (isEnglish) {
+        // LTR direction - move right
+        if (index < 5) {
+          otpRefs[index + 1].current.focus();
+        }
+      } else {
+        // RTL direction - move left
+        if (index > 0) {
+          otpRefs[index - 1].current.focus();
+        }
+      }
     }
   };
 
-  // Add this function to handle backspace in OTP inputs
+  // Updated handleOtpKeyDown to support RTL when in Arabic
   const handleOtpKeyDown = (index, e) => {
-    if (e.key === "Backspace" && !otpValues[index] && index > 0) {
-      otpRefs[index - 1].current.focus();
+    if (e.key === "Backspace" && !otpValues[index]) {
+      if (isEnglish) {
+        // LTR direction - move left on backspace
+        if (index > 0) {
+          otpRefs[index - 1].current.focus();
+        }
+      } else {
+        // RTL direction - move right on backspace
+        if (index < 5) {
+          otpRefs[index + 1].current.focus();
+        }
+      }
     }
   };
 
-  // Updated handleOtpPaste function
+  // Updated handleOtpPaste function to support RTL
   const handleOtpPaste = (e) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text").trim();
@@ -130,20 +150,39 @@ export default function ForgotPassword() {
     // Create a new array with the pasted digits
     const newOtpValues = [...otpValues];
 
-    // Fill in the digits - start at the beginning always
-    for (let i = 0; i < digits.length && i < 6; i++) {
-      newOtpValues[i] = digits[i];
-    }
+    if (isEnglish) {
+      // LTR - fill from left to right
+      for (let i = 0; i < digits.length && i < 6; i++) {
+        newOtpValues[i] = digits[i];
+      }
 
-    // Update state
-    setOtpValues(newOtpValues);
-    setOtp(newOtpValues.join(""));
+      // Update state
+      setOtpValues(newOtpValues);
+      setOtp(newOtpValues.join(""));
 
-    // Focus the appropriate input after pasting
-    if (digits.length < 6) {
-      otpRefs[Math.min(digits.length, 5)].current.focus();
+      // Focus the appropriate input after pasting
+      if (digits.length < 6) {
+        otpRefs[Math.min(digits.length, 5)].current.focus();
+      } else {
+        otpRefs[5].current.focus();
+      }
     } else {
-      otpRefs[5].current.focus();
+      // RTL - fill from right to left
+      const startIndex = 5;
+      for (let i = 0; i < digits.length && i < 6; i++) {
+        newOtpValues[startIndex - i] = digits[i];
+      }
+
+      // Update state
+      setOtpValues(newOtpValues);
+      setOtp(newOtpValues.join(""));
+
+      // Focus the appropriate input after pasting
+      if (digits.length < 6) {
+        otpRefs[Math.max(0, startIndex - digits.length + 1)].current.focus();
+      } else {
+        otpRefs[0].current.focus();
+      }
     }
   };
 
@@ -456,7 +495,10 @@ export default function ForgotPassword() {
             <h1 className="text-white text-2xl sm:text-3xl md:text-[36px] lg:text-[40px] pt-8 sm:pt-12 lg:pt-16 font-extrabold font-Tajawal text-center">
               {isEnglish ? "Reset Password" : "إعادة تعيين كلمة المرور"}
             </h1>
-            <p dir={isEnglish ? "ltr" : "rtl"} className="text-gray-400 text-center mt-4">
+            <p
+              dir={isEnglish ? "ltr" : "rtl"}
+              className="text-gray-400 text-center mt-4"
+            >
               {isEnglish
                 ? `We've sent a 6-digit verification code to ${email}. Enter the code to continue.`
                 : ` لقد أرسلنا رمز تحقق مكون من 6 أرقام إلى.${email} أدخل الرمز للمتابعة`}
@@ -560,14 +602,15 @@ export default function ForgotPassword() {
               {/* Password Input */}
               <div className="flex flex-col gap-1">
                 <label
-                  className={`text-white ${
-                    isEnglish ? "text-left" : "text-right"
+                  className={`text-white pb-3 ${
+                    isEnglish ? "text-left" : ""
                   } text-sm sm:text-base font-normal`}
                 >
                   {isEnglish ? "New Password" : "كلمة المرور الجديدة"}
                 </label>
                 <div className="relative">
                   <input
+                    dir="ltr"
                     onChange={(e) => {
                       setNewPassword(e.target.value);
                       setValidationErrors((prev) => ({
@@ -606,14 +649,16 @@ export default function ForgotPassword() {
               {/* Confirm Password Input */}
               <div className="flex flex-col gap-1">
                 <label
-                  className={`text-white ${
-                    isEnglish ? "text-left" : "text-right"
+                
+                  className={`text-white pb-3 ${
+                    isEnglish ? "text-left" : ""
                   } text-sm sm:text-base font-normal`}
                 >
                   {isEnglish ? "Confirm Password" : "تأكيد كلمة المرور"}
                 </label>
                 <div className="relative">
                   <input
+                    dir="ltr"
                     onChange={(e) => {
                       setConfirmPassword(e.target.value);
                       setValidationErrors((prev) => ({
@@ -709,7 +754,7 @@ export default function ForgotPassword() {
         </div>
       </div>
 
-      <div className="min-h-screen pt-10 flex items-center justify-center px-4 sm:px-6 md:px-8">
+      <div className="lg:min-h-screen pt-10 flex items-center justify-center px-4 sm:px-6 md:px-8">
         <div className="bg-[#131619] px-6 sm:px-12 md:px-20 lg:px-28 rounded-2xl flex flex-col gap-4 w-full max-w-[720px] mx-auto">
           {renderStepContent()}
 
