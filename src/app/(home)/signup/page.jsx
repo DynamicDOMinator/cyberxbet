@@ -161,7 +161,9 @@ export default function Signup() {
         ? "Email is required"
         : "البريد الإلكتروني مطلوب";
       isValid = false;
-    } else if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (
+      !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)
+    ) {
       errors.email = isEnglish
         ? "Invalid email format"
         : "صيغة البريد الإلكتروني غير صحيحة";
@@ -244,7 +246,6 @@ export default function Signup() {
         user_name: username,
         password: password,
         country: country.value,
-        name: "Ahmed",
       });
 
       // Handle successful registration
@@ -353,7 +354,7 @@ export default function Signup() {
 
       <div className="min-h-screen pt-10 flex items-center justify-center px-4 sm:px-6 md:px-8">
         <div className="bg-[#131619] px-6 sm:px-12 md:px-20 lg:px-28 rounded-2xl flex flex-col gap-4 w-full max-w-[720px] mx-auto">
-          <h1 className="text-white text-2xl pt-10 sm:text-3xl md:text-[36px] lg:text-[40px] pt-1 font-extrabold font-Tajawal text-center">
+          <h1 className="text-white text-2xl pt-10 sm:text-3xl md:text-[36px] lg:text-[40px]  font-extrabold font-Tajawal text-center">
             {isEnglish ? (
               <>
                 Join <span className="text-[#38FFE5]">CyberXbytes</span>

@@ -42,7 +42,7 @@ export function AuthProvider({ children }) {
       // Handle successful login
       if (response.data.token && response.data.user) {
         Cookies.set("token", response.data.token);
-        Cookies.set("user", JSON.stringify(response.data.user));
+
         setIsAuthenticated(true);
         router.push("/home");
         return {
@@ -94,7 +94,7 @@ export function AuthProvider({ children }) {
       // Handle successful verification and login
       if (response.data.token && response.data.user) {
         Cookies.set("token", response.data.token);
-        Cookies.set("user", JSON.stringify(response.data.user));
+
         setIsAuthenticated(true);
         router.push("/home");
         return {
