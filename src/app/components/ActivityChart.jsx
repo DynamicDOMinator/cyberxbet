@@ -63,8 +63,9 @@ const ActivityChart = ({ isEnglish }) => {
         backgroundColor: (context) => {
           const ctx = context.chart.ctx;
           const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-          gradient.addColorStop(0, "rgba(0, 255, 222, 0.4)");
-          gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+          gradient.addColorStop(0, "#00FFDE66"); // Semi-transparent teal at top
+          gradient.addColorStop(0.5, "rgba(0, 255, 222, 0.1)"); // Nearly transparent in middle
+          gradient.addColorStop(1, "rgba(0, 0, 0, 0)"); // Completely transparent at bottom
           return gradient;
         },
         fill: true,
