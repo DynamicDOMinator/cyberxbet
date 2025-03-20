@@ -10,15 +10,9 @@ import { FaRegCopyright } from "react-icons/fa";
 import Link from "next/link";
 import Logo from "@/app/components/Logo";
 import { useLanguage } from "@/app/context/LanguageContext";
-import LoadingPage from "@/app/components/LoadingPage";
+
 const NumberAnimation = ({ end }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
-
   const { ref, inView } = useInView({
     triggerOnce: true,
     threshold: 0.1,
@@ -69,7 +63,6 @@ export default function Home() {
   const { isEnglish, setIsEnglish } = useLanguage();
   const [isAOSInitialized, setIsAOSInitialized] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
 
   const toggleLanguage = () => {
     setIsEnglish(!isEnglish);
@@ -77,17 +70,6 @@ export default function Home() {
 
   useEffect(() => {
     setIsMounted(true);
-
-    // Set isLoaded to true after window load event completes
-    if (typeof window !== "undefined") {
-      if (document.readyState === "complete") {
-        setIsLoaded(true);
-      } else {
-        window.addEventListener("load", () => setIsLoaded(true));
-        return () =>
-          window.removeEventListener("load", () => setIsLoaded(true));
-      }
-    }
 
     // Only handle mouse move events
     let rafId;
@@ -117,7 +99,7 @@ export default function Home() {
     return null;
   }
 
-  return isLoaded ? (
+  return (
     <main className="relative bg-[#0B0D0F] min-h-screen overflow-hidden">
       {/* Base grid without blur */}
       <div className="fixed inset-0 bg-[linear-gradient(to_right,#38FFE520_1px,transparent_1px),linear-gradient(to_bottom,#38FFE520_1px,transparent_1px)] bg-[size:50px_50px] pointer-events-none" />
@@ -903,7 +885,5 @@ export default function Home() {
         </div>
       </div>
     </main>
-  ) : (
-    <LoadingPage />
   );
 }
