@@ -9,7 +9,8 @@ import { BiLoaderAlt } from "react-icons/bi";
 import CountrySelect from "@/app/components/CountrySelect";
 import countryList from "react-select-country-list";
 import { useAuth } from "@/app/context/AuthContext";
-
+import { useLanguage } from "@/app/context/LanguageContext";
+import LoadingPage from "@/app/components/LoadingPage";
 export default function Signup() {
   const {
     verifyOtp,
@@ -31,15 +32,19 @@ export default function Signup() {
     password: "",
     country: "",
   });
-  const [isEnglish, setIsEnglish] = useState(false);
+  const { isEnglish, setIsEnglish } = useLanguage();
   const [otpStep, setOtpStep] = useState(false);
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [registrationId, setRegistrationId] = useState("");
   const [expiresIn, setExpiresIn] = useState(0);
   const [successMessage, setSuccessMessage] = useState("");
   const otpInputRefs = useRef([]);
-
+  const [isLoaded, setIsLoaded] = useState(false);
   const countries = useMemo(() => countryList().getData(), []);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   const handleOtpChange = (index, value) => {
     // Only allow numbers
@@ -334,6 +339,7 @@ export default function Signup() {
   };
 
   return (
+    isLoaded ? (
     <div className="bg-[#0B0D0F] relative pb-20 min-h-screen">
       <div className="flex items-center flex-col lg:flex-row-reverse justify-between">
         <Logo />
@@ -631,6 +637,9 @@ export default function Signup() {
           </p>
         </div>
       </div>
-    </div>
+      </div>
+    ) : (
+      <LoadingPage />
+    )
   );
 }

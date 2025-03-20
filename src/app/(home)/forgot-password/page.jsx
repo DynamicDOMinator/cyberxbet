@@ -6,6 +6,8 @@ import axios from "axios";
 import { useState, useEffect, useRef } from "react";
 import { BiLoaderAlt } from "react-icons/bi";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { useLanguage } from "@/app/context/LanguageContext";
+import LoadingPage from "@/app/components/LoadingPage";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -24,7 +26,10 @@ export default function ForgotPassword() {
     newPassword: "",
     confirmPassword: "",
   });
-  const [isEnglish, setIsEnglish] = useState(false);
+
+  // Replace with this improved approach
+  const { isEnglish, setIsEnglish } = useLanguage();
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // Add these new state variables for OTP inputs
   const [otpValues, setOtpValues] = useState(["", "", "", "", "", ""]);
@@ -35,6 +40,11 @@ export default function ForgotPassword() {
   const toggleLanguage = () => {
     setIsEnglish(!isEnglish);
   };
+
+  // Add this useEffect to control rendering
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   useEffect(() => {
     // Load reCAPTCHA v3
@@ -649,7 +659,6 @@ export default function ForgotPassword() {
               {/* Confirm Password Input */}
               <div className="flex flex-col gap-1">
                 <label
-                
                   className={`text-white pb-3 ${
                     isEnglish ? "text-left" : ""
                   } text-sm sm:text-base font-normal`}
@@ -736,36 +745,42 @@ export default function ForgotPassword() {
     }
   };
   return (
-    <div className="bg-[#0B0D0F]relative pb-20 min-h-screen">
-      <div className="flex items-center flex-col lg:flex-row-reverse justify-between">
-        <Logo />
-        <div className="flex items-center mt-8 lg:ml-16 gap-8 px-4">
-          <Link href="/login">
-            <button className="text-white cursor-pointer hover:bg-[#38FFE5] transition-all duration-400 hover:text-black border-2 border-white font-medium py-2 px-4 rounded">
-              {isEnglish ? "Login" : "تسجيل الدخول"}
-            </button>
-          </Link>
-          <button
-            onClick={toggleLanguage}
-            className="text-white cursor-pointer text-lg font-bold font-Tajawal"
-          >
-            {isEnglish ? "عربي" : "English"}
-          </button>
-        </div>
-      </div>
+    <div className="bg-[#0B0D0F] relative pb-20 min-h-screen">
+      {isLoaded ? (
+        <>
+          <div className="flex items-center flex-col lg:flex-row-reverse justify-between">
+            <Logo />
+            <div className="flex items-center mt-8 lg:ml-16 gap-8 px-4">
+              <Link href="/login">
+                <button className="text-white cursor-pointer hover:bg-[#38FFE5] transition-all duration-400 hover:text-black border-2 border-white font-medium py-2 px-4 rounded">
+                  {isEnglish ? "Login" : "تسجيل الدخول"}
+                </button>
+              </Link>
+              <button
+                onClick={toggleLanguage}
+                className="text-white cursor-pointer text-lg font-bold font-Tajawal"
+              >
+                {isEnglish ? "عربي" : "English"}
+              </button>
+            </div>
+          </div>
 
-      <div className="lg:min-h-screen pt-10 flex items-center justify-center px-4 sm:px-6 md:px-8">
-        <div className="bg-[#131619] px-6 sm:px-12 md:px-20 lg:px-28 rounded-2xl flex flex-col gap-4 w-full max-w-[720px] mx-auto">
-          {renderStepContent()}
+          <div className="lg:min-h-screen pt-10 flex items-center justify-center px-4 sm:px-6 md:px-8">
+            <div className="bg-[#131619] px-6 sm:px-12 md:px-20 lg:px-28 rounded-2xl flex flex-col gap-4 w-full max-w-[720px] mx-auto">
+              {renderStepContent()}
 
-          <p className="text-gray-400 text-center mt-8 mb-8">
-            {isEnglish ? "Remember your password?" : "تتذكر كلمة المرور؟"}{" "}
-            <Link href="/login" className="text-[#38FFE5] hover:underline">
-              {isEnglish ? "Login" : "تسجيل الدخول"}
-            </Link>
-          </p>
-        </div>
-      </div>
+              <p className="text-gray-400 text-center mt-8 mb-8">
+                {isEnglish ? "Remember your password?" : "تتذكر كلمة المرور؟"}{" "}
+                <Link href="/login" className="text-[#38FFE5] hover:underline">
+                  {isEnglish ? "Login" : "تسجيل الدخول"}
+                </Link>
+              </p>
+            </div>
+          </div>
+        </>
+      ) : (
+        <LoadingPage />
+      )}
     </div>
   );
 }

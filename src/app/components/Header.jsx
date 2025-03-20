@@ -39,7 +39,6 @@ export default function Header() {
   const [userName, setUserName] = useState("");
   const router = useRouter();
 
-  
   const userProfile = useUserProfile();
 
   useEffect(() => {
@@ -49,8 +48,6 @@ export default function Header() {
   useEffect(() => {
     setRandom(Math.floor(Math.random() * 1000));
   }, []);
-
-  
 
   const logout = async () => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -212,11 +209,12 @@ export default function Header() {
                 anchor="bottom end"
                 className={`w-52 origin-top-right rounded-xl ${
                   isEnglish ? "lg:mr-10" : "lg:ml-10"
-                } lg:mt-2 bg-[#0B0D0F33] p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0`}
+                } lg:mt-5 bg-[#0B0D0F33] p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0`}
               >
                 <MenuItem>
                   <button
                     dir={isEnglish ? "ltr" : "rtl"}
+                    onClick={() => router.push("/profile")}
                     className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
                   >
                     <RiUserLine className="size-4 fill-[#38FFE5]" />
@@ -266,6 +264,7 @@ export default function Header() {
                 className={`text-white ${
                   isEnglish ? "text-left" : "text-right"
                 }`}
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 {isEnglish ? "Home" : "الرئيسية"}
               </button>
@@ -289,6 +288,7 @@ export default function Header() {
                       className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
                         isEnglish ? "text-left" : "text-right"
                       }`}
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Edit
                     </button>
@@ -296,6 +296,7 @@ export default function Header() {
                       className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
                         isEnglish ? "text-left" : "text-right"
                       }`}
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Duplicate
                     </button>
@@ -303,6 +304,7 @@ export default function Header() {
                       className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
                         isEnglish ? "text-left" : "text-right"
                       }`}
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Archive
                     </button>
@@ -314,6 +316,7 @@ export default function Header() {
                 className={`text-white ${
                   isEnglish ? "text-left" : "text-right"
                 }`}
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 {isEnglish ? "Events" : "الفعاليات"}
               </button>
@@ -321,6 +324,7 @@ export default function Header() {
                 className={`text-white ${
                   isEnglish ? "text-left" : "text-right"
                 }`}
+                onClick={() => setIsMobileMenuOpen(false)}
               >
                 {isEnglish ? "Leaderboard" : "المتصدرين"}
               </button>
@@ -346,6 +350,7 @@ export default function Header() {
                       className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
                         isEnglish ? "text-left" : "text-right"
                       }`}
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Option 1
                     </button>
@@ -353,6 +358,7 @@ export default function Header() {
                       className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
                         isEnglish ? "text-left" : "text-right"
                       }`}
+                      onClick={() => setIsMobileMenuOpen(false)}
                     >
                       Option 2
                     </button>
@@ -392,8 +398,12 @@ export default function Header() {
                   {mobileUserMenuOpen && (
                     <div className="mt-2 rounded-xl p-2 space-y-2">
                       <button
+                        onClick={() => {
+                          router.push("/profile");
+                          setIsMobileMenuOpen(false);
+                        }}
                         dir={isEnglish ? "ltr" : "rtl"}
-                        className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
+                        className="group flex w-full  items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
                       >
                         <RiUserLine className="size-4 fill-[#38FFE5]" />
                         <span className="text-white">
@@ -401,6 +411,7 @@ export default function Header() {
                         </span>
                       </button>
                       <button
+                        onClick={() => setIsMobileMenuOpen(false)}
                         dir={isEnglish ? "ltr" : "rtl"}
                         className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
                       >
@@ -411,7 +422,10 @@ export default function Header() {
                       </button>
                       <div className="my-1 h-px bg-[#38FFE5]/20" />
                       <button
-                        onClick={() => setIsEnglish(!isEnglish)}
+                        onClick={() => {
+                          setIsEnglish(!isEnglish);
+                          setIsMobileMenuOpen(false);
+                        }}
                         dir={isEnglish ? "ltr" : "rtl"}
                         className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
                       >
@@ -421,7 +435,10 @@ export default function Header() {
                         </span>
                       </button>
                       <button
-                        onClick={logout}
+                        onClick={() => {
+                          logout();
+                          setIsMobileMenuOpen(false);
+                        }}
                         dir={isEnglish ? "ltr" : "rtl"}
                         className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
                       >

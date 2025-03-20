@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import Logo from "@/app/components/Logo";
-import axios from "axios";
+import LoadingPage from "@/app/components/LoadingPage";
 import { useState, useEffect } from "react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { BiLoaderAlt } from "react-icons/bi";
 import { useAuth } from "@/app/context/AuthContext";
-
+import { useLanguage } from "@/app/context/LanguageContext";
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -19,7 +19,9 @@ export default function Login() {
     email: "",
     password: "",
   });
-  const [isEnglish, setIsEnglish] = useState(false);
+  const { isEnglish, setIsEnglish } = useLanguage();
+  const [isLoaded, setIsLoaded] = useState(false);
+   
   const {
     login: authLogin,
     loading: authLoading,
@@ -29,6 +31,10 @@ export default function Login() {
   const toggleLanguage = () => {
     setIsEnglish(!isEnglish);
   };
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   useEffect(() => {
     // Load reCAPTCHA v3
@@ -157,6 +163,7 @@ export default function Login() {
   };
 
   return (
+    isLoaded ? (
     <div className="bg-[#0B0D0F] relative pb-20 min-h-screen">
       <div className="flex items-center flex-col lg:flex-row-reverse justify-between">
         <Logo />
@@ -324,6 +331,9 @@ export default function Login() {
           </p>
         </div>
       </div>
-    </div>
+      </div>
+    ) : (
+      <LoadingPage />
+    )
   );
 }

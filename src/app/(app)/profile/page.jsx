@@ -2,7 +2,7 @@
 import { useLanguage } from "@/app/context/LanguageContext";
 import { FaTiktok } from "react-icons/fa6";
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Achievements from "@/app/components/Achievements";
 import { FaInstagram } from "react-icons/fa6";
@@ -11,19 +11,24 @@ import { FaYoutube } from "react-icons/fa";
 import { FaDiscord } from "react-icons/fa";
 import { BsTwitterX } from "react-icons/bs";
 import ActivityChart from "@/app/components/ActivityChart";
-
+import LoadingPage from "@/app/components/LoadingPage";
 export default function Profile() {
   const [activeTab, setActiveTab] = useState(0);
   const [averageEyeLevel, setAverageEyeLevel] = useState(true);
   const [youSelected, setYouSelected] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
 
   const handleTabClick = (index) => {
     setActiveTab(index);
   };
 
-  const { isEnglish } = useLanguage();
+  const { isEnglish} = useLanguage();
 
-  return (
+  return isLoaded ? (
     <div
       dir={isEnglish ? "ltr" : "rtl"}
       className="pt-40 px-4 sm:px-10 max-w-[2000px] mx-auto"
@@ -497,5 +502,7 @@ export default function Profile() {
         <ActivityChart isEnglish={isEnglish} />
       </div>
     </div>
+  ) : (
+    <LoadingPage />
   );
 }

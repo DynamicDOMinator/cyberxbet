@@ -3,10 +3,17 @@
 import { useLanguage } from "../../context/LanguageContext";
 import Image from "next/image";
 import Achievements from "@/app/components/Achievements";
+import LoadingPage from "@/app/components/LoadingPage";
+import { useState, useEffect } from "react";
 export default function Home() {
   const { isEnglish } = useLanguage();
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  return (
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  return isLoaded ? (
     <div className="max-w-[2000px] mx-auto pb-10 mt-20">
       {/* ads section  */}
       <div className="lg:pt-28 pt-12 lg:px-16 px-5  ">
@@ -297,5 +304,7 @@ export default function Home() {
         </div>
       </div>
     </div>
+  ) : (
+    <LoadingPage />
   );
 }
