@@ -26,7 +26,7 @@ export default function Profile() {
     setActiveTab(index);
   };
 
-  const { isEnglish} = useLanguage();
+  const { isEnglish } = useLanguage();
 
   return isLoaded ? (
     <div
@@ -54,26 +54,26 @@ export default function Profile() {
 
       <div className="flex flex-wrap items-center gap-3 sm:gap-5 mt-8 sm:mt-16">
         <div
-          className="bg-transparent shadow-inner shadow-[#FE2C55] rounded-full w-full sm:w-48 h-12 flex items-center justify-center px-4 mb-2 sm:mb-0"
+          className="bg-transparent shadow-inner shadow-[#FE2C55] rounded-full  w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0"
           style={{ boxShadow: "0px -1.5px 20px 0px #FE2C55 inset" }}
         >
           <span className="text-white text-lg font-medium">TikTok</span>
           <FaTiktok
-            className={`text-white text-xl ${isEnglish ? "ml-3" : "mr-3"}`}
+            className={`text-white  `}
           />
         </div>
 
         <div
-          className="bg-transparent shadow-inner shadow-[#0A66C2] rounded-full w-full sm:w-48 h-12 flex items-center justify-center px-4 mb-2 sm:mb-0"
+          className="bg-transparent shadow-inner shadow-[#0A66C2] rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0"
           style={{ boxShadow: "0px -1.5px 20px 0px #0A66C2 inset" }}
         >
           <span className="text-white text-lg font-medium">LinkedIn</span>
           <FaLinkedin
-            className={`text-white text-xl ${isEnglish ? "ml-3" : "mr-3"}`}
+            className={`text-white text-lg `}
           />
         </div>
         <div
-          className="bg-white/1  rounded-full w-full sm:w-48 h-12 flex items-center justify-center px-4 mb-2 sm:mb-0"
+          className="bg-white/10  rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0"
           style={{
             boxShadow:
               "0px 5px 15px 0px #BA339F inset, 2px -1px 30px 0px #E0AF47 inset",
@@ -81,31 +81,31 @@ export default function Profile() {
         >
           <span className="text-white text-lg font-medium">Instagram</span>
           <FaInstagram
-            className={`text-white text-xl ${isEnglish ? "ml-3" : "mr-3"}`}
+            className={`text-white text-lg `}
           />
         </div>
         <div
-          className="bg-transparent shadow-inner shadow-[#FF0000] rounded-full w-full sm:w-48 h-12 flex items-center justify-center px-4 mb-2 sm:mb-0"
+            className="bg-transparent shadow-inner shadow-[#FF0000] rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0"
           style={{ boxShadow: "0px -1.5px 20px 0px #FF0000 inset" }}
         >
           <span className="text-white text-lg font-medium">Youtube</span>
           <FaYoutube
-            className={`text-white text-xl ${isEnglish ? "ml-3" : "mr-3"}`}
+            className={`text-white text-lg `}
           />
         </div>
         <div
-          className="bg-transparent shadow-inner shadow-[#5865F2] rounded-full w-full sm:w-48 h-12 flex items-center justify-center px-4 mb-2 sm:mb-0"
+          className="bg-transparent shadow-inner shadow-[#5865F2] rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0"
           style={{ boxShadow: "0px -1.5px 20px 0px #5865F2 inset" }}
         >
           <span className="text-white text-lg font-medium">Discord</span>
           <FaDiscord
-            className={`text-[#5865F2] text-xl ${isEnglish ? "ml-3" : "mr-3"}`}
+            className={`text-[#5865F2] text-lg `}
           />
         </div>
-        <div className="bg-black  rounded-full w-full sm:w-48 h-12 flex items-center justify-center px-4 mb-2 sm:mb-0">
+        <div className="bg-black  rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0">
           <span className="text-white text-lg font-medium">Twitter X</span>
           <BsTwitterX
-            className={`text-white text-xl ${isEnglish ? "ml-3" : "mr-3"}`}
+            className={`text-white text-lg `}
           />
         </div>
       </div>
@@ -323,8 +323,6 @@ export default function Profile() {
         </div>
       </div>
 
-      
-
       <div className="my-10">
         <div className="flex flex-col py-4 sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
           <h2 className="text-2xl  font-semibold">
@@ -366,7 +364,7 @@ export default function Profile() {
         <div className="space-y-5">
           {/* Reversing Skill */}
           <div className="flex items-center flex-row-reverse ">
-            <div className="w-full mr-4">
+            <div className="w-full ">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full w-3/4 bg-gradient-to-r from-[#00E2FF] to-[#00F5A0]"
@@ -374,18 +372,18 @@ export default function Profile() {
                 ></div>
               </div>
             </div>
-            <span
-              className={`font-medium text-white  ${
-                isEnglish ? "pr-2" : "pr-5"
+            <div
+              className={`min-w-[130px] ${
+                isEnglish ? "text-left" : "text-right"
               }`}
             >
-              Reversing
-            </span>
+              <span className="font-medium text-white">Reverse</span>
+            </div>
           </div>
 
           {/* Mobile Skill */}
           <div className="flex items-center flex-row-reverse">
-            <div className="w-full mr-4">
+            <div className="w-full ">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full w-3/4 bg-gradient-to-r from-[#00E2FF] to-[#00F5A0]"
@@ -393,18 +391,18 @@ export default function Profile() {
                 ></div>
               </div>
             </div>
-            <span
-              className={`font-medium text-white  ${
-                isEnglish ? "pr-2" : "pr-5"
+            <div
+              className={`min-w-[130px] ${
+                isEnglish ? "text-left" : "text-right"
               }`}
             >
-              Mobile
-            </span>
+              <span className="font-medium text-white">Web</span>
+            </div>
           </div>
 
           {/* PWM Skill */}
           <div className="flex items-center flex-row-reverse">
-            <div className="w-full mr-4">
+            <div className="w-full ">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full w-3/4 bg-gradient-to-r from-[#00E2FF] to-[#00F5A0]"
@@ -412,18 +410,18 @@ export default function Profile() {
                 ></div>
               </div>
             </div>
-            <span
-              className={`font-medium text-white  ${
-                isEnglish ? "pr-2" : "pr-5"
+            <div
+              className={`min-w-[130px] ${
+                isEnglish ? "text-left" : "text-right"
               }`}
             >
-              PWM
-            </span>
+              <span className="font-medium text-white">Misc</span>
+            </div>
           </div>
 
           {/* MISC Skill */}
           <div className="flex items-center flex-row-reverse">
-            <div className="w-full mr-4">
+            <div className="w-full ">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full w-3/4 bg-gradient-to-r from-[#00E2FF] to-[#00F5A0]"
@@ -431,18 +429,18 @@ export default function Profile() {
                 ></div>
               </div>
             </div>
-            <span
-              className={`font-medium text-white  ${
-                isEnglish ? "pr-2" : "pr-5"
+            <div
+              className={`min-w-[130px] ${
+                isEnglish ? "text-left" : "text-right"
               }`}
             >
-              MISC
-            </span>
+              <span className="font-medium text-white">Crypto</span>
+            </div>
           </div>
 
           {/* Hardware Skill */}
           <div className="flex items-center flex-row-reverse">
-            <div className="w-full mr-4">
+            <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full w-3/4 bg-gradient-to-r from-[#00E2FF] to-[#00F5A0]"
@@ -450,18 +448,20 @@ export default function Profile() {
                 ></div>
               </div>
             </div>
-            <span
-              className={`font-medium text-white  ${
-                isEnglish ? "pr-2" : "pr-5"
+            <div
+              className={`min-w-[130px] ${
+                isEnglish ? "text-left" : "text-right"
               }`}
             >
-              Hardware
-            </span>
+              <span className="font-medium text-white">
+                CyberXbytes Learning
+              </span>
+            </div>
           </div>
 
           {/* Forensics Skill */}
           <div className="flex items-center flex-row-reverse">
-            <div className="w-full mr-4">
+            <div className="w-full ">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full w-3/4 bg-gradient-to-r from-[#00E2FF] to-[#00F5A0]"
@@ -469,18 +469,18 @@ export default function Profile() {
                 ></div>
               </div>
             </div>
-            <span
-              className={`font-medium text-white  ${
-                isEnglish ? "pr-2" : "pr-5"
+            <div
+              className={`min-w-[130px] ${
+                isEnglish ? "text-left" : "text-right"
               }`}
             >
-              Forensics
-            </span>
+              <span className="font-medium text-white">Forensic</span>
+            </div>
           </div>
 
           {/* Web Skill */}
           <div className="flex items-center flex-row-reverse">
-            <div className="w-full mr-4">
+            <div className="w-full ">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full w-3/4 bg-gradient-to-r from-[#00E2FF] to-[#00F5A0]"
@@ -488,13 +488,13 @@ export default function Profile() {
                 ></div>
               </div>
             </div>
-            <span
-              className={`font-medium text-white  ${
-                isEnglish ? "pr-2" : "pr-5"
+            <div
+              className={`min-w-[130px] ${
+                isEnglish ? "text-left" : "text-right"
               }`}
             >
-              Web
-            </span>
+              <span className="font-medium text-white">Web</span>
+            </div>
           </div>
         </div>
       </div>
