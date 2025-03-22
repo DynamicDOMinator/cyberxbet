@@ -205,7 +205,7 @@ export default function Profile() {
       <div className="flex flex-col sm:flex-row gap-5 sm:gap-10 items-center my-10">
         <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4 flex gap-4 items-center">
           <div>
-            <Image src="/blood.png" alt="profile" width={56} height={56} />
+            <Image src="/blood.png" alt="profile" width={36} height={36} />
           </div>
           <div>
             <h1>{isEnglish ? "First Bytes" : "البايتس الاولي"}</h1>
@@ -217,7 +217,7 @@ export default function Profile() {
 
         <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4 flex gap-4 items-center">
           <div>
-            <Image src="/byte.png" alt="profile" width={56} height={56} />
+            <Image src="/byte.png" alt="profile" width={36} height={36} />
           </div>
           <div>
             <h1>{isEnglish ? "Total Bytes" : "مجموع البايتس"}</h1>
@@ -235,8 +235,8 @@ export default function Profile() {
               <Image
                 src="/icon-challnge.png"
                 alt="challenges"
-                width={96}
-                height={96}
+                width={56}
+                height={56}
               />
             </div>
             <div>
@@ -281,7 +281,7 @@ export default function Profile() {
         <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4">
           <div className="flex gap-4 items-center">
             <div>
-              <Image src="/server.png" alt="servers" width={96} height={96} />
+              <Image src="/server.png" alt="servers" width={56} height={56} />
             </div>
             <div>
               <h1>{isEnglish ? "Servers Hacked" : "الخوادم المخترقة"}</h1>

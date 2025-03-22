@@ -31,7 +31,7 @@ export default function Achievements() {
 
     <div className="lg:basis-1/3 w-full">
       <div className="flex flex-col items-center gap-4 bg-white/3 backdrop-blur-xl rounded-lg p-4">
-        <Image src="/ranking.png" alt="progress" width={56} height={56} />
+        <Image src="/ranking.png" alt="progress" width={36} height={36} />
         <p className="text-[#BCC9DB] text-[18px]">
           {isEnglish ? "No Ranking" : "لا يوجد تصنيف"}
         </p>
