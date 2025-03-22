@@ -27,6 +27,12 @@ const gradientAnimation = `
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
   }
+  
+  @keyframes pulse {
+    0% { opacity: 0.4; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 0.4; transform: scale(0.8); }
+  }
 `;
 
 export default function Header() {
@@ -187,7 +193,13 @@ export default function Header() {
               dir={isEnglish ? "ltr" : "rtl"}
               className="flex items-center gap-2 text-white"
             >
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              <span
+                className="w-2 h-2 rounded-full bg-[#38FFE5]"
+                style={{
+                  animation: "pulse 3s ease-in-out infinite",
+                  boxShadow: "0 0 5px #38FFE5",
+                }}
+              ></span>
               <span>{random}</span>{" "}
               {isEnglish ? "Players Online" : "عدد اللاعبين"}
             </p>
@@ -372,7 +384,13 @@ export default function Header() {
                   dir={isEnglish ? "ltr" : "rtl"}
                   className="flex items-center gap-2 text-white"
                 >
-                  <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                  <span
+                    className="w-2 h-2 rounded-full bg-[#38FFE5]"
+                    style={{
+                      animation: "pulse 1.5s ease-in-out infinite",
+                      boxShadow: "0 0 5px #38FFE5",
+                    }}
+                  ></span>
                   <span>{random}</span>{" "}
                   {isEnglish ? "Players Online" : "عدد اللاعبين"}
                 </p>

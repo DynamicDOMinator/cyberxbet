@@ -2,7 +2,7 @@
 import { useLanguage } from "@/app/context/LanguageContext";
 import { FaTiktok } from "react-icons/fa6";
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Achievements from "@/app/components/Achievements";
 import { FaInstagram } from "react-icons/fa6";
@@ -17,10 +17,36 @@ export default function Profile() {
   const [averageEyeLevel, setAverageEyeLevel] = useState(true);
   const [youSelected, setYouSelected] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [skillsVisible, setSkillsVisible] = useState(false);
+  const skillsSectionRef = useRef(null);
 
   useEffect(() => {
     setIsLoaded(true);
   }, []);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setSkillsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 }
+    );
+
+    if (skillsSectionRef.current) {
+      observer.observe(skillsSectionRef.current);
+    }
+
+    return () => {
+      if (skillsSectionRef.current) {
+        observer.disconnect();
+      }
+    };
+  }, [isLoaded]);
 
   const handleTabClick = (index) => {
     setActiveTab(index);
@@ -58,9 +84,7 @@ export default function Profile() {
           style={{ boxShadow: "0px -1.5px 20px 0px #FE2C55 inset" }}
         >
           <span className="text-white text-lg font-medium">TikTok</span>
-          <FaTiktok
-            className={`text-white  `}
-          />
+          <FaTiktok className={`text-white  `} />
         </div>
 
         <div
@@ -68,9 +92,7 @@ export default function Profile() {
           style={{ boxShadow: "0px -1.5px 20px 0px #0A66C2 inset" }}
         >
           <span className="text-white text-lg font-medium">LinkedIn</span>
-          <FaLinkedin
-            className={`text-white text-lg `}
-          />
+          <FaLinkedin className={`text-white text-lg `} />
         </div>
         <div
           className="bg-white/10  rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0"
@@ -80,33 +102,25 @@ export default function Profile() {
           }}
         >
           <span className="text-white text-lg font-medium">Instagram</span>
-          <FaInstagram
-            className={`text-white text-lg `}
-          />
+          <FaInstagram className={`text-white text-lg `} />
         </div>
         <div
-            className="bg-transparent shadow-inner shadow-[#FF0000] rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0"
+          className="bg-transparent shadow-inner shadow-[#FF0000] rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0"
           style={{ boxShadow: "0px -1.5px 20px 0px #FF0000 inset" }}
         >
           <span className="text-white text-lg font-medium">Youtube</span>
-          <FaYoutube
-            className={`text-white text-lg `}
-          />
+          <FaYoutube className={`text-white text-lg `} />
         </div>
         <div
           className="bg-transparent shadow-inner shadow-[#5865F2] rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0"
           style={{ boxShadow: "0px -1.5px 20px 0px #5865F2 inset" }}
         >
           <span className="text-white text-lg font-medium">Discord</span>
-          <FaDiscord
-            className={`text-[#5865F2] text-lg `}
-          />
+          <FaDiscord className={`text-[#5865F2] text-lg `} />
         </div>
         <div className="bg-black  rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0">
           <span className="text-white text-lg font-medium">Twitter X</span>
-          <BsTwitterX
-            className={`text-white text-lg `}
-          />
+          <BsTwitterX className={`text-white text-lg `} />
         </div>
       </div>
 
@@ -323,9 +337,9 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="my-10">
+      <div className="my-10" ref={skillsSectionRef}>
         <div className="flex flex-col py-4 sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
-          <h2 className="text-2xl  font-semibold">
+          <h2 className="text-2xl font-semibold">
             {isEnglish ? "Skills Proficiency" : "ملخص المهارات"}
           </h2>
 
@@ -363,12 +377,13 @@ export default function Profile() {
 
         <div className="space-y-5">
           {/* Reversing Skill */}
-          <div className="flex items-center flex-row-reverse ">
-            <div className="w-full ">
+          <div className="flex items-center flex-row-reverse">
+            <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full w-3/4 bg-gradient-to-r from-[#00E2FF] to-[#00F5A0]"
-                  style={{ width: "65%" }}
+                  className={`h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out ${
+                    skillsVisible ? "w-[65%]" : "w-0"
+                  }`}
                 ></div>
               </div>
             </div>
@@ -383,11 +398,12 @@ export default function Profile() {
 
           {/* Mobile Skill */}
           <div className="flex items-center flex-row-reverse">
-            <div className="w-full ">
+            <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full w-3/4 bg-gradient-to-r from-[#00E2FF] to-[#00F5A0]"
-                  style={{ width: "90%" }}
+                  className={`h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-150 ${
+                    skillsVisible ? "w-[90%]" : "w-0"
+                  }`}
                 ></div>
               </div>
             </div>
@@ -402,11 +418,12 @@ export default function Profile() {
 
           {/* PWM Skill */}
           <div className="flex items-center flex-row-reverse">
-            <div className="w-full ">
+            <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full w-3/4 bg-gradient-to-r from-[#00E2FF] to-[#00F5A0]"
-                  style={{ width: "75%" }}
+                  className={`h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-300 ${
+                    skillsVisible ? "w-[75%]" : "w-0"
+                  }`}
                 ></div>
               </div>
             </div>
@@ -421,11 +438,12 @@ export default function Profile() {
 
           {/* MISC Skill */}
           <div className="flex items-center flex-row-reverse">
-            <div className="w-full ">
+            <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full w-3/4 bg-gradient-to-r from-[#00E2FF] to-[#00F5A0]"
-                  style={{ width: "60%" }}
+                  className={`h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-450 ${
+                    skillsVisible ? "w-[60%]" : "w-0"
+                  }`}
                 ></div>
               </div>
             </div>
@@ -443,8 +461,9 @@ export default function Profile() {
             <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full w-3/4 bg-gradient-to-r from-[#00E2FF] to-[#00F5A0]"
-                  style={{ width: "85%" }}
+                  className={`h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-600 ${
+                    skillsVisible ? "w-[85%]" : "w-0"
+                  }`}
                 ></div>
               </div>
             </div>
@@ -461,11 +480,12 @@ export default function Profile() {
 
           {/* Forensics Skill */}
           <div className="flex items-center flex-row-reverse">
-            <div className="w-full ">
+            <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full w-3/4 bg-gradient-to-r from-[#00E2FF] to-[#00F5A0]"
-                  style={{ width: "55%" }}
+                  className={`h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-750 ${
+                    skillsVisible ? "w-[55%]" : "w-0"
+                  }`}
                 ></div>
               </div>
             </div>
@@ -480,11 +500,12 @@ export default function Profile() {
 
           {/* Web Skill */}
           <div className="flex items-center flex-row-reverse">
-            <div className="w-full ">
+            <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
-                  className="h-full rounded-full w-3/4 bg-gradient-to-r from-[#00E2FF] to-[#00F5A0]"
-                  style={{ width: "80%" }}
+                  className={`h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-900 ${
+                    skillsVisible ? "w-[80%]" : "w-0"
+                  }`}
                 ></div>
               </div>
             </div>
