@@ -205,13 +205,15 @@ export default function Header() {
             </p>
             <Menu as="div" className="relative">
               <MenuButton className="flex items-center gap-2 hover:bg-gray-800 transition-all duration-500 py-2 px-2 rounded-md text-white focus:outline-none cursor-pointer">
-                <Image
-                  src="/icon1.png"
-                  width={30}
-                  height={30}
-                  className="rounded-full"
-                  alt="users"
-                />
+                <div className=" border border-[#38FFE5]/50 rounded-full p-1 flex items-center justify-center">
+                  <Image
+                    src="/icon1.png"
+                    width={30}
+                    height={30}
+                    className="rounded-full"
+                    alt="users"
+                  />
+                </div>
                 <p>{userName}</p>
                 <ChevronDownIcon className="size-4 fill-white/60" />
               </MenuButton>
