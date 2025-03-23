@@ -12,6 +12,10 @@ import { FaDiscord } from "react-icons/fa";
 import { BsTwitterX } from "react-icons/bs";
 import ActivityChart from "@/app/components/ActivityChart";
 import LoadingPage from "@/app/components/LoadingPage";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
+
 export default function Profile() {
   const [activeTab, setActiveTab] = useState(0);
   const [averageEyeLevel, setAverageEyeLevel] = useState(true);
@@ -80,46 +84,61 @@ export default function Profile() {
 
       <div className="flex flex-wrap items-center gap-3 sm:gap-5 mt-8 sm:mt-16">
         <div
-          className="bg-transparent shadow-inner shadow-[#FE2C55] rounded-full  w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0"
+          className="bg-transparent shadow-inner shadow-[#FE2C55] rounded-full  w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
           style={{ boxShadow: "0px -1.5px 20px 0px #FE2C55 inset" }}
         >
-          <span className="text-white text-lg font-medium">TikTok</span>
+          <span className={`text-white  font-medium ${inter.className}`}>
+            TikTok
+          </span>
           <FaTiktok className={`text-white  `} />
         </div>
 
         <div
-          className="bg-transparent shadow-inner shadow-[#0A66C2] rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0"
+          className="bg-transparent shadow-inner shadow-[#0A66C2] rounded-full w-[120px]  flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
           style={{ boxShadow: "0px -1.5px 20px 0px #0A66C2 inset" }}
         >
-          <span className="text-white text-lg font-medium">LinkedIn</span>
+          <span className={`text-white font-medium ${inter.className}`}>
+            LinkedIn
+          </span>
           <FaLinkedin className={`text-white text-lg `} />
         </div>
         <div
-          className="bg-white/10  rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0"
+          className="bg-white/10  rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
           style={{
             boxShadow:
               "0px 5px 15px 0px #BA339F inset, 2px -1px 30px 0px #E0AF47 inset",
           }}
         >
-          <span className="text-white text-lg font-medium">Instagram</span>
+          <span className={`text-white font-medium ${inter.className}`}>
+            Instagram
+          </span>
           <FaInstagram className={`text-white text-lg `} />
         </div>
         <div
-          className="bg-transparent shadow-inner shadow-[#FF0000] rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0"
+          className="bg-transparent shadow-inner shadow-[#FF0000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
           style={{ boxShadow: "0px -1.5px 20px 0px #FF0000 inset" }}
         >
-          <span className="text-white text-lg font-medium">Youtube</span>
+          <span className={`text-white font-medium ${inter.className}`}>
+            Youtube
+          </span>
           <FaYoutube className={`text-white text-lg `} />
         </div>
         <div
-          className="bg-transparent shadow-inner shadow-[#5865F2] rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0"
+          className="bg-transparent shadow-inner shadow-[#5865F2] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
           style={{ boxShadow: "0px -1.5px 20px 0px #5865F2 inset" }}
         >
-          <span className="text-white text-lg font-medium">Discord</span>
+          <span className={`text-white font-medium ${inter.className}`}>
+            Discord
+          </span>
           <FaDiscord className={`text-[#5865F2] text-lg `} />
         </div>
-        <div className="bg-black  rounded-full w-[120px] flex items-center justify-center gap-2 px-2 mb-2 sm:mb-0">
-          <span className="text-white text-lg font-medium">Twitter X</span>
+        <div
+          className="bg-transparent shadow-inner shadow-[#000000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+          style={{ boxShadow: "0px -1.5px 20px 0px #000000 inset" }}
+        >
+          <span className={`text-white  font-medium ${inter.className}`}>
+            Twitter X
+          </span>
           <BsTwitterX className={`text-white text-lg `} />
         </div>
       </div>
