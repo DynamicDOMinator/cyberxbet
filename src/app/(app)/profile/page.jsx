@@ -283,28 +283,28 @@ export default function Profile() {
           <div className="px-7 pt-10 flex flex-col gap-8">
             <div className="flex items-center justify-between">
               <p>0</p>
-              <p className="text-[#00D0FF] font-bold text-xl sm:text-2xl">
+              <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
                 {isEnglish ? "Easy" : "سهل"}
               </p>
             </div>
 
             <div className="flex items-center justify-between">
               <p>0</p>
-              <p className="text-[#9DFF00] font-bold text-xl sm:text-2xl">
+              <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
                 {isEnglish ? "Medium" : "متوسط"}
               </p>
             </div>
 
             <div className="flex items-center justify-between">
               <p>0</p>
-              <p className="text-[#FF5E00] font-bold text-xl sm:text-2xl">
+              <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
                 {isEnglish ? "Hard" : "صعب"}
               </p>
             </div>
 
             <div className="flex items-center justify-between">
               <p>0</p>
-              <p className="text-[#FF1100] font-bold text-xl sm:text-2xl">
+              <p className="text-[#FF1100] font-bold text-base sm:text-lg">
                 {isEnglish ? "Very Hard" : "صعب جدا"}
               </p>
             </div>
@@ -327,28 +327,28 @@ export default function Profile() {
           <div className="px-7 pt-10 flex flex-col gap-8">
             <div className="flex items-center justify-between">
               <p>0</p>
-              <p className="text-[#00D0FF] font-bold text-xl sm:text-2xl">
+              <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
                 {isEnglish ? "Easy" : "سهل"}
               </p>
             </div>
 
             <div className="flex items-center justify-between">
               <p>0</p>
-              <p className="text-[#9DFF00] font-bold text-xl sm:text-2xl">
+              <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
                 {isEnglish ? "Medium" : "متوسط"}
               </p>
             </div>
 
             <div className="flex items-center justify-between">
               <p>0</p>
-              <p className="text-[#FF5E00] font-bold text-xl sm:text-2xl">
+              <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
                 {isEnglish ? "Hard" : "صعب"}
               </p>
             </div>
 
             <div className="flex items-center justify-between">
               <p>0</p>
-              <p className="text-[#FF1100] font-bold text-xl sm:text-2xl">
+              <p className="text-[#FF1100] font-bold text-base sm:text-lg">
                 {isEnglish ? "Very Hard" : "صعب جدا"}
               </p>
             </div>
