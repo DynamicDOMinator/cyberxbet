@@ -1508,7 +1508,7 @@ export default function ProfileSettings() {
 
                 <div className="flex gap-4 items-center justify-center order-first sm:order-none">
                   <Image
-                    src="/instagram.png"
+                    src="/instgram-1.png"
                     alt="instagram"
                     width={30}
                     height={30}
