@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { useLanguage } from "@/app/context/LanguageContext";
 
-export default function TrainingChallenges() {
+export default function Servers() {
   const { isEnglish } = useLanguage();
   return (
     <div className="pt-36 mx-auto px-4 py-8 max-w-[2000px]">
@@ -12,14 +12,14 @@ export default function TrainingChallenges() {
           isEnglish ? "text-left" : "text-right"
         }`}
       >
-        {isEnglish ? "Training Challenges" : "التحديات التدريبية"}
+        {isEnglish ? "Servers" : "الخوادم"}
       </h1>
       <p
         className={`pt-3 text-white ${isEnglish ? "text-left" : "text-right"}`}
       >
         {isEnglish
-          ? "Training challenges provided by global companies to develop trainees' skills in various technical specialties such as cloud, security, and networking"
-          : "تحديات تدريبية مقدمة من شركات عالمية لتطوير مهارات المتدربين في تخصصات تقنية مختلفة مثل السحابية والأمن والشبكات"}
+          ? "Servers challenges provided by global companies to develop trainees' skills in various technical specialties such as cloud, security, and networking"
+          : "تحديات خوادم تفاعلية تهدف إلى تقييم وتطوير مهاراتك في اكتشاف الثغرات واختراق الأنظمة ضمن بيئة تنافسية تحاكي سيناريوهات واقعية"}
       </p>
 
       {/* Challenges Grid */}

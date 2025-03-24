@@ -61,7 +61,7 @@ export default function Header() {
     const response = await axios.post(`${apiUrl}/auth/logout`, { token });
 
     Cookies.remove("token");
-   
+
     router.push("/");
   };
 
@@ -124,31 +124,39 @@ export default function Header() {
               <MenuItems
                 transition
                 anchor="bottom end"
-                className="w-52 origin-top-right rounded-xl border border-white/5 bg-white/5 p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+                className="w-52 origin-top-right rounded-xl border border-white/5 bg-black/75 mt-7 p-2 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
               >
                 <MenuItem>
-                  <button className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10">
-                    <PencilIcon className="size-4 fill-white/30" />
-                    Edit
-                  </button>
+                  <Link href="/training-challenges">
+                    <p
+                      dir={isEnglish ? "ltr" : "rtl"}
+                      className="py-2 px-4 hover:bg-white/10 rounded "
+                    >
+                      {isEnglish ? "Training Challenges" : "التحديات التدريبية"}
+                    </p>
+                  </Link>
                 </MenuItem>
                 <MenuItem>
-                  <button className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10">
-                    <Square2StackIcon className="size-4 fill-white/30" />
-                    Duplicate
-                  </button>
+                  <Link href="/competitive-challenges">
+                    <p
+                      dir={isEnglish ? "ltr" : "rtl"}
+                      className="py-2 px-4 hover:bg-white/10 rounded "
+                    >
+                      {isEnglish
+                        ? "Competitive Challenges"
+                        : "التحديات التنافسية"}
+                    </p>
+                  </Link>
                 </MenuItem>
                 <MenuItem>
-                  <button className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10">
-                    <ArchiveBoxIcon className="size-4 fill-white/30" />
-                    Archive
-                  </button>
-                </MenuItem>
-                <MenuItem>
-                  <button className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10">
-                    <TrashIcon className="size-4 fill-white/30" />
-                    Delete
-                  </button>
+                  <Link href="/servers">
+                    <p
+                      dir={isEnglish ? "ltr" : "rtl"}
+                      className="py-2 px-4 hover:bg-white/10 rounded "
+                    >
+                      {isEnglish ? "Servers" : "الخوادم"}
+                    </p>
+                  </Link>
                 </MenuItem>
               </MenuItems>
             </Menu>
@@ -299,30 +307,40 @@ export default function Header() {
                 </button>
                 {mobileChallengesOpen && (
                   <div className="mt-2 bg-[#0B0D0F33] rounded-lg p-2 space-y-2">
-                    <button
-                      className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
-                        isEnglish ? "text-left" : "text-right"
-                      }`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
-                        isEnglish ? "text-left" : "text-right"
-                      }`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Duplicate
-                    </button>
-                    <button
-                      className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
-                        isEnglish ? "text-left" : "text-right"
-                      }`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Archive
-                    </button>
+                    <Link href="/training-challenges">
+                      <button
+                        className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
+                          isEnglish ? "text-left" : "text-right"
+                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {isEnglish
+                          ? "Training Challenges"
+                          : "التحديات التدريبية"}
+                      </button>
+                    </Link>
+                    <Link href="/competitive-challenges">
+                      <button
+                        className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
+                          isEnglish ? "text-left" : "text-right"
+                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {isEnglish
+                          ? "Competitive Challenges"
+                          : "التحديات التنافسية"}
+                      </button>
+                    </Link>
+                    <Link href="/servers">
+                      <button
+                        className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
+                          isEnglish ? "text-left" : "text-right"
+                        }`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
+                        {isEnglish ? "Servers" : "الخوادم"}
+                      </button>
+                    </Link>
                   </div>
                 )}
               </div>
@@ -435,7 +453,6 @@ export default function Header() {
                       </button>
                       <button
                         onClick={() => setIsMobileMenuOpen(false)}
-
                         dir={isEnglish ? "ltr" : "rtl"}
                         className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
                       >
