@@ -61,7 +61,7 @@ export default function Header() {
     const response = await axios.post(`${apiUrl}/auth/logout`, { token });
 
     Cookies.remove("token");
-    Cookies.remove("user");
+   
     router.push("/");
   };
 
@@ -229,7 +229,7 @@ export default function Header() {
                   <button
                     dir={isEnglish ? "ltr" : "rtl"}
                     onClick={() => router.push("/profile")}
-                    className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
+                    className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10 cursor-pointer"
                   >
                     <RiUserLine className="size-4 fill-[#38FFE5]" />
                     {isEnglish ? "Account" : "الحساب"}
@@ -238,7 +238,8 @@ export default function Header() {
                 <MenuItem>
                   <button
                     dir={isEnglish ? "ltr" : "rtl"}
-                    className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
+                    onClick={() => router.push("/profile-settings")}
+                    className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10 cursor-pointer"
                   >
                     <CiSettings className="size-4 fill-[#38FFE5]" />
                     {isEnglish ? "Settings" : "الإعدادات"}
@@ -248,7 +249,7 @@ export default function Header() {
                 <MenuItem>
                   <button
                     dir={isEnglish ? "ltr" : "rtl"}
-                    className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
+                    className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10 cursor-pointer"
                     onClick={() => setIsEnglish(!isEnglish)}
                   >
                     <MdLanguage className="size-4 fill-[#38FFE5]" />
@@ -427,17 +428,22 @@ export default function Header() {
                       >
                         <RiUserLine className="size-4 fill-[#38FFE5]" />
                         <span className="text-white">
-                          {isEnglish ? "Account" : "الحساب"}
+                          <Link href="/profile">
+                            {isEnglish ? "Account" : "الحساب"}
+                          </Link>
                         </span>
                       </button>
                       <button
                         onClick={() => setIsMobileMenuOpen(false)}
+
                         dir={isEnglish ? "ltr" : "rtl"}
                         className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
                       >
                         <CiSettings className="size-4 fill-[#38FFE5]" />
                         <span className="text-white">
-                          {isEnglish ? "Settings" : "الإعدادات"}
+                          <Link href="/profile-settings">
+                            {isEnglish ? "Settings" : "الإعدادات"}
+                          </Link>
                         </span>
                       </button>
                       <div className="my-1 h-px bg-[#38FFE5]/20" />

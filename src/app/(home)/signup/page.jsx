@@ -251,6 +251,7 @@ export default function Signup() {
         user_name: username,
         password: password,
         country: country.value,
+        name: username,
       });
 
       // Handle successful registration
@@ -266,18 +267,40 @@ export default function Signup() {
       }
     } catch (error) {
       console.error("Signup error:", error);
+
+      // Handle error response with validation errors
       if (error.response?.data?.errors) {
+        // Map the server-side errors to our form fields
         const backendErrors = error.response.data.errors;
+        const formattedErrors = {};
+
+        // Process each error key
+        Object.keys(backendErrors).forEach((key) => {
+          // Map server field names to our form field names if needed
+          let fieldName = key;
+          if (key === "user_name") fieldName = "username";
+          // Removed 'name' field mapping
+
+          // Set the first error message for each field
+          if (backendErrors[key] && backendErrors[key].length > 0) {
+            formattedErrors[fieldName] = backendErrors[key][0];
+          }
+        });
+
         setValidationErrors((prev) => ({
           ...prev,
-          ...Object.keys(backendErrors).reduce((acc, key) => {
-            acc[key] = backendErrors[key][0];
-            return acc;
-          }, {}),
+          ...formattedErrors,
         }));
+
+        // If there's a general message, display it as well
+        if (error.response.data.message) {
+          setError(error.response.data.message);
+        }
       } else {
+        // Handle general errors
         setError(
           error.response?.data?.error ||
+            error.response?.data?.message ||
             error.message ||
             (isEnglish
               ? "An error occurred during signup"
@@ -338,8 +361,7 @@ export default function Signup() {
     signup();
   };
 
-  return (
-    isLoaded ? (
+  return isLoaded ? (
     <div className="bg-[#0B0D0F] relative pb-20 min-h-screen">
       <div className="flex items-center flex-col lg:flex-row-reverse justify-between">
         <Logo />
@@ -376,10 +398,10 @@ export default function Signup() {
             <div className="flex flex-col gap-8 mt-10">
               {successMessage && (
                 <div
-                  className="bg-[#1A2025] border border-[#38FFE5] text-white px-4 py-3 rounded-xl relative"
+                  className="bg-[#1A2025]  border border-[#38FFE5] text-center text-white px-4 py-3 rounded-xl relative"
                   role="alert"
                 >
-                  <span className="block sm:inline text-center">
+                  <span className="block sm:inline text-center ">
                     {successMessage}
                   </span>
                 </div>
@@ -637,9 +659,8 @@ export default function Signup() {
           </p>
         </div>
       </div>
-      </div>
-    ) : (
-      <LoadingPage />
-    )
+    </div>
+  ) : (
+    <LoadingPage />
   );
 }

@@ -137,6 +137,58 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Logout function
+  const logout = async (isEnglish = true) => {
+    setError("");
+    setLoading(true);
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) {
+        throw new Error(
+          "API URL not configured. Please check .env.local file."
+        );
+      }
+
+      const token = Cookies.get("token");
+
+      if (token) {
+        await axios.post(`${apiUrl}/auth/logout`, {
+          token,
+        });
+      }
+
+      // Clear token and reset auth state
+      Cookies.remove("token");
+      setIsAuthenticated(false);
+      router.push("/login");
+
+      return {
+        success: true,
+        message: isEnglish
+          ? "Logged out successfully!"
+          : "تم تسجيل الخروج بنجاح!",
+      };
+    } catch (error) {
+      console.error("Logout error:", error);
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        (isEnglish
+          ? "An error occurred during logout"
+          : "حدث خطأ أثناء تسجيل الخروج");
+
+      setError(errorMessage);
+
+      return {
+        success: false,
+        error: error.response?.data || error.message,
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -144,6 +196,7 @@ export function AuthProvider({ children }) {
         error,
         login,
         verifyOtp,
+        logout,
         setError,
         isAuthenticated,
       }}
