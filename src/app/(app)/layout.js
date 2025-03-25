@@ -9,7 +9,7 @@ export default function AppLayout({ children }) {
     <AuthProvider>
       <UserProfileProvider>
         <LanguageProvider>
-          {/* <Header /> */}
+          <Header />
           {children}
         </LanguageProvider>
       </UserProfileProvider>

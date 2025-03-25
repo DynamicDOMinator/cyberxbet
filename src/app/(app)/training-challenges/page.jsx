@@ -68,7 +68,7 @@ export default function TrainingChallenges() {
                 </span>
               </p>
             </div>
-            <button className="text-[#38FFE5] py-2 cursor-pointer hover:shadow-lg font-bold hover:shadow-[#38FFE5] hover:bg-[#38FFE5] hover:text-black transition-all duration-300 px-4 rounded-md">
+            <button className="text-[#38FFE5] lg:hover:py-2 lg:hover:px-4 cursor-pointer lg:hover:shadow-lg font-bold lg:hover:shadow-[#38FFE5] lg:hover:bg-[#38FFE5] lg:hover:text-black transition-all duration-300  rounded-md">
               {isEnglish ? "Start Now" : "إبدأ الآن"}
             </button>
           </div>
@@ -114,7 +114,7 @@ export default function TrainingChallenges() {
                 </span>
               </p>
             </div>
-            <button className="text-[#38FFE5] py-2 cursor-pointer hover:shadow-lg font-bold hover:shadow-[#38FFE5] hover:bg-[#38FFE5] hover:text-black transition-all duration-300 px-4 rounded-md">
+            <button className="text-[#38FFE5] lg:hover:py-2 lg:hover:px-4 cursor-pointer lg:hover:shadow-lg font-bold lg:hover:shadow-[#38FFE5] lg:hover:bg-[#38FFE5] lg:hover:text-black transition-all duration-300  rounded-md">
               {isEnglish ? "Start Now" : "إبدأ الآن"}
             </button>
           </div>
@@ -159,7 +159,7 @@ export default function TrainingChallenges() {
                 </span>
               </p>
             </div>
-            <button className="text-[#38FFE5] py-2 cursor-pointer hover:shadow-lg font-bold hover:shadow-[#38FFE5] hover:bg-[#38FFE5] hover:text-black transition-all duration-300 px-4 rounded-md">
+            <button className="text-[#38FFE5] lg:hover:py-2 lg:hover:px-4 cursor-pointer lg:hover:shadow-lg font-bold lg:hover:shadow-[#38FFE5] lg:hover:bg-[#38FFE5] lg:hover:text-black transition-all duration-300  rounded-md">
               {isEnglish ? "Start Now" : "إبدأ الآن"}
             </button>
           </div>

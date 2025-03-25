@@ -160,10 +160,14 @@ export default function Header() {
                 </MenuItem>
               </MenuItems>
             </Menu>
-            <p className="text-white">{isEnglish ? "Events" : "الفعاليات"}</p>
-            <p className="text-white">
-              {isEnglish ? "Leaderboard" : "المتصدرين"}
-            </p>
+            <Link href="/events">
+              <p className="text-white">{isEnglish ? "Events" : "الفعاليات"}</p>
+            </Link>
+            <Link href="/leaderboard">
+              <p className="text-white">
+                {isEnglish ? "Leaderboard" : "المتصدرين"}
+              </p>
+            </Link>
             <Menu as="div" className="relative">
               <MenuButton className="inline-flex items-center gap-2 py-2 text-white focus:outline-none cursor-pointer">
                 {isEnglish ? "Add Challenge" : "أضف تحدي"}
@@ -345,23 +349,26 @@ export default function Header() {
                 )}
               </div>
 
-              <button
-                className={`text-white ${
-                  isEnglish ? "text-left" : "text-right"
-                }`}
+              <Link href="/events">
+                <button
+                  className={`text-white ${
+                    isEnglish ? "text-left" : "text-right"
+                  }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                {isEnglish ? "Events" : "الفعاليات"}
-              </button>
-              <button
-                className={`text-white ${
-                  isEnglish ? "text-left" : "text-right"
-                }`}
+                  {isEnglish ? "Events" : "الفعاليات"}
+                </button>
+              </Link>
+              <Link href="/leaderboard">
+                <button
+                  className={`text-white ${
+                    isEnglish ? "text-left" : "text-right"
+                  }`}
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {isEnglish ? "Leaderboard" : "المتصدرين"}
-              </button>
-
+                </button>
+              </Link>
               {/* Add Challenge Dropdown */}
               <div className="relative">
                 <button
