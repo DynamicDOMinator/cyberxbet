@@ -1,0 +1,424 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(11, 13, 15, 0.9);
+  overflow: hidden;
+}
+
+/* Base grid - matches the homepage grid */
+.baseGrid {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+      to right,
+      rgba(56, 255, 229, 0.12) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(56, 255, 229, 0.12) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+}
+
+/* LED glow effects that match the main page */
+.ledGlow {
+  position: absolute;
+  width: 650px;
+  height: 310px;
+  background: #38ffe5;
+  opacity: 0.4;
+  filter: blur(200px);
+  pointer-events: none;
+}
+
+.topLeft {
+  top: -100px;
+  left: -100px;
+}
+
+.topRight {
+  top: -200px;
+  right: -60px;
+}
+
+.bottomRight {
+  bottom: -50px;
+  right: -60px;
+  width: 750px;
+  height: 510px;
+}
+
+.bottomLeft {
+  bottom: -50px;
+  left: -100px;
+  width: 650px;
+  height: 510px;
+}
+
+/* Confetti animation */
+.confettiContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  perspective: 700px;
+  z-index: 6;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  top: -10%;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 3px;
+  animation: confettiFall linear forwards;
+  z-index: 6;
+  transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-10%) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+/* Grid overlay animation - grid cells that reveal the content */
+.gridOverlay {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.gridCell {
+  position: absolute;
+  width: 10%;
+  height: 20%;
+  background: rgba(56, 255, 229, 0.15);
+  border: 1px solid rgba(56, 255, 229, 0.3);
+  pointer-events: none;
+}
+
+/* Cyber flash effect instead of blood splash */
+.cyberFlashContainer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  z-index: 3;
+  overflow: hidden;
+}
+
+.cyberFlash {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle at center,
+    rgba(56, 255, 229, 0.8) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.cyberLines {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background-image: repeating-linear-gradient(
+      0deg,
+      rgba(56, 255, 229, 0.2) 0px,
+      rgba(56, 255, 229, 0.2) 1px,
+      transparent 1px,
+      transparent 20px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(56, 255, 229, 0.2) 0px,
+      rgba(56, 255, 229, 0.2) 1px,
+      transparent 1px,
+      transparent 20px
+    );
+  transform: translate(-25%, -25%) rotate(45deg);
+  pointer-events: none;
+}
+
+/* Main container */
+.container {
+  position: relative;
+  width: 90%;
+  max-width: 800px;
+  background: rgba(11, 13, 15, 0.9);
+  border: 2px solid #38ffe5;
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: 0 0 30px rgba(56, 255, 229, 0.3);
+  z-index: 5;
+  overflow: hidden;
+}
+
+/* Header section */
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.headerIcon {
+  font-size: 2.5rem;
+  color: #38ffe5;
+  margin-right: 16px;
+  filter: drop-shadow(0 0 8px rgba(56, 255, 229, 0.7));
+}
+
+.headerTitle h1 {
+  display: flex;
+  flex-direction: column;
+  font-size: 2.5rem;
+  line-height: 1;
+  margin: 0;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.firstWord {
+  color: #fff;
+  letter-spacing: 2px;
+}
+
+.secondWord {
+  color: #38ffe5;
+  letter-spacing: 3px;
+  text-shadow: 0 0 10px rgba(56, 255, 229, 0.7);
+}
+
+/* Achievement card */
+.achievementCard {
+  background: rgba(20, 24, 28, 0.8);
+  border: 1px solid rgba(56, 255, 229, 0.3);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.achievementHeader {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid rgba(56, 255, 229, 0.2);
+}
+
+.trophy {
+  font-size: 2.5rem;
+  color: #ffd700;
+  margin-right: 20px;
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.4));
+  animation: trophyPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes trophyPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.achievementTitle {
+  flex: 1;
+}
+
+.achievementTitle h2 {
+  color: #fff;
+  font-size: 1.8rem;
+  margin: 0 0 8px 0;
+  font-weight: 700;
+}
+
+.subtitle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1rem;
+}
+
+.challenge {
+  display: flex;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.challenge svg {
+  font-size: 0.9rem;
+}
+
+.challenge svg:first-child {
+  color: #ff3e4f;
+  margin-right: 4px;
+}
+
+.arrow {
+  width: 20px;
+  height: 2px;
+  background: #38ffe5;
+  margin: 0 4px;
+  position: relative;
+}
+
+.arrow:after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 4px 0 4px 6px;
+  border-color: transparent transparent transparent #38ffe5;
+}
+
+.challenge svg:nth-child(3) {
+  color: #38ffe5;
+  margin-right: 8px;
+}
+
+.challengeName {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Achievement stats */
+.achievementBody {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: rgba(56, 255, 229, 0.05);
+}
+
+.stat {
+  text-align: center;
+  flex: 1;
+}
+
+.statValue {
+  color: #38ffe5;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.statLabel {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+}
+
+/* Terminal box */
+.terminalBox {
+  margin-top: 16px;
+  background: #0a0d0f;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(56, 255, 229, 0.2);
+}
+
+.terminalHeader {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(56, 255, 229, 0.1);
+  border-bottom: 1px solid rgba(56, 255, 229, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+}
+
+.terminalIcon {
+  color: #38ffe5;
+  margin-right: 8px;
+  font-size: 0.9rem;
+}
+
+.terminalBody {
+  padding: 12px;
+  font-family: "Courier New", monospace;
+}
+
+.terminalLine {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
+.prompt {
+  color: #38ffe5;
+  margin-right: 6px;
+}
+
+.highlight {
+  color: #38ffe5;
+  font-weight: bold;
+}
+
+.cursor {
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  background-color: #38ffe5;
+  animation: blink 1s infinite;
+  vertical-align: middle;
+}
+
+@keyframes blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Security icon */
+.securityIcon {
+  position: absolute;
+  bottom: -30px;
+  right: -30px;
+  font-size: 10rem;
+  color: rgba(56, 255, 229, 0.1);
+  transform: rotate(-15deg);
+  z-index: -1;
+}
+
+@media (max-width: 768px) {
+  .headerTitle h1 {
+    font-size: 2rem;
+  }
+
+  .achievementTitle h2 {
+    font-size: 1.5rem;
+  }
+
+  .trophy {
+    font-size: 2rem;
+  }
+
+  .container {
+    padding: 16px;
+  }
+}
