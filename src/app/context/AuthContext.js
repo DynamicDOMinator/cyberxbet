@@ -6,18 +6,18 @@ import Cookies from "js-cookie";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
 
-  // Check if user is authenticated on initial load
+  // Add this useEffect for initial authentication check
   useEffect(() => {
     const token = Cookies.get("token");
-
     if (token) {
       setIsAuthenticated(true);
     }
+    setLoading(false);
   }, []);
 
   // Login function
@@ -28,9 +28,7 @@ export function AuthProvider({ children }) {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       if (!apiUrl) {
-        throw new Error(
-          "API URL not configured. Please check .env.local file."
-        );
+        throw new Error("API URL not configured");
       }
 
       const response = await axios.post(`${apiUrl}/auth/login`, {
@@ -39,12 +37,15 @@ export function AuthProvider({ children }) {
         recaptchaToken,
       });
 
-      // Handle successful login
       if (response.data.token && response.data.user) {
         Cookies.set("token", response.data.token);
-
         setIsAuthenticated(true);
+        setLoading(false);
+
+        // Ensure state is updated before navigation
+        await new Promise((resolve) => setTimeout(resolve, 100));
         router.push("/home");
+
         return {
           success: true,
           data: response.data,
