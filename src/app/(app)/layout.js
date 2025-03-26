@@ -5,10 +5,11 @@ import { LanguageProvider } from "../context/LanguageContext";
 import Header from "../components/Header";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
+import LoadingPage from "../components/LoadingPage";
+
 
 export default function AppLayout({ children }) {
-  const router = useRouter();
+
 
   return (
     <AuthProvider>
@@ -28,7 +29,7 @@ function AuthStateWrapper({ children }) {
   }, [isAuthenticated, loading, router]);
 
   if (loading) {
-    return <div>Loading...</div>; // Or your loading component
+    return <LoadingPage />;
   }
 
   return isAuthenticated ? (

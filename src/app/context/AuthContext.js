@@ -11,13 +11,40 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
 
-  // Add this useEffect for initial authentication check
+  // Token validation using an existing endpoint or JWT decoding
   useEffect(() => {
-    const token = Cookies.get("token");
-    if (token) {
-      setIsAuthenticated(true);
-    }
-    setLoading(false);
+    const validateToken = async () => {
+      const token = Cookies.get("token");
+
+      if (!token) {
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+        // Option 1: Use an existing profile or user endpoint that requires authentication
+        const response = await axios.get(`${apiUrl}/user/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        // If the request succeeds, the token is valid
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Token validation error:", error);
+        // If we get 401/403 or any error, the token is likely invalid
+        Cookies.remove("token");
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    validateToken();
   }, []);
 
   // Login function
