@@ -36,7 +36,6 @@ export function AuthProvider({ children }) {
         setIsAuthenticated(true);
       } catch (error) {
         console.error("Token validation error:", error);
-        // If we get 401/403 or any error, the token is likely invalid
         Cookies.remove("token");
         setIsAuthenticated(false);
       } finally {
@@ -68,7 +67,6 @@ export function AuthProvider({ children }) {
         setIsAuthenticated(true);
         setLoading(false);
 
-        // Ensure state is updated before navigation
         await new Promise((resolve) => setTimeout(resolve, 100));
         router.push("/home");
 
@@ -108,7 +106,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Verify OTP
+  
   const verifyOtp = async (otpData, isEnglish = true) => {
     setError("");
     setLoading(true);
@@ -118,7 +116,7 @@ export function AuthProvider({ children }) {
 
       const response = await axios.post(`${apiUrl}/auth/verify-otp`, otpData);
 
-      // Handle successful verification and login
+     
       if (response.data.token && response.data.user) {
         Cookies.set("token", response.data.token);
 
@@ -135,7 +133,7 @@ export function AuthProvider({ children }) {
         };
       }
 
-      // If response doesn't contain token/user but was successful
+    
       return {
         success: true,
         data: response.data,
@@ -185,7 +183,6 @@ export function AuthProvider({ children }) {
         });
       }
 
-      // Clear token and reset auth state
       Cookies.remove("token");
       setIsAuthenticated(false);
       router.push("/login");

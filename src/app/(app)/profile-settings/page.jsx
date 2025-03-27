@@ -20,6 +20,7 @@ import { useAuth } from "@/app/context/AuthContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export default function ProfileSettings() {
+  
   const { isEnglish } = useLanguage();
   const { logout } = useAuth();
   const {
@@ -29,7 +30,6 @@ export default function ProfileSettings() {
     loading,
     error,
     fetchUserProfile,
-    updateUserProfile,
     profileImage: contextProfileImage,
     setError,
   } = useUserProfile();
@@ -58,7 +58,6 @@ export default function ProfileSettings() {
   const [editingEmail, setEditingEmail] = useState(false);
   const [originalEmail, setOriginalEmail] = useState("");
 
-  // Initialize all social accounts as unlinked
   const [socialAccounts, setSocialAccounts] = useState({
     discord: { linked: false, value: "" },
     instagram: { linked: false, value: "" },
@@ -76,40 +75,31 @@ export default function ProfileSettings() {
   const otpInputRefs = useRef([]);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Add a new state to track username changes
   const [inputUserName, setInputUserName] = useState("");
 
-  // Add these new state variables and refs
   const [profileImage, setProfileImage] = useState("/user.png");
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Add new state to track if any changes have been made
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Add a state to track if the username is being edited
   const [editingUserName, setEditingUserName] = useState(false);
   const [originalUserName, setOriginalUserName] = useState("");
 
-  // Add a new state variable:
   const [savingProfile, setSavingProfile] = useState(false);
 
-  // Add state to track initial loading
   const [initialLoading, setInitialLoading] = useState(true);
 
-  // Add new state for password change
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
 
-  // Add new state variables for saving social media changes
   const [savingSocialMedia, setSavingSocialMedia] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
 
-  // Custom styles for the country select component
   const countrySelectStyles = {
     control: (styles, { isFocused }) => ({
       ...styles,
@@ -119,7 +109,7 @@ export default function ProfileSettings() {
         ? "0px 0px 0px 1px #00D8C8, 0px 0px 10px 0px #00D8C8"
         : "none",
       padding: "6px",
-      borderRadius: "0.375rem",
+      borderRadius: "0.75rem",
       "&:hover": {
         borderColor: "#00D8C8",
       },
@@ -1041,7 +1031,7 @@ export default function ProfileSettings() {
 
             <div>
               <h1 className="text-2xl sm:text-4xl font-semibold ">
-                Mahmoud Fatouh
+                {userName}
               </h1>
               <p className="text-xl sm:text-3xl font-semibold">
                 {isEnglish ? "Beginner" : "مبتدئ"}
@@ -1221,7 +1211,7 @@ export default function ProfileSettings() {
                   onFocus={handleUsernameFocus}
                   onBlur={handleUsernameBlur}
                   placeholder={userName || ""}
-                  className="bg-black rounded-md p-3 text-right w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300 text-white placeholder-gray-500"
+                  className="bg-black rounded-xl p-3 text-right w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300 text-white placeholder-gray-500"
                 />
               </div>
 
@@ -1237,18 +1227,18 @@ export default function ProfileSettings() {
                           type="email"
                           value={newEmail}
                           onChange={(e) => setNewEmail(e.target.value)}
-                          className="bg-black rounded-md rounded-r-none p-3 text-right w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300"
+                          className="bg-black rounded-xl rounded-r-none p-3 text-right w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300"
                         />
                         <div className="flex gap-2">
                           <button
                             onClick={handleEmailUpdate}
-                            className="bg-[#00D8C8] text-black rounded-md font-bold px-4 hover:shadow-[0px_0px_15px_0px_#00D8C8] transition-all duration-300"
+                            className="bg-[#00D8C8] text-black rounded-xl font-bold px-4 hover:shadow-[0px_0px_15px_0px_#00D8C8] transition-all duration-300"
                           >
-                            {isEnglish ? "Save" : "حفظ"}
+                            {isEnglish ? "Save" : "حفظ"}  
                           </button>
                           <button
                             onClick={cancelEmailEdit}
-                            className="text-red-500 border-2 border-red-500 font-bold px-4 rounded-md hover:shadow-[0px_0px_15px_0px_#ff0000] transition-all duration-300"
+                            className="text-red-500 border-2 border-red-500 font-bold px-4 rounded-xl hover:shadow-[0px_0px_15px_0px_#ff0000] transition-all duration-300"
                           >
                             {isEnglish ? "Cancel" : "الغاء"}
                           </button>
@@ -1260,7 +1250,7 @@ export default function ProfileSettings() {
                       <input
                         type="email"
                         placeholder={email}
-                        className="bg-black rounded-md p-3 text-right pr-12 w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300"
+                        className="bg-black rounded-xl p-3 text-right pr-12 w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300"
                         readOnly
                       />
                       <button
@@ -1308,7 +1298,7 @@ export default function ProfileSettings() {
                   {isEnglish ? "Timezone" : "المنطقة الزمنية"}
                 </label>
                 <div className="relative">
-                  <select className="bg-black rounded-md p-3 w-full appearance-none text-right pr-10 focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300">
+                  <select className="bg-black rounded-xl p-3 w-full appearance-none text-right pr-10 focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300">
                     <option value="cairo">Egypt, Cairo</option>
                     {/* Add more timezones as needed */}
                   </select>
@@ -1424,7 +1414,7 @@ export default function ProfileSettings() {
                     onChange={(e) =>
                       handleSocialMediaChange("discord", e.target.value)
                     }
-                    className={`bg-black rounded-md p-3 w-full lg:w-1/2 text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
+                    className={`bg-black rounded-xl p-3 w-full lg:w-1/2 text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
                       validationErrors.discord
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : "border-transparent"
@@ -1528,7 +1518,7 @@ export default function ProfileSettings() {
                     onChange={(e) =>
                       handleSocialMediaChange("linkedin", e.target.value)
                     }
-                    className={`bg-black rounded-md p-3 w-full lg:w-1/2 text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
+                    className={`bg-black rounded-xl p-3 w-full lg:w-1/2 text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
                       validationErrors.linkedin
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : "border-transparent"
@@ -1630,7 +1620,7 @@ export default function ProfileSettings() {
                     onChange={(e) =>
                       handleSocialMediaChange("instagram", e.target.value)
                     }
-                    className={`bg-black rounded-md p-3 w-full lg:w-1/2 text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
+                    className={`bg-black rounded-xl p-3 w-full lg:w-1/2 text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
                       validationErrors.instagram
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : "border-transparent"
@@ -1735,7 +1725,7 @@ export default function ProfileSettings() {
                     onChange={(e) =>
                       handleSocialMediaChange("tiktok", e.target.value)
                     }
-                    className={`bg-black rounded-md p-3 w-full text-right lg:w-1/2 focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
+                    className={`bg-black rounded-xl p-3 w-full text-right lg:w-1/2 focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
                       validationErrors.tiktok
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : "border-transparent"
@@ -1839,7 +1829,7 @@ export default function ProfileSettings() {
                     onChange={(e) =>
                       handleSocialMediaChange("youtube", e.target.value)
                     }
-                    className={`bg-black rounded-md p-3 w-full text-right lg:w-1/2 focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
+                    className={`bg-black rounded-xl p-3 w-full text-right lg:w-1/2 focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
                       validationErrors.youtube
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : "border-transparent"
@@ -1943,7 +1933,7 @@ export default function ProfileSettings() {
                     onChange={(e) =>
                       handleSocialMediaChange("twitter", e.target.value)
                     }
-                    className={`bg-black rounded-md p-3 w-full text-right lg:w-1/2 focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
+                    className={`bg-black rounded-xl p-3 w-full text-right lg:w-1/2 focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
                       validationErrors.twitter
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : "border-transparent"
@@ -2126,7 +2116,7 @@ export default function ProfileSettings() {
                       type={showCurrentPassword ? "text" : "password"}
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="bg-black rounded-md p-3 text-left w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300"
+                      className="bg-black rounded-xl p-3 text-left w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300"
                       placeholder={
                         isEnglish
                           ? "Enter current password"
@@ -2192,7 +2182,7 @@ export default function ProfileSettings() {
                       type={showNewPassword ? "text" : "password"}
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
-                      className="bg-black rounded-md p-3 text-left w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300"
+                      className="bg-black rounded-xl p-3 text-left w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300"
                       placeholder={
                         isEnglish
                           ? "Enter new password"

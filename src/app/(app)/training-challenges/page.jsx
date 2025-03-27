@@ -15,11 +15,12 @@ export default function TrainingChallenges() {
         {isEnglish ? "Training Challenges" : "التحديات التدريبية"}
       </h1>
       <p
+        dir={isEnglish ? "ltr" : "rtl"}
         className={`pt-3 text-white ${isEnglish ? "text-left" : "text-right"}`}
       >
         {isEnglish
-          ? "Training challenges provided by global companies to develop trainees' skills in various technical specialties such as cloud, security, and networking"
-          : "تحديات تدريبية مقدمة من شركات عالمية لتطوير مهارات المتدربين في تخصصات تقنية مختلفة مثل السحابية والأمن والشبكات"}
+          ? "Training challenges provided by CyberXbytes aimed at developing trainees' skills in solving CTF challenges and vulnerability analysis within a realistic and secure environment."
+          : "تحديات تدريبية مقدمة من CyberXbytes تهدف إلى تطوير مهارات المتدربين في حل تحديات CTF وتحليل الثغرات ضمن بيئة واقعية وآمنة."}
       </p>
 
       {/* Challenges Grid */}

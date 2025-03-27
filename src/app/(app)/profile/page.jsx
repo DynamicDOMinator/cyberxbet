@@ -13,19 +13,62 @@ import { BsTwitterX } from "react-icons/bs";
 import ActivityChart from "@/app/components/ActivityChart";
 import LoadingPage from "@/app/components/LoadingPage";
 import { Inter } from "next/font/google";
+import { useUserProfile } from "@/app/context/UserProfileContext";
+import Cookies from "js-cookie";
+import axios from "axios";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export default function Profile() {
+  const { isEnglish } = useLanguage();
+  const { userName, profileImage: contextProfileImage } = useUserProfile();
   const [activeTab, setActiveTab] = useState(0);
   const [averageEyeLevel, setAverageEyeLevel] = useState(true);
   const [youSelected, setYouSelected] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [skillsVisible, setSkillsVisible] = useState(false);
+  const [socialAccounts, setSocialAccounts] = useState({
+    discord: { linked: false },
+    instagram: { linked: false },
+    linkedin: { linked: false },
+    tiktok: { linked: false },
+    youtube: { linked: false },
+    twitter: { linked: false },
+  });
   const skillsSectionRef = useRef(null);
+
+  const fetchSocialMediaLinks = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
+
+      const response = await axios.get(`${apiUrl}/user/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const userData = response.data.user;
+
+      if (userData && userData.socialMedia) {
+        const userSocialMedia = userData.socialMedia;
+        setSocialAccounts({
+          discord: { linked: !!userSocialMedia.discord },
+          instagram: { linked: !!userSocialMedia.instagram },
+          twitter: { linked: !!userSocialMedia.twitter },
+          tiktok: { linked: !!userSocialMedia.tiktok },
+          youtube: { linked: !!userSocialMedia.youtube },
+          linkedin: { linked: !!userSocialMedia.linkedIn },
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching social media links:", error);
+    }
+  };
 
   useEffect(() => {
     setIsLoaded(true);
+    fetchSocialMediaLinks();
   }, []);
 
   useEffect(() => {
@@ -56,8 +99,6 @@ export default function Profile() {
     setActiveTab(index);
   };
 
-  const { isEnglish } = useLanguage();
-
   return isLoaded ? (
     <div
       dir={isEnglish ? "ltr" : "rtl"}
@@ -65,17 +106,28 @@ export default function Profile() {
     >
       <div className="flex items-center gap-3 sm:gap-5">
         <div>
-          <Image
-            className="rounded-full w-16 h-16 sm:w-[88px] sm:h-[88px]"
-            src="/user.png"
-            alt="profile"
-            width={88}
-            height={88}
-          />
+          {contextProfileImage ? (
+            <img
+              className="rounded-full w-16 h-16 sm:w-[88px] sm:h-[88px] object-cover"
+              src={contextProfileImage}
+              alt="profile"
+              onError={(e) => {
+                e.target.src = "/user.png"; // Fallback to default if remote image fails
+              }}
+            />
+          ) : (
+            <Image
+              className="rounded-full w-16 h-16 sm:w-[88px] sm:h-[88px]"
+              src="/user.png"
+              alt="profile"
+              width={88}
+              height={88}
+            />
+          )}
         </div>
 
         <div>
-          <h1 className="text-2xl sm:text-4xl font-semibold">Mahmoud Fatouh</h1>
+          <h1 className="text-2xl sm:text-4xl font-semibold">{userName}</h1>
           <p className="text-xl sm:text-3xl font-semibold">
             {isEnglish ? "Beginner" : "مبتدئ"}
           </p>
@@ -83,64 +135,80 @@ export default function Profile() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3 sm:gap-5 mt-8 sm:mt-16">
-        <div
-          className="bg-transparent shadow-inner shadow-[#FE2C55] rounded-full  w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
-          style={{ boxShadow: "0px -1.5px 20px 0px #FE2C55 inset" }}
-        >
-          <span className={`text-white  font-medium ${inter.className}`}>
-            TikTok
-          </span>
-          <FaTiktok className={`text-white  `} />
-        </div>
+        {socialAccounts.tiktok.linked && (
+          <div
+            className="bg-transparent shadow-inner shadow-[#FE2C55] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+            style={{ boxShadow: "0px -1.5px 20px 0px #FE2C55 inset" }}
+          >
+            <span className={`text-white font-medium ${inter.className}`}>
+              TikTok
+            </span>
+            <FaTiktok className={`text-white`} />
+          </div>
+        )}
 
-        <div
-          className="bg-transparent shadow-inner shadow-[#0A66C2] rounded-full w-[120px]  flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
-          style={{ boxShadow: "0px -1.5px 20px 0px #0A66C2 inset" }}
-        >
-          <span className={`text-white font-medium ${inter.className}`}>
-            LinkedIn
-          </span>
-          <FaLinkedin className={`text-white text-lg `} />
-        </div>
-        <div
-          className="bg-white/10  rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
-          style={{
-            boxShadow:
-              "0px 5px 15px 0px #BA339F inset, 2px -1px 30px 0px #E0AF47 inset",
-          }}
-        >
-          <span className={`text-white font-medium ${inter.className}`}>
-            Instagram
-          </span>
-          <FaInstagram className={`text-white text-lg `} />
-        </div>
-        <div
-          className="bg-transparent shadow-inner shadow-[#FF0000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
-          style={{ boxShadow: "0px -1.5px 20px 0px #FF0000 inset" }}
-        >
-          <span className={`text-white font-medium ${inter.className}`}>
-            Youtube
-          </span>
-          <FaYoutube className={`text-white text-lg `} />
-        </div>
-        <div
-          className="bg-transparent shadow-inner shadow-[#5865F2] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
-          style={{ boxShadow: "0px -1.5px 20px 0px #5865F2 inset" }}
-        >
-          <span className={`text-white font-medium ${inter.className}`}>
-            Discord
-          </span>
-          <FaDiscord className={`text-[#5865F2] text-lg `} />
-        </div>
-        <div
-          className="bg-transparent shadow-inner shadow-[#000000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
-          style={{ boxShadow: "0px -1.5px 20px 0px #000000 inset" }}
-        >
-          <span className={`text-white  font-medium ${inter.className}`}>
-            Twitter X
-          </span>
-          <BsTwitterX className={`text-white text-lg `} />
-        </div>
+        {socialAccounts.linkedin.linked && (
+          <div
+            className="bg-transparent shadow-inner shadow-[#0A66C2] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+            style={{ boxShadow: "0px -1.5px 20px 0px #0A66C2 inset" }}
+          >
+            <span className={`text-white font-medium ${inter.className}`}>
+              LinkedIn
+            </span>
+            <FaLinkedin className={`text-white text-lg`} />
+          </div>
+        )}
+
+        {socialAccounts.instagram.linked && (
+          <div
+            className="bg-white/10 rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+            style={{
+              boxShadow:
+                "0px 5px 15px 0px #BA339F inset, 2px -1px 30px 0px #E0AF47 inset",
+            }}
+          >
+            <span className={`text-white font-medium ${inter.className}`}>
+              Instagram
+            </span>
+            <FaInstagram className={`text-white text-lg`} />
+          </div>
+        )}
+
+        {socialAccounts.youtube.linked && (
+          <div
+            className="bg-transparent shadow-inner shadow-[#FF0000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+            style={{ boxShadow: "0px -1.5px 20px 0px #FF0000 inset" }}
+          >
+            <span className={`text-white font-medium ${inter.className}`}>
+              Youtube
+            </span>
+            <FaYoutube className={`text-white text-lg`} />
+          </div>
+        )}
+
+        {socialAccounts.discord.linked && (
+          <div
+            className="bg-transparent shadow-inner shadow-[#5865F2] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+            style={{ boxShadow: "0px -1.5px 20px 0px #5865F2 inset" }}
+          >
+            <span className={`text-white font-medium ${inter.className}`}>
+              Discord
+            </span>
+            <FaDiscord className={`text-[#5865F2] text-lg`} />
+          </div>
+        )}
+
+        {socialAccounts.twitter.linked && (
+          <div
+            className="bg-transparent shadow-inner shadow-[#000000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+            style={{ boxShadow: "0px -1.5px 20px 0px #000000 inset" }}
+          >
+            <span className={`text-white font-medium ${inter.className}`}>
+              Twitter X
+            </span>
+            <BsTwitterX className={`text-white text-lg`} />
+          </div>
+        )}
       </div>
 
       {/* tabs  */}
