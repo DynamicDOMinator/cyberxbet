@@ -56,7 +56,7 @@ export default function Events() {
         {events.map((event) => (
           <div
             key={event.id}
-            className="bg-gray-900 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
+            className="bg-white/1 rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
           >
             <div className="bg-[url('/challnge-bg.jpg')] bg-cover bg-center py-8 md:py-14 px-4">
               <h2 className="text-3xl md:text-5xl text-center font-extrabold text-white mb-2">

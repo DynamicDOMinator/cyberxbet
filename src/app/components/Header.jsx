@@ -46,6 +46,7 @@ export default function Header() {
   const router = useRouter();
 
   const userProfile = useUserProfile();
+  const { profileImage } = userProfile;
 
   useEffect(() => {
     setUserName(userProfile?.userName);
@@ -217,13 +218,17 @@ export default function Header() {
             </p>
             <Menu as="div" className="relative">
               <MenuButton className="flex items-center gap-2 hover:bg-gray-800 transition-all duration-500 py-2 px-2 rounded-md text-white focus:outline-none cursor-pointer">
-                <div className=" border border-[#38FFE5]/50 rounded-full p-1 flex items-center justify-center">
+                <div
+                  className={`${
+                    !profileImage ? "border border-[#38FFE5]/50" : ""
+                  } rounded-full p-1 flex items-center justify-center`}
+                >
                   <Image
-                    src="/icon1.png"
+                    src={profileImage || "/icon1.png"}
                     width={30}
                     height={30}
-                    className="rounded-full"
-                    alt="users"
+                    className="rounded-full object-cover"
+                    alt="user profile"
                   />
                 </div>
                 <p>{userName}</p>
@@ -354,8 +359,8 @@ export default function Header() {
                   className={`text-white ${
                     isEnglish ? "text-left" : "text-right"
                   }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
                   {isEnglish ? "Events" : "الفعاليات"}
                 </button>
               </Link>
@@ -364,9 +369,9 @@ export default function Header() {
                   className={`text-white ${
                     isEnglish ? "text-left" : "text-right"
                   }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {isEnglish ? "Leaderboard" : "المتصدرين"}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {isEnglish ? "Leaderboard" : "المتصدرين"}
                 </button>
               </Link>
               {/* Add Challenge Dropdown */}
@@ -428,12 +433,19 @@ export default function Header() {
                     onClick={() => setMobileUserMenuOpen(!mobileUserMenuOpen)}
                     className="flex items-center gap-2 text-white w-full"
                   >
-                    <Image
-                      src="/icon1.png"
-                      width={20}
-                      height={20}
-                      alt="users"
-                    />
+                    <div
+                      className={`${
+                        !profileImage ? "border border-[#38FFE5]/50" : ""
+                      } rounded-full flex items-center justify-center`}
+                    >
+                      <Image
+                        src={profileImage || "/icon1.png"}
+                        width={20}
+                        height={20}
+                        className="rounded-full object-cover"
+                        alt="user profile"
+                      />
+                    </div>
                     <span>{userName}</span>
                     <ChevronDownIcon
                       className={`w-5 h-5 transition-transform ${

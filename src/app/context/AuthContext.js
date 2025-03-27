@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   // Login function
-  const login = async (email, password, recaptchaToken, isEnglish = true) => {
+  const login = async (login, password, isEnglish = true) => {
     setError("");
     setLoading(true);
 
@@ -59,9 +59,8 @@ export function AuthProvider({ children }) {
       }
 
       const response = await axios.post(`${apiUrl}/auth/login`, {
-        email,
+        login,
         password,
-        recaptchaToken,
       });
 
       if (response.data.token && response.data.user) {

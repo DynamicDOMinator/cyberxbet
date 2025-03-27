@@ -324,10 +324,12 @@ export default function ProfileSettings() {
 
       // Create an object with just this platform
       const socialMediaData = {
-        [platform]: socialAccounts[platform].value,
+        // Use linkedIn with capital I for the API
+        [platform === "linkedin" ? "linkedIn" : platform]:
+          socialAccounts[platform].value,
       };
 
-      await axios.post(
+      const response = await axios.post(
         `${apiUrl}/user/change-socialmedia-links`,
         socialMediaData,
         {
@@ -338,15 +340,49 @@ export default function ProfileSettings() {
         }
       );
 
-      // Update linked status
-      setSocialAccounts({
-        ...socialAccounts,
-        [platform]: {
-          ...socialAccounts[platform],
-          linked: true,
+      // Get the updated social media links from the response
+      const updatedSocialMedia = response.data.social_media;
+
+      // Update the state based on the API response
+      setSocialAccounts((prev) => ({
+        ...prev,
+        discord: {
+          ...prev.discord,
+          linked: !!updatedSocialMedia.discord,
+          value: updatedSocialMedia.discord || "",
           linking: false,
         },
-      });
+        instagram: {
+          ...prev.instagram,
+          linked: !!updatedSocialMedia.instagram,
+          value: updatedSocialMedia.instagram || "",
+          linking: false,
+        },
+        linkedin: {
+          ...prev.linkedin,
+          linked: !!updatedSocialMedia.linkedIn,
+          value: updatedSocialMedia.linkedIn || "",
+          linking: false,
+        },
+        twitter: {
+          ...prev.twitter,
+          linked: !!updatedSocialMedia.twitter,
+          value: updatedSocialMedia.twitter || "",
+          linking: false,
+        },
+        tiktok: {
+          ...prev.tiktok,
+          linked: !!updatedSocialMedia.tiktok,
+          value: updatedSocialMedia.tiktok || "",
+          linking: false,
+        },
+        youtube: {
+          ...prev.youtube,
+          linked: !!updatedSocialMedia.youtube,
+          value: updatedSocialMedia.youtube || "",
+          linking: false,
+        },
+      }));
 
       setSuccessMessage(
         isEnglish
@@ -385,14 +421,15 @@ export default function ProfileSettings() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = Cookies.get("token");
 
-      // Send an empty string to unlink
-      const socialMediaData = {
-        [platform]: "",
-      };
+      // Send platform name in the request body
+      // Map 'linkedin' to 'linkedIn' for the API
+      const apiPlatform = platform === "linkedin" ? "linkedIn" : platform;
 
-      await axios.post(
-        `${apiUrl}/user/change-socialmedia-links`,
-        socialMediaData,
+      const response = await axios.post(
+        `${apiUrl}/user/unlink-socialmedia-links`,
+        {
+          platform: apiPlatform,
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -401,15 +438,49 @@ export default function ProfileSettings() {
         }
       );
 
-      // Update linked status and clear the value
-      setSocialAccounts({
-        ...socialAccounts,
-        [platform]: {
-          linked: false,
-          value: "",
+      // Get the updated social media links from the response
+      const updatedSocialMedia = response.data.social_media;
+
+      // Update the state based on the API response
+      setSocialAccounts((prev) => ({
+        ...prev,
+        discord: {
+          ...prev.discord,
+          linked: !!updatedSocialMedia.discord,
+          value: updatedSocialMedia.discord || "",
           unlinking: false,
         },
-      });
+        instagram: {
+          ...prev.instagram,
+          linked: !!updatedSocialMedia.instagram,
+          value: updatedSocialMedia.instagram || "",
+          unlinking: false,
+        },
+        linkedin: {
+          ...prev.linkedin,
+          linked: !!updatedSocialMedia.linkedIn,
+          value: updatedSocialMedia.linkedIn || "",
+          unlinking: false,
+        },
+        twitter: {
+          ...prev.twitter,
+          linked: !!updatedSocialMedia.twitter,
+          value: updatedSocialMedia.twitter || "",
+          unlinking: false,
+        },
+        tiktok: {
+          ...prev.tiktok,
+          linked: !!updatedSocialMedia.tiktok,
+          value: updatedSocialMedia.tiktok || "",
+          unlinking: false,
+        },
+        youtube: {
+          ...prev.youtube,
+          linked: !!updatedSocialMedia.youtube,
+          value: updatedSocialMedia.youtube || "",
+          unlinking: false,
+        },
+      }));
 
       setSuccessMessage(
         isEnglish
@@ -437,7 +508,7 @@ export default function ProfileSettings() {
     }
   };
 
-  // Update the useEffect to fetch social media links
+  // Update the fetchSocialMediaLinks function
   const fetchSocialMediaLinks = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -449,25 +520,39 @@ export default function ProfileSettings() {
         },
       });
 
-      const userData = response.data.data;
+      const userData = response.data.user;
 
-      // Check if social media links exist in the response
-      if (userData && userData.social_media) {
-        const userSocialMedia = userData.social_media;
+      if (userData && userData.socialMedia) {
+        const userSocialMedia = userData.socialMedia;
 
-        const updatedSocialAccounts = { ...socialAccounts };
-
-        // Update each social media platform
-        Object.keys(updatedSocialAccounts).forEach((platform) => {
-          if (userSocialMedia[platform]) {
-            updatedSocialAccounts[platform] = {
-              linked: true,
-              value: userSocialMedia[platform],
-            };
-          }
+        // Update socialAccounts state with the new data
+        setSocialAccounts({
+          ...socialAccounts,
+          discord: {
+            linked: !!userSocialMedia.discord,
+            value: userSocialMedia.discord || "",
+          },
+          instagram: {
+            linked: !!userSocialMedia.instagram,
+            value: userSocialMedia.instagram || "",
+          },
+          twitter: {
+            linked: !!userSocialMedia.twitter,
+            value: userSocialMedia.twitter || "",
+          },
+          tiktok: {
+            linked: !!userSocialMedia.tiktok,
+            value: userSocialMedia.tiktok || "",
+          },
+          youtube: {
+            linked: !!userSocialMedia.youtube,
+            value: userSocialMedia.youtube || "",
+          },
+          linkedin: {
+            linked: !!userSocialMedia.linkedIn, // Note the capital 'I' here
+            value: userSocialMedia.linkedIn || "",
+          },
         });
-
-        setSocialAccounts(updatedSocialAccounts);
       }
     } catch (error) {
       console.error("Error fetching social media links:", error);
@@ -755,8 +840,6 @@ export default function ProfileSettings() {
     let hasErrors = false;
 
     Object.keys(socialAccounts).forEach((platform) => {
-      if (platform === "linkedin") return; // Skip LinkedIn as it's not in the API
-
       if (
         socialAccounts[platform].value &&
         !validateSocialMediaUrl(socialAccounts[platform].value, platform)
@@ -780,12 +863,13 @@ export default function ProfileSettings() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = Cookies.get("token");
 
-      // Only include social media accounts that have values
+      // Include all social media accounts that have values, including LinkedIn
       const socialMediaData = {};
       Object.keys(socialAccounts).forEach((platform) => {
-        if (platform === "linkedin") return; // Skip LinkedIn as it's not in the API
         if (socialAccounts[platform].value) {
-          socialMediaData[platform] = socialAccounts[platform].value;
+          // Map 'linkedin' to 'linkedIn' for the API
+          const apiKey = platform === "linkedin" ? "linkedIn" : platform;
+          socialMediaData[apiKey] = socialAccounts[platform].value;
         }
       });
 
@@ -803,7 +887,6 @@ export default function ProfileSettings() {
       // Update linked status for accounts with values
       const updatedSocialAccounts = { ...socialAccounts };
       Object.keys(socialAccounts).forEach((platform) => {
-        if (platform === "linkedin") return; // Skip LinkedIn
         updatedSocialAccounts[platform].linked =
           !!socialAccounts[platform].value;
       });
@@ -966,64 +1049,80 @@ export default function ProfileSettings() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-3 sm:gap-5 mt-8 sm:mt-16">
-            <div
-              className="bg-transparent shadow-inner shadow-[#FE2C55] rounded-full  w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
-              style={{ boxShadow: "0px -1.5px 20px 0px #FE2C55 inset" }}
-            >
-              <span className={`text-white  font-medium ${inter.className}`}>
-                TikTok
-              </span>
-              <FaTiktok className={`text-white  `} />
-            </div>
+            {socialAccounts.tiktok.linked && (
+              <div
+                className="bg-transparent shadow-inner shadow-[#FE2C55] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+                style={{ boxShadow: "0px -1.5px 20px 0px #FE2C55 inset" }}
+              >
+                <span className={`text-white font-medium ${inter.className}`}>
+                  TikTok
+                </span>
+                <FaTiktok className={`text-white`} />
+              </div>
+            )}
 
-            <div
-              className="bg-transparent shadow-inner shadow-[#0A66C2] rounded-full w-[120px]  flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
-              style={{ boxShadow: "0px -1.5px 20px 0px #0A66C2 inset" }}
-            >
-              <span className={`text-white font-medium ${inter.className}`}>
-                LinkedIn
-              </span>
-              <FaLinkedin className={`text-white text-lg `} />
-            </div>
-            <div
-              className="bg-white/10  rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
-              style={{
-                boxShadow:
-                  "0px 5px 15px 0px #BA339F inset, 2px -1px 30px 0px #E0AF47 inset",
-              }}
-            >
-              <span className={`text-white font-medium ${inter.className}`}>
-                Instagram
-              </span>
-              <FaInstagram className={`text-white text-lg `} />
-            </div>
-            <div
-              className="bg-transparent shadow-inner shadow-[#FF0000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
-              style={{ boxShadow: "0px -1.5px 20px 0px #FF0000 inset" }}
-            >
-              <span className={`text-white font-medium ${inter.className}`}>
-                Youtube
-              </span>
-              <FaYoutube className={`text-white text-lg `} />
-            </div>
-            <div
-              className="bg-transparent shadow-inner shadow-[#5865F2] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
-              style={{ boxShadow: "0px -1.5px 20px 0px #5865F2 inset" }}
-            >
-              <span className={`text-white font-medium ${inter.className}`}>
-                Discord
-              </span>
-              <FaDiscord className={`text-[#5865F2] text-lg `} />
-            </div>
-            <div
-              className="bg-transparent shadow-inner shadow-[#000000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
-              style={{ boxShadow: "0px -1.5px 20px 0px #000000 inset" }}
-            >
-              <span className={`text-white  font-medium ${inter.className}`}>
-                Twitter X
-              </span>
-              <BsTwitterX className={`text-white text-lg `} />
-            </div>
+            {socialAccounts.linkedin.linked && (
+              <div
+                className="bg-transparent shadow-inner shadow-[#0A66C2] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+                style={{ boxShadow: "0px -1.5px 20px 0px #0A66C2 inset" }}
+              >
+                <span className={`text-white font-medium ${inter.className}`}>
+                  LinkedIn
+                </span>
+                <FaLinkedin className={`text-white text-lg`} />
+              </div>
+            )}
+
+            {socialAccounts.instagram.linked && (
+              <div
+                className="bg-white/10 rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+                style={{
+                  boxShadow:
+                    "0px 5px 15px 0px #BA339F inset, 2px -1px 30px 0px #E0AF47 inset",
+                }}
+              >
+                <span className={`text-white font-medium ${inter.className}`}>
+                  Instagram
+                </span>
+                <FaInstagram className={`text-white text-lg`} />
+              </div>
+            )}
+
+            {socialAccounts.youtube.linked && (
+              <div
+                className="bg-transparent shadow-inner shadow-[#FF0000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+                style={{ boxShadow: "0px -1.5px 20px 0px #FF0000 inset" }}
+              >
+                <span className={`text-white font-medium ${inter.className}`}>
+                  Youtube
+                </span>
+                <FaYoutube className={`text-white text-lg`} />
+              </div>
+            )}
+
+            {socialAccounts.discord.linked && (
+              <div
+                className="bg-transparent shadow-inner shadow-[#5865F2] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+                style={{ boxShadow: "0px -1.5px 20px 0px #5865F2 inset" }}
+              >
+                <span className={`text-white font-medium ${inter.className}`}>
+                  Discord
+                </span>
+                <FaDiscord className={`text-[#5865F2] text-lg`} />
+              </div>
+            )}
+
+            {socialAccounts.twitter.linked && (
+              <div
+                className="bg-transparent shadow-inner shadow-[#000000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+                style={{ boxShadow: "0px -1.5px 20px 0px #000000 inset" }}
+              >
+                <span className={`text-white font-medium ${inter.className}`}>
+                  Twitter X
+                </span>
+                <BsTwitterX className={`text-white text-lg`} />
+              </div>
+            )}
           </div>
           {/* Personal Information Section */}
           <div className="bg-[#131619] rounded-xl p-6 mt-8 sm:mt-16">
@@ -1267,8 +1366,8 @@ export default function ProfileSettings() {
                 <button
                   className={`px-6 py-2 rounded-md text-sm font-medium w-full sm:w-28 ${
                     socialAccounts.discord.linked
-                      ? "bg-[#1E2124] text-white"
-                      : "bg-[#00D8C8] text-black hover:shadow-[0px_0px_15px_0px_#00D8C8]"
+                      ? "bg-[#1E2124] text-white cursor-pointer"
+                      : "bg-[#00D8C8] text-black hover:shadow-[0px_0px_15px_0px_#00D8C8] cursor-pointer"
                   } transition-all duration-300`}
                   onClick={() =>
                     socialAccounts.discord.linked
@@ -1282,9 +1381,9 @@ export default function ProfileSettings() {
                 >
                   {socialAccounts.discord.linking ||
                   socialAccounts.discord.unlinking ? (
-                    <span className="flex items-center justify-center">
+                    <span className="flex gap-2 items-center justify-center">
                       <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        className="animate-spin h-4 w-4 text-white"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -1311,6 +1410,8 @@ export default function ProfileSettings() {
                     ) : (
                       "إلغاء الربط"
                     )
+                  ) : isEnglish ? (
+                    "Link"
                   ) : (
                     "ربط"
                   )}
@@ -1323,15 +1424,17 @@ export default function ProfileSettings() {
                     onChange={(e) =>
                       handleSocialMediaChange("discord", e.target.value)
                     }
-                    className={`bg-black rounded-md p-3 w-full text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
+                    className={`bg-black rounded-md p-3 w-full lg:w-1/2 text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
                       validationErrors.discord
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : "border-transparent"
                     } transition-all duration-300`}
                     placeholder={
-                      isEnglish
-                        ? "Your Discord account link"
-                        : "رابط حسابك في ديسكورد"
+                      !socialAccounts.discord.value
+                        ? isEnglish
+                          ? "Your Discord account link"
+                          : "رابط حسابك في ديسكورد"
+                        : ""
                     }
                     dir="ltr"
                   />
@@ -1367,8 +1470,8 @@ export default function ProfileSettings() {
                 <button
                   className={`px-6 py-2 rounded-md text-sm font-medium w-full sm:w-28 ${
                     socialAccounts.linkedin.linked
-                      ? "bg-[#1E2124] text-white"
-                      : "bg-[#00D8C8] text-black hover:shadow-[0px_0px_15px_0px_#00D8C8]"
+                      ? "bg-[#1E2124] text-white cursor-pointer"
+                      : "bg-[#00D8C8] text-black hover:shadow-[0px_0px_15px_0px_#00D8C8] cursor-pointer"
                   } transition-all duration-300`}
                   onClick={() =>
                     socialAccounts.linkedin.linked
@@ -1382,9 +1485,9 @@ export default function ProfileSettings() {
                 >
                   {socialAccounts.linkedin.linking ||
                   socialAccounts.linkedin.unlinking ? (
-                    <span className="flex items-center justify-center">
+                    <span className="flex gap-2 items-center justify-center">
                       <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        className="animate-spin  h-4 w-4 text-white"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -1411,6 +1514,8 @@ export default function ProfileSettings() {
                     ) : (
                       "إلغاء الربط"
                     )
+                  ) : isEnglish ? (
+                    "Link"
                   ) : (
                     "ربط"
                   )}
@@ -1423,7 +1528,7 @@ export default function ProfileSettings() {
                     onChange={(e) =>
                       handleSocialMediaChange("linkedin", e.target.value)
                     }
-                    className={`bg-black rounded-md p-3 w-full text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
+                    className={`bg-black rounded-md p-3 w-full lg:w-1/2 text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
                       validationErrors.linkedin
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : "border-transparent"
@@ -1467,8 +1572,8 @@ export default function ProfileSettings() {
                 <button
                   className={`px-6 py-2 rounded-md text-sm font-medium w-full sm:w-28 ${
                     socialAccounts.instagram.linked
-                      ? "bg-[#1E2124] text-white"
-                      : "bg-[#00D8C8] text-black hover:shadow-[0px_0px_15px_0px_#00D8C8]"
+                      ? "bg-[#1E2124] text-white cursor-pointer"
+                      : "bg-[#00D8C8] text-black hover:shadow-[0px_0px_15px_0px_#00D8C8] cursor-pointer"
                   } transition-all duration-300`}
                   onClick={() =>
                     socialAccounts.instagram.linked
@@ -1482,9 +1587,9 @@ export default function ProfileSettings() {
                 >
                   {socialAccounts.instagram.linking ||
                   socialAccounts.instagram.unlinking ? (
-                    <span className="flex items-center justify-center">
+                    <span className="flex gap-2 items-center justify-center">
                       <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        className="animate-spin h-4 w-4 text-white"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -1511,6 +1616,8 @@ export default function ProfileSettings() {
                     ) : (
                       "إلغاء الربط"
                     )
+                  ) : isEnglish ? (
+                    "Link"
                   ) : (
                     "ربط"
                   )}
@@ -1519,23 +1626,21 @@ export default function ProfileSettings() {
                 <div className="flex-1 mx-0 sm:mx-4 w-full">
                   <input
                     type="text"
-                    value={
-                      socialAccounts.instagram
-                        ? socialAccounts.instagram.value
-                        : ""
-                    }
+                    value={socialAccounts.instagram.value}
                     onChange={(e) =>
                       handleSocialMediaChange("instagram", e.target.value)
                     }
-                    className={`bg-black rounded-md p-3 w-full text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
+                    className={`bg-black rounded-md p-3 w-full lg:w-1/2 text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
                       validationErrors.instagram
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : "border-transparent"
                     } transition-all duration-300`}
                     placeholder={
-                      isEnglish
-                        ? "Your Instagram account link"
-                        : "رابط حسابك في انستغرام"
+                      !socialAccounts.instagram.value
+                        ? isEnglish
+                          ? "Your Instagram account link"
+                          : "رابط حسابك في انستغرام"
+                        : ""
                     }
                     dir="ltr"
                   />
@@ -1572,8 +1677,8 @@ export default function ProfileSettings() {
                 <button
                   className={`px-6 py-2 rounded-md text-sm font-medium w-full sm:w-28 ${
                     socialAccounts.tiktok.linked
-                      ? "bg-[#1E2124] text-white"
-                      : "bg-[#00D8C8] text-black hover:shadow-[0px_0px_15px_0px_#00D8C8]"
+                      ? "bg-[#1E2124] text-white cursor-pointer"
+                      : "bg-[#00D8C8] text-black hover:shadow-[0px_0px_15px_0px_#00D8C8] cursor-pointer"
                   } transition-all duration-300`}
                   onClick={() =>
                     socialAccounts.tiktok.linked
@@ -1587,9 +1692,9 @@ export default function ProfileSettings() {
                 >
                   {socialAccounts.tiktok.linking ||
                   socialAccounts.tiktok.unlinking ? (
-                    <span className="flex items-center justify-center">
+                    <span className="flex gap-2 items-center justify-center">
                       <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        className="animate-spin h-4 w-4 text-white"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -1616,6 +1721,8 @@ export default function ProfileSettings() {
                     ) : (
                       "إلغاء الربط"
                     )
+                  ) : isEnglish ? (
+                    "Link"
                   ) : (
                     "ربط"
                   )}
@@ -1628,15 +1735,17 @@ export default function ProfileSettings() {
                     onChange={(e) =>
                       handleSocialMediaChange("tiktok", e.target.value)
                     }
-                    className={`bg-black rounded-md p-3 w-full text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
+                    className={`bg-black rounded-md p-3 w-full text-right lg:w-1/2 focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
                       validationErrors.tiktok
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : "border-transparent"
                     } transition-all duration-300`}
                     placeholder={
-                      isEnglish
-                        ? "Your TikTok account link"
-                        : "رابط حسابك في تيك توك"
+                      !socialAccounts.tiktok.value
+                        ? isEnglish
+                          ? "Your TikTok account link"
+                          : "رابط حسابك في تيك توك"
+                        : ""
                     }
                     dir="ltr"
                   />
@@ -1672,8 +1781,8 @@ export default function ProfileSettings() {
                 <button
                   className={`px-6 py-2 rounded-md text-sm font-medium w-full sm:w-28 ${
                     socialAccounts.youtube.linked
-                      ? "bg-[#1E2124] text-white"
-                      : "bg-[#00D8C8] text-black hover:shadow-[0px_0px_15px_0px_#00D8C8]"
+                      ? "bg-[#1E2124] text-white cursor-pointer"
+                      : "bg-[#00D8C8] text-black hover:shadow-[0px_0px_15px_0px_#00D8C8] cursor-pointer"
                   } transition-all duration-300`}
                   onClick={() =>
                     socialAccounts.youtube.linked
@@ -1687,9 +1796,9 @@ export default function ProfileSettings() {
                 >
                   {socialAccounts.youtube.linking ||
                   socialAccounts.youtube.unlinking ? (
-                    <span className="flex items-center justify-center">
+                    <span className="flex gap-2 items-center justify-center">
                       <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        className="animate-spin h-4 w-4 text-white"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -1716,6 +1825,8 @@ export default function ProfileSettings() {
                     ) : (
                       "إلغاء الربط"
                     )
+                  ) : isEnglish ? (
+                    "Link"
                   ) : (
                     "ربط"
                   )}
@@ -1728,15 +1839,17 @@ export default function ProfileSettings() {
                     onChange={(e) =>
                       handleSocialMediaChange("youtube", e.target.value)
                     }
-                    className={`bg-black rounded-md p-3 w-full text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
+                    className={`bg-black rounded-md p-3 w-full text-right lg:w-1/2 focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
                       validationErrors.youtube
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : "border-transparent"
                     } transition-all duration-300`}
                     placeholder={
-                      isEnglish
-                        ? "Your YouTube account link"
-                        : "رابط حسابك في يوتيوب"
+                      !socialAccounts.youtube.value
+                        ? isEnglish
+                          ? "Your YouTube account link"
+                          : "رابط حسابك في يوتيوب"
+                        : ""
                     }
                     dir="ltr"
                   />
@@ -1772,8 +1885,8 @@ export default function ProfileSettings() {
                 <button
                   className={`px-6 py-2 rounded-md text-sm font-medium w-full sm:w-28 ${
                     socialAccounts.twitter.linked
-                      ? "bg-[#1E2124] text-white"
-                      : "bg-[#00D8C8] text-black hover:shadow-[0px_0px_15px_0px_#00D8C8]"
+                      ? "bg-[#1E2124] text-white cursor-pointer"
+                      : "bg-[#00D8C8] text-black hover:shadow-[0px_0px_15px_0px_#00D8C8] cursor-pointer"
                   } transition-all duration-300`}
                   onClick={() =>
                     socialAccounts.twitter.linked
@@ -1787,9 +1900,9 @@ export default function ProfileSettings() {
                 >
                   {socialAccounts.twitter.linking ||
                   socialAccounts.twitter.unlinking ? (
-                    <span className="flex items-center justify-center">
+                    <span className="flex gap-2 items-center justify-center">
                       <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        className="animate-spin h-4 w-4 text-white"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -1816,6 +1929,8 @@ export default function ProfileSettings() {
                     ) : (
                       "إلغاء الربط"
                     )
+                  ) : isEnglish ? (
+                    "Link"
                   ) : (
                     "ربط"
                   )}
@@ -1828,15 +1943,17 @@ export default function ProfileSettings() {
                     onChange={(e) =>
                       handleSocialMediaChange("twitter", e.target.value)
                     }
-                    className={`bg-black rounded-md p-3 w-full text-right focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
+                    className={`bg-black rounded-md p-3 w-full text-right lg:w-1/2 focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] border ${
                       validationErrors.twitter
                         ? "border-red-500 focus:border-red-500 focus:ring-red-500"
                         : "border-transparent"
                     } transition-all duration-300`}
                     placeholder={
-                      isEnglish
-                        ? "Your Twitter X account link"
-                        : "رابط حسابك في تويتر"
+                      !socialAccounts.twitter.value
+                        ? isEnglish
+                          ? "Your Twitter X account link"
+                          : "رابط حسابك في تويتر"
+                        : ""
                     }
                     dir="ltr"
                   />

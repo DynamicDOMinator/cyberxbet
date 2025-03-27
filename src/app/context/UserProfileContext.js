@@ -17,6 +17,11 @@ export function UserProfileProvider({ children }) {
   const [profileImage, setProfileImage] = useState(null);
   const [userName, setUserName] = useState("");
   const [country, setCountry] = useState("");
+  const [discord, setDiscord] = useState(null);
+  const [instagram, setInstagram] = useState(null);
+  const [twitter, setTwitter] = useState(null);
+  const [tiktok, setTiktok] = useState(null);
+  const [youtube, setYoutube] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,14 +42,11 @@ export function UserProfileProvider({ children }) {
         throw new Error("Authentication token or API URL not found");
       }
 
-      
-
-      // Add timeout to prevent hanging requests
       const response = await axios.get(`${apiUrl}/user/profile`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        timeout: 20000, // 10 seconds timeout
+        timeout: 20000,
       });
 
       // Set individual user profile fields
@@ -54,6 +56,15 @@ export function UserProfileProvider({ children }) {
       setProfileImage(userData.profile_image);
       setUserName(userData.user_name);
       setCountry(userData.country);
+
+      // Update how we handle socialMedia data
+      if (userData.socialMedia) {
+        setDiscord(userData.socialMedia.discord || null);
+        setInstagram(userData.socialMedia.instagram || null);
+        setTwitter(userData.socialMedia.twitter || null);
+        setTiktok(userData.socialMedia.tiktok || null);
+        setYoutube(userData.socialMedia.youtube || null);
+      }
 
       return userData;
     } catch (error) {
@@ -74,7 +85,7 @@ export function UserProfileProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated]); // Add dependencies here
+  }, [isAuthenticated]);
 
   // Update user profile
   const updateUserProfile = async (profileData) => {
@@ -103,6 +114,15 @@ export function UserProfileProvider({ children }) {
       setProfileImage(userData.profile_image);
       setUserName(userData.user_name);
       setCountry(userData.country);
+
+      // Update how we handle socialMedia data
+      if (userData.socialMedia) {
+        setDiscord(userData.socialMedia.discord || null);
+        setInstagram(userData.socialMedia.instagram || null);
+        setTwitter(userData.socialMedia.twitter || null);
+        setTiktok(userData.socialMedia.tiktok || null);
+        setYoutube(userData.socialMedia.youtube || null);
+      }
 
       return {
         success: true,
@@ -136,6 +156,11 @@ export function UserProfileProvider({ children }) {
       setProfileImage(null);
       setUserName("");
       setCountry("");
+      setDiscord(null);
+      setInstagram(null);
+      setTwitter(null);
+      setTiktok(null);
+      setYoutube(null);
     }
   }, [isAuthenticated, fetchUserProfile]);
 
@@ -146,6 +171,11 @@ export function UserProfileProvider({ children }) {
         profileImage,
         userName,
         country,
+        discord,
+        instagram,
+        twitter,
+        tiktok,
+        youtube,
         loading,
         error,
         fetchUserProfile,
