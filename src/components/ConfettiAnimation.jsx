@@ -24,7 +24,7 @@ const ConfettiAnimation = () => {
       width={windowSize.width}
       height={windowSize.height}
       recycle={true}
-      numberOfPieces={200}
+      numberOfPieces={50}
       gravity={0.2}
       wind={0.01}
       colors={["#38FFE5", "#00ff9f", "#00b8ff", "#ff00ff"]}
