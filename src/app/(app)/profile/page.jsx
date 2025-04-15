@@ -117,8 +117,8 @@ export default function Profile() {
             />
           ) : (
             <Image
-              className="rounded-full w-16 h-16 sm:w-[88px] sm:h-[88px]"
-              src="/user.png"
+              className="rounded-full  w-16 h-16 sm:w-[88px] sm:h-[88px]"
+              src="/icon1.png"
               alt="profile"
               width={88}
               height={88}

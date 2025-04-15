@@ -6,7 +6,6 @@ import Cookies from "js-cookie";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
@@ -18,7 +17,6 @@ export function AuthProvider({ children }) {
 
       if (!token) {
         setIsAuthenticated(false);
-        setLoading(false);
         return;
       }
 
@@ -38,8 +36,6 @@ export function AuthProvider({ children }) {
         console.error("Token validation error:", error);
         Cookies.remove("token");
         setIsAuthenticated(false);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -49,7 +45,6 @@ export function AuthProvider({ children }) {
   // Login function
   const login = async (login, password, isEnglish = true) => {
     setError("");
-    setLoading(true);
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -63,11 +58,13 @@ export function AuthProvider({ children }) {
       });
 
       if (response.data.token && response.data.user) {
+        // Set the token in cookies
         Cookies.set("token", response.data.token);
+        
+        // Set authentication state
         setIsAuthenticated(true);
-        setLoading(false);
-
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        
+        // Navigate to home page
         router.push("/home");
 
         return {
@@ -101,15 +98,13 @@ export function AuthProvider({ children }) {
         success: false,
         error: error.response?.data || error.message,
       };
-    } finally {
-      setLoading(false);
     }
   };
 
   
   const verifyOtp = async (otpData, isEnglish = true) => {
     setError("");
-    setLoading(true);
+  
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -158,14 +153,14 @@ export function AuthProvider({ children }) {
         error: error.response?.data || error.message,
       };
     } finally {
-      setLoading(false);
+   
     }
   };
 
   // Logout function
   const logout = async (isEnglish = true) => {
     setError("");
-    setLoading(true);
+  
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -208,21 +203,19 @@ export function AuthProvider({ children }) {
         success: false,
         error: error.response?.data || error.message,
       };
-    } finally {
-      setLoading(false);
-    }
+    } 
   };
 
   return (
     <AuthContext.Provider
       value={{
-        loading,
         error,
         login,
         verifyOtp,
         logout,
         setError,
         isAuthenticated,
+        setIsAuthenticated,
       }}
     >
       {children}

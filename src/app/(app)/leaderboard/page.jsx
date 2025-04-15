@@ -5,101 +5,55 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import LoadingPage from "@/app/components/LoadingPage";
 import { FiSearch } from "react-icons/fi";
-
+import axios from "axios";
+import Cookies from "js-cookie";
 export default function Leaderboard() {
   const { isEnglish } = useLanguage();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
-    setIsLoaded(true);
+    const fetchLeaderboard = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = Cookies.get("token");
+        const response = await axios.get(`${apiUrl}/leader-board`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.data.status === "success") {
+          // Transform the API data to match our component structure
+          const transformedData = response.data.data.map((user, index) => ({
+            rank: index + 1,
+            username: user.user_name,
+            profileImage: "/icon1.png", // fallback to default image
+            flames: user.points,
+            droplets: user.challenges_solved,
+            notes: user.first_blood_count,
+          }));
+
+          setLeaderboardData(transformedData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch leaderboard data:", error);
+      } finally {
+        setIsLoaded(true);
+      }
+    };
+
+    fetchLeaderboard();
   }, []);
 
-  const leaderboardData = [
-    {
-      rank: 1,
-      username: "MahmoudFatouh",
-      flames: 1000,
-      droplets: 1000,
-      notes: 1000,
-    },
-    {
-      rank: 2,
-      username: "MahmoudFatouh",
-      flames: 1000,
-      droplets: 1000,
-      notes: 1000,
-    },
-    {
-      rank: 3,
-      username: "MahmoudFatouh",
-      flames: 1000,
-      droplets: 1000,
-      notes: 1000,
-    },
-    {
-      rank: 4,
-      username: "MahmoudFatouh",
-      flames: 1000,
-      droplets: 1000,
-      notes: 1000,
-    },
-    {
-      rank: 5,
-      username: "MahmoudFatouh",
-      flames: 1000,
-      droplets: 1000,
-      notes: 1000,
-    },
-    {
-      rank: 6,
-      username: "MahmoudFatouh",
-      flames: 1000,
-      droplets: 1000,
-      notes: 1000,
-    },
-    {
-      rank: 7,
-      username: "MahmoudFatouh",
-      flames: 1000,
-      droplets: 1000,
-      notes: 1000,
-    },
-    {
-      rank: 8,
-      username: "MahmoudFatouh",
-      flames: 1000,
-      droplets: 1000,
-      notes: 1000,
-    },
-    {
-      rank: 9,
-      username: "MahmoudFatouh",
-      flames: 1000,
-      droplets: 1000,
-      notes: 1000,
-    },
-    {
-      rank: 10,
-      username: "MahmoudFatouh",
-      flames: 1000,
-      droplets: 1000,
-      notes: 1000,
-    },
-    {
-      rank: 11,
-      username: "MahmoudFatouh",
-      flames: 1000,
-      droplets: 1000,
-      notes: 1000,
-    },
-    {
-      rank: 100,
-      username: "MahmoudFatouh",
-      flames: 1000,
-      droplets: 1000,
-      notes: 1000,
-    },
-  ];
+  useEffect(() => {
+    const filtered = leaderboardData.filter((user) =>
+      user.username.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredData(filtered);
+  }, [searchQuery, leaderboardData]);
 
   return isLoaded ? (
     <div className="max-w-[2000px] mx-auto pb-10 mt-36">
@@ -128,6 +82,8 @@ export default function Leaderboard() {
                 type="text"
                 placeholder={isEnglish ? "Search" : "بحث"}
                 className="bg-[#0B0D0F] text-white/60 text-sm outline-none w-full"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
           </div>
@@ -159,7 +115,7 @@ export default function Leaderboard() {
           </div>
 
           {/* Table Rows */}
-          {leaderboardData.map((user, index) => (
+          {filteredData.map((user, index) => (
             <div
               key={index}
               className={`rounded-lg mb-3 px-10 py-3 ${
@@ -195,7 +151,7 @@ export default function Leaderboard() {
                     </div>
                     <div className="flex items-center gap-2 ml-16">
                       <Image
-                        src="/user.png"
+                        src={user.profileImage}
                         alt="user avatar"
                         width={40}
                         height={40}
@@ -211,7 +167,7 @@ export default function Leaderboard() {
                 <div className="col-span-1 flex justify-center">
                   <div className="flex flex-row-reverse items-center gap-2">
                     <Image
-                      src="/point.png"
+                      src="/byte.png"
                       alt="flames"
                       width={25}
                       height={25}

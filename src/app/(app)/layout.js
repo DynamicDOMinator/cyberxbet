@@ -3,14 +3,10 @@ import { AuthProvider, useAuth } from "../context/AuthContext";
 import { UserProfileProvider } from "../context/UserProfileContext";
 import { LanguageProvider } from "../context/LanguageContext";
 import Header from "../components/Header";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import LoadingPage from "../components/LoadingPage";
-
 
 export default function AppLayout({ children }) {
-
-
   return (
     <AuthProvider>
       <AuthStateWrapper>{children}</AuthStateWrapper>
@@ -19,25 +15,46 @@ export default function AppLayout({ children }) {
 }
 
 function AuthStateWrapper({ children }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, setIsAuthenticated } = useAuth();
   const router = useRouter();
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
+    // Check if token exists in cookies
+    const token = document.cookie.includes('token=');
+    
+    // If token exists but isAuthenticated is false, set it to true
+    if (token && !isAuthenticated) {
+      setIsAuthenticated(true);
+    }
+    
+    // Set initialized after first render
+    setIsInitialized(true);
+  }, [isAuthenticated, setIsAuthenticated]);
+
+  useEffect(() => {
+    // Only redirect if we've initialized and user is not authenticated
+    if (isInitialized && !isAuthenticated) {
       router.push("/login");
     }
-  }, [isAuthenticated, loading, router]);
+  }, [isAuthenticated, router, isInitialized]);
 
-  if (loading) {
-    return <LoadingPage />;
+  // Don't render anything until initialized
+  if (!isInitialized) {
+    return null;
   }
 
-  return isAuthenticated ? (
+  // Only render children if authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  return (
     <UserProfileProvider>
       <LanguageProvider>
         <Header />
         {children}
       </LanguageProvider>
     </UserProfileProvider>
-  ) : null;
+  );
 }

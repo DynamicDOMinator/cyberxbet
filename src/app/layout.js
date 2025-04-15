@@ -13,6 +13,9 @@ const tajawal = Tajawal({
 export const metadata = {
   title: "CyberXbytes",
   description: "CyberXbytes",
+  icons: {
+    icon: "/logo3.png",
+  },
 };
 
 export default function RootLayout({ children }) {

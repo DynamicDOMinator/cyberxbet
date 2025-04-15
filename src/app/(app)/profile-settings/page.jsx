@@ -77,7 +77,7 @@ export default function ProfileSettings() {
 
   const [inputUserName, setInputUserName] = useState("");
 
-  const [profileImage, setProfileImage] = useState("/user.png");
+  const [profileImage, setProfileImage] = useState("/icon1.png");
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
@@ -760,7 +760,7 @@ export default function ProfileSettings() {
 
   const handleRemoveImage = () => {
     // Always revert to default image when removing
-    setProfileImage("/user.png");
+    setProfileImage("/icon1.png");
     setSelectedImageFile(null);
 
     // If the image was changed and now we're removing it, this is a change
@@ -1014,14 +1014,14 @@ export default function ProfileSettings() {
                   src={contextProfileImage}
                   alt="profile"
                   onError={(e) => {
-                    e.target.src = "/user.png"; // Fallback to default if remote image fails
+                    e.target.src = "/icon1.png"; // Fallback to default if remote image fails
                   }}
                 />
               ) : (
                 // Use Next.js Image for local images only
                 <Image
                   className="rounded-full w-16 h-16 sm:w-[88px] sm:h-[88px]"
-                  src="/user.png"
+                  src="/icon1.png"
                   alt="profile"
                   width={88}
                   height={88}
@@ -1136,13 +1136,13 @@ export default function ProfileSettings() {
                     alt="profile"
                     className="rounded-full w-full h-full object-cover"
                     onError={(e) => {
-                      e.target.src = "/user.png"; // Fallback to default if remote image fails
+                      e.target.src = "/icon1.png"; // Fallback to default if remote image fails
                     }}
                   />
                 ) : (
                   // Fallback to default image
                   <Image
-                    src="/user.png"
+                    src="/icon1.png"
                     alt="profile"
                     className="rounded-full w-full h-full object-cover"
                     width={96}
@@ -1164,14 +1164,24 @@ export default function ProfileSettings() {
                     accept="image/*"
                     className="hidden"
                   />
+                  {!selectedImageFile && (
                   <button
                     onClick={handleUploadClick}
                     disabled={uploading}
                     className="bg-[#00D8C8] text-black font-bold hover:shadow-[0px_0px_15px_0px_#00D8C8] transition-all duration-300 px-5 py-2 rounded-md text-sm"
                   >
-                    {isEnglish ? "Choose Image" : "اختر صورة"}
+                    {isEnglish ? "Choose Image" :" رفع صورة"}
                   </button>
+                  )}
                   {selectedImageFile && (
+                    <>
+                      <button
+                      onClick={handleUploadClick}
+                      disabled={uploading}
+                      className="bg-[#00D8C8] text-black font-bold hover:shadow-[0px_0px_15px_0px_#00D8C8] transition-all duration-300 px-5 py-2 rounded-md text-sm"
+                    >
+                      {isEnglish ? "Choose Image" :" تعديل الصورة"}
+                    </button>
                     <button
                       onClick={handleRemoveImage}
                       disabled={uploading}
@@ -1179,6 +1189,8 @@ export default function ProfileSettings() {
                     >
                       {isEnglish ? "Remove" : "إزالة"}
                     </button>
+                    
+                    </>
                   )}
                 </div>
                 {selectedImageFile && (

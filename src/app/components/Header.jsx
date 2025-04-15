@@ -43,6 +43,7 @@ export default function Header() {
   const [mobileAddChallengeOpen, setMobileAddChallengeOpen] = useState(false);
   const [mobileUserMenuOpen, setMobileUserMenuOpen] = useState(false);
   const [userName, setUserName] = useState("");
+  const [labs, setLabs] = useState([]);
   const router = useRouter();
 
   const userProfile = useUserProfile();
@@ -54,6 +55,28 @@ export default function Header() {
 
   useEffect(() => {
     setRandom(Math.floor(Math.random() * 1000));
+  }, []);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = Cookies.get("token");
+        const response = await axios.get(`${apiUrl}/labs`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.data.status === "success") {
+          setLabs(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching labs:", error);
+      }
+    };
+
+    fetchUserProfile();
   }, []);
 
   const logout = async () => {
@@ -127,38 +150,19 @@ export default function Header() {
                 anchor="bottom end"
                 className="w-52 origin-top-right rounded-xl border border-white/5 bg-black/75 mt-7 p-2 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
               >
-                <MenuItem>
-                  <Link href="/training-challenges">
-                    <p
-                      dir={isEnglish ? "ltr" : "rtl"}
-                      className="py-2 px-4 hover:bg-white/10 rounded "
-                    >
-                      {isEnglish ? "Training Challenges" : "التحديات التدريبية"}
-                    </p>
-                  </Link>
-                </MenuItem>
-                <MenuItem>
-                  <Link href="/competitive-challenges">
-                    <p
-                      dir={isEnglish ? "ltr" : "rtl"}
-                      className="py-2 px-4 hover:bg-white/10 rounded "
-                    >
-                      {isEnglish
-                        ? "Competitive Challenges"
-                        : "التحديات التنافسية"}
-                    </p>
-                  </Link>
-                </MenuItem>
-                <MenuItem>
-                  <Link href="/servers">
-                    <p
-                      dir={isEnglish ? "ltr" : "rtl"}
-                      className="py-2 px-4 hover:bg-white/10 rounded "
-                    >
-                      {isEnglish ? "Servers" : "الخوادم"}
-                    </p>
-                  </Link>
-                </MenuItem>
+                {labs &&
+                  labs.map((lab) => (
+                    <MenuItem key={lab.uuid}>
+                      <Link href={`/labs/${lab.uuid}`}>
+                        <p
+                          dir={isEnglish ? "ltr" : "rtl"}
+                          className="py-2 px-4 hover:bg-white/10 rounded"
+                        >
+                          {isEnglish ? lab.name : lab.ar_name}
+                        </p>
+                      </Link>
+                    </MenuItem>
+                  ))}
               </MenuItems>
             </Menu>
             <Link href="/events">
@@ -169,31 +173,11 @@ export default function Header() {
                 {isEnglish ? "Leaderboard" : "المتصدرين"}
               </p>
             </Link>
-            <Menu as="div" className="relative">
-              <MenuButton className="inline-flex items-center gap-2 py-2 text-white focus:outline-none cursor-pointer">
+            <Link href="/add-challenge">
+              <p className="inline-flex items-center gap-2 py-2 text-white focus:outline-none cursor-pointer">
                 {isEnglish ? "Add Challenge" : "أضف تحدي"}
-                <ChevronDownIcon className="size-4 fill-white/60" />
-              </MenuButton>
-
-              <MenuItems
-                transition
-                anchor="bottom end"
-                className="w-52 origin-top-right rounded-xl border border-white/5 bg-white/5 p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
-              >
-                <MenuItem>
-                  <button className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10">
-                    <PencilIcon className="size-4 fill-white/30" />
-                    Option 1
-                  </button>
-                </MenuItem>
-                <MenuItem>
-                  <button className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10">
-                    <Square2StackIcon className="size-4 fill-white/30" />
-                    Option 2
-                  </button>
-                </MenuItem>
-              </MenuItems>
-            </Menu>
+              </p>
+            </Link>
           </div>
 
           {/* User Info - Desktop */}
@@ -316,40 +300,19 @@ export default function Header() {
                 </button>
                 {mobileChallengesOpen && (
                   <div className="mt-2 bg-[#0B0D0F33] rounded-lg p-2 space-y-2">
-                    <Link href="/training-challenges">
-                      <button
-                        className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
-                          isEnglish ? "text-left" : "text-right"
-                        }`}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        {isEnglish
-                          ? "Training Challenges"
-                          : "التحديات التدريبية"}
-                      </button>
-                    </Link>
-                    <Link href="/competitive-challenges">
-                      <button
-                        className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
-                          isEnglish ? "text-left" : "text-right"
-                        }`}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        {isEnglish
-                          ? "Competitive Challenges"
-                          : "التحديات التنافسية"}
-                      </button>
-                    </Link>
-                    <Link href="/servers">
-                      <button
-                        className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
-                          isEnglish ? "text-left" : "text-right"
-                        }`}
-                        onClick={() => setIsMobileMenuOpen(false)}
-                      >
-                        {isEnglish ? "Servers" : "الخوادم"}
-                      </button>
-                    </Link>
+                    {labs &&
+                      labs.map((lab) => (
+                        <Link href={`/labs/${lab.uuid}`} key={lab.uuid}>
+                          <button
+                            className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
+                              isEnglish ? "text-left" : "text-right"
+                            }`}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            {isEnglish ? lab.name : lab.ar_name}
+                          </button>
+                        </Link>
+                      ))}
                   </div>
                 )}
               </div>
