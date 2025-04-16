@@ -397,7 +397,6 @@ export default function ChallengePage() {
                   alt={`${challenge?.title || "Challenge"} icon`}
                 />
                 <p className="text-lg font-semibold">{challenge?.title}</p>
-             
               </div>
               <div>
                 <p className="font-bold">
@@ -410,7 +409,9 @@ export default function ChallengePage() {
               <p className="text-gray-300 text-[18px]">
                 {challenge?.description}
               </p>
-              <p className="bg-black/50 mt-2 text-white text-sm p-2 rounded-full w-fit">{challenge?.flag_type}</p>
+              <p className="bg-black/50 mt-2 text-white text-sm p-2 rounded-full w-fit">
+                {challenge?.flag_type}
+              </p>
               <p className="mt-10">
                 {isEnglish ? "Difficulty Level" : "مستوى الصعوبة"}:
                 {challenge?.difficulty === "سهل" && (
@@ -438,20 +439,6 @@ export default function ChallengePage() {
           </div>
 
           <div className="relative">
-            {isLocked && (
-              <div className="absolute top-4 left-0 w-full h-full bg-black/10 backdrop-blur-sm ">
-                <div className="flex flex-col w-full h-full justify-center items-center gap-2">
-                  <Image src="/lock.png" alt="lock" width={160} height={160} />
-
-                  <p className="text-white font-semibold">
-                    {isEnglish
-                      ? "Challenge is not available yet"
-                      : "التحدي غير متاح حالياً"}
-                  </p>
-                </div>
-              </div>
-            )}
-
             <div
               dir={isEnglish ? "ltr" : "rtl"}
               className="flex mx-10 pt-10 items-center gap-4"
@@ -484,12 +471,14 @@ export default function ChallengePage() {
             {details && (
               <div
                 dir={isEnglish ? "rtl" : "ltr"}
-                className="grid  grid-cols-1 md:grid-cols-3 gap-6 mx-10 mt-10"
+                className={`grid grid-cols-1 md:grid-cols-${
+                  challenge?.file && challenge?.link ? "3" : "2"
+                } gap-6 mx-10 mt-10`}
               >
                 {/* Flag Submission Section */}
                 <div
                   dir={isEnglish ? "ltr" : "rtl"}
-                  className="bg-[#FFFFFF0D] rounded-lg p-6 flex flex-col min-h-[250px]"
+                  className="bg-[#FFFFFF0D] relative rounded-lg p-6 flex flex-col min-h-[250px]"
                 >
                   <div className="flex items-center gap-4 mb-6">
                     <Image
@@ -519,62 +508,80 @@ export default function ChallengePage() {
                     </button>
                   )}
 
-                  <div className="flex items-center lg:flex-row flex-col gap-4 mt-auto">
-                    <div className=" w-full lg:w-2/3">
-                      <input
-                        type="text"
-                        placeholder={isEnglish ? "Flag" : "العلم"}
-                        className="bg-[#0B0D0F] w-full border border-gray-700 rounded-lg p-3 text-white"
-                        value={flagInput}
-                        onChange={(e) => setFlagInput(e.target.value)}
+                  {isLocked ? (
+                    <div className="absolute bottom-7 w-full  right-1/2 translate-x-1/2">
+                      <Image
+                        className="mx-auto"
+                        src="/lock2.png"
+                        alt="Lock"
+                        width={48}
+                        height={48}
                       />
+                      <p className="text-white text-[20px] text-center ">
+                        تهانينا! لقد التقط جميع الأعلام بنجاح
+                      </p>
                     </div>
-
-                    <button
-                      onClick={submitFlag}
-                      disabled={isLoading}
-                      className="bg-[#38FFE5] w-full lg:w-1/3 py-3 cursor-pointer hover:bg-[#38FFE5]/90 text-black font-semibold px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isLoading ? (
-                        <div className="flex items-center justify-center">
-                          <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <div className="flex items-center lg:flex-row flex-col gap-4 mt-auto">
+                        <div className=" w-full lg:w-2/3">
+                          <input
+                            type="text"
+                            placeholder={isEnglish ? "Flag" : "العلم"}
+                            className="bg-[#0B0D0F] w-full border border-gray-700 rounded-lg p-3 text-white"
+                            value={flagInput}
+                            onChange={(e) => setFlagInput(e.target.value)}
+                          />
                         </div>
-                      ) : isEnglish ? (
-                        "Submit"
-                      ) : (
-                        "تسليم"
+
+                        <button
+                          onClick={submitFlag}
+                          disabled={isLoading}
+                          className="bg-[#38FFE5] w-full lg:w-1/3 py-3 cursor-pointer hover:bg-[#38FFE5]/90 text-black font-semibold px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isLoading ? (
+                            <div className="flex items-center justify-center">
+                              <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                            </div>
+                          ) : isEnglish ? (
+                            "Submit"
+                          ) : (
+                            "تسليم"
+                          )}
+                        </button>
+                      </div>
+
+                      {error && (
+                        <p className="text-red-500 text-sm mt-2">{error}</p>
                       )}
-                    </button>
-                  </div>
-                  {error && (
-                    <p className="text-red-500 text-sm mt-2">{error}</p>
+                    </>
                   )}
                 </div>
 
                 {/* Challenge Files Section */}
-                <div
-                  dir={isEnglish ? "ltr" : "rtl"}
-                  className="bg-[#FFFFFF0D] rounded-lg p-6 flex flex-col min-h-[250px]"
-                >
-                  <div className="flex items-center gap-4 mb-6">
-                    <Image
-                      src="/files.png"
-                      alt="Files"
-                      width={32}
-                      height={32}
-                      priority
-                    />
-                    <h3 className="text-lg font-semibold">
-                      {isEnglish ? "Challenge Files" : "ملفات التحدي"}
-                    </h3>
-                  </div>
-                  <p className="text-sm text-gray-400">
-                    {isEnglish
-                      ? "Download required challenge files"
-                      : "تحميل الملفات المطلوبة للتحدي"}
-                  </p>
-                  <div className="mt-auto">
-                    {challenge?.file ? (
+                {challenge?.file && (
+                  <div
+                    dir={isEnglish ? "ltr" : "rtl"}
+                    className="bg-[#FFFFFF0D] rounded-lg p-6 flex flex-col min-h-[250px]"
+                  >
+                    <div className="flex items-center gap-4 mb-6">
+                      <Image
+                        src="/files.png"
+                        alt="Files"
+                        width={32}
+                        height={32}
+                        priority
+                      />
+                      <h3 className="text-lg font-semibold">
+                        {isEnglish ? "Challenge Files" : "ملفات التحدي"}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-400">
+                      {isEnglish
+                        ? "Download required challenge files"
+                        : "تحميل الملفات المطلوبة للتحدي"}
+                    </p>
+                    <div className="mt-auto">
                       <a
                         href={challenge.file}
                         download
@@ -582,59 +589,45 @@ export default function ChallengePage() {
                       >
                         {isEnglish ? "Download File" : "تحميل الملف"}
                       </a>
-                    ) : (
-                      <button
-                        disabled
-                        className="lg:w-1/2 bg-transparent w-full cursor-not-allowed border border-gray-600 text-gray-600 font-semibold py-3 rounded-lg"
-                      >
-                        {isEnglish ? "No files available" : "لا يوجد ملفات"}
-                      </button>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Challenge Link Section */}
-                <div
-                  dir={isEnglish ? "ltr" : "rtl"}
-                  className="bg-[#FFFFFF0D] rounded-lg p-6 flex flex-col min-h-[250px]"
-                >
-                  <div className="flex items-center gap-4 mb-6">
-                    <Image
-                      src="/links.png"
-                      alt="Link"
-                      width={32}
-                      height={32}
-                      priority
-                    />
-                    <h3 className="text-lg font-semibold">
+                {challenge?.link && (
+                  <div
+                    dir={isEnglish ? "ltr" : "rtl"}
+                    className="bg-[#FFFFFF0D] rounded-lg p-6 flex flex-col min-h-[250px]"
+                  >
+                    <div className="flex items-center gap-4 mb-6">
+                      <Image
+                        src="/links.png"
+                        alt="Link"
+                        width={32}
+                        height={32}
+                        priority
+                      />
+                      <h3 className="text-lg font-semibold">
+                        {isEnglish
+                          ? "Click to go to challenge page"
+                          : "اضغط للانتقال إلى صفحة التحدي"}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-gray-400">
                       {isEnglish
                         ? "Click to go to challenge page"
                         : "اضغط للانتقال إلى صفحة التحدي"}
-                    </h3>
-                  </div>
-                  <p className="text-sm text-gray-400">
-                    {isEnglish
-                      ? "Click to go to challenge page"
-                      : "اضغط للانتقال إلى صفحة التحدي"}
-                  </p>
-                  <div className="mt-auto">
-                    {challenge?.link ? (
+                    </p>
+                    <div className="mt-auto">
                       <button
                         onClick={() => window.open(challenge.link, "_blank")}
                         className="lg:w-1/2 w-full bg-transparent cursor-pointer border border-[#38FFE5] hover:bg-[#38FFE5]/10 text-[#38FFE5] font-semibold py-3 rounded-lg transition-all"
                       >
                         {isEnglish ? "Start Challenge" : "ابدأ التحدي"}
                       </button>
-                    ) : (
-                      <button
-                        disabled
-                        className="lg:w-1/2 w-full bg-transparent cursor-not-allowed border border-gray-600 text-gray-600 font-semibold py-3 rounded-lg"
-                      >
-                        {isEnglish ? "No link available" : "لا يوجد رابط"}
-                      </button>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
@@ -659,82 +652,101 @@ export default function ChallengePage() {
                   dir={isEnglish ? "ltr" : "rtl"}
                   className="mx-10 mb-5 pb-5 mt-10 bg-[#06373F26] px-5"
                 >
-                  {activitiesData?.map((user, index) => {
-                    // Get the most recent solved_at time
-                    const latestSolvedAt =
-                      user.solved_flags?.length > 0
-                        ? new Date(
-                            Math.max(
-                              ...user.solved_flags.map(
-                                (flag) => new Date(flag.solved_at)
+                  {activitiesData?.length > 0 ? (
+                    activitiesData.map((user, index) => {
+                      // Get the most recent solved_at time
+                      const latestSolvedAt =
+                        user.solved_flags?.length > 0
+                          ? new Date(
+                              Math.max(
+                                ...user.solved_flags.map(
+                                  (flag) => new Date(flag.solved_at)
+                                )
                               )
                             )
-                          )
-                        : null;
+                          : null;
 
-                    // Format the time difference
-                    const formatTimeAgo = (date) => {
-                      const now = new Date();
-                      const diffInSeconds = Math.floor((now - date) / 1000);
+                      // Format the time difference
+                      const formatTimeAgo = (date) => {
+                        const now = new Date();
+                        const diffInSeconds = Math.floor((now - date) / 1000);
 
-                      if (diffInSeconds < 60)
-                        return isEnglish ? "Just now" : "الآن";
-                      if (diffInSeconds < 3600) {
-                        const minutes = Math.floor(diffInSeconds / 60);
+                        if (diffInSeconds < 60)
+                          return isEnglish ? "Just now" : "الآن";
+                        if (diffInSeconds < 3600) {
+                          const minutes = Math.floor(diffInSeconds / 60);
+                          return isEnglish
+                            ? `${minutes} minutes ago`
+                            : `منذ ${minutes} دقيقة`;
+                        }
+                        if (diffInSeconds < 86400) {
+                          const hours = Math.floor(diffInSeconds / 3600);
+                          return isEnglish
+                            ? `${hours} hours ago`
+                            : `منذ ${hours} ساعة`;
+                        }
+                        const days = Math.floor(diffInSeconds / 86400);
                         return isEnglish
-                          ? `${minutes} minutes ago`
-                          : `منذ ${minutes} دقيقة`;
-                      }
-                      if (diffInSeconds < 86400) {
-                        const hours = Math.floor(diffInSeconds / 3600);
-                        return isEnglish
-                          ? `${hours} hours ago`
-                          : `منذ ${hours} ساعة`;
-                      }
-                      const days = Math.floor(diffInSeconds / 86400);
-                      return isEnglish ? `${days} days ago` : `منذ ${days} يوم`;
-                    };
+                          ? `${days} days ago`
+                          : `منذ ${days} يوم`;
+                      };
 
-                    return (
-                      <div
-                        key={index}
-                        className={`flex items-center justify-between flex-wrap py-5 rounded-lg px-5 ${
-                          index % 2 === 0 ? "bg-transparent" : "bg-[#06373F]"
-                        }`}
-                      >
-                        <div className="flex items-center gap-8">
-                          <div>
-                            <Image
-                              src={index === 0 ? "/blood.png" : "/flag.png"}
-                              alt="flag"
-                              width={32}
-                              height={32}
-                            />
+                      return (
+                        <div
+                          key={index}
+                          className={`flex items-center justify-between flex-wrap py-5 rounded-lg px-5 ${
+                            index % 2 === 0 ? "bg-transparent" : "bg-[#06373F]"
+                          }`}
+                        >
+                          <div className="flex items-center gap-8">
+                            <div>
+                              <Image
+                                src={index === 0 ? "/blood.png" : "/flag.png"}
+                                alt="flag"
+                                width={32}
+                                height={32}
+                              />
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <Image
+                                src={user.profile_image || "/icon1.png"}
+                                alt="profile"
+                                width={32}
+                                height={32}
+                              />
+                              <p className="text-xl font-semibold">
+                                {user.user_name}
+                              </p>
+                            </div>
                           </div>
                           <div className="flex items-center gap-4">
-                            <Image
-                              src={user.profile_image || "/icon1.png"}
-                              alt="profile"
-                              width={32}
-                              height={32}
-                            />
-                            <p className="text-xl font-semibold">
-                              {user.user_name}
+                            <p className="text-[#BCC9DB] py-2 md:py-0 text-[18px]">
+                              {latestSolvedAt
+                                ? formatTimeAgo(latestSolvedAt)
+                                : isEnglish
+                                ? "Not solved yet"
+                                : "لم يتم الحل بعد"}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <p className="text-[#BCC9DB] py-2 md:py-0 text-[18px]">
-                            {latestSolvedAt
-                              ? formatTimeAgo(latestSolvedAt)
-                              : isEnglish
-                              ? "Not solved yet"
-                              : "لم يتم الحل بعد"}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-10">
+                      <Image
+                        src="/notfound.png"
+                        alt="No activities"
+                        width={64}
+                        height={64}
+                        className="mb-4"
+                      />
+                      <p className="text-[#BCC9DB] text-[18px]">
+                        {isEnglish
+                          ? "No activities yet"
+                          : "لاتوجد أنشطة حتي الآن"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -862,7 +874,7 @@ export default function ChallengePage() {
                       </span>
                       {isEnglish
                         ? "will be added to your account"
-                        : "ستضاف إلي حسابك"}
+                        : "ستضاف إلى حسابك"}
                     </p>
                   </div>
                 </div>
@@ -916,7 +928,7 @@ export default function ChallengePage() {
           {/* notfication flag  */}
 
           {notfication && (
-            <div className="fixed top-28 right-4 z-50">
+            <div className="fixed inset-0 flex items-center justify-center z-50">
               <div className="bg-[#131619] border border-[#38FFE5] rounded-lg p-4 shadow-lg animate-fade-in">
                 <div className="flex items-center gap-3">
                   <div>
