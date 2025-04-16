@@ -20,7 +20,6 @@ import { useAuth } from "@/app/context/AuthContext";
 const inter = Inter({ subsets: ["latin"] });
 
 export default function ProfileSettings() {
-  
   const { isEnglish } = useLanguage();
   const { logout } = useAuth();
   const {
@@ -32,6 +31,7 @@ export default function ProfileSettings() {
     fetchUserProfile,
     profileImage: contextProfileImage,
     setError,
+    timeZone,
   } = useUserProfile();
 
   const countries = useMemo(() => countryList().getData(), []);
@@ -96,9 +96,33 @@ export default function ProfileSettings() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [selectedTimeZone, setSelectedTimeZone] = useState(timeZone);
 
   const [savingSocialMedia, setSavingSocialMedia] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
+
+  // Get all available timezones
+  const timeZones = useMemo(() => {
+    try {
+      return Intl.supportedValuesOf("timeZone")
+        .map((zone) => {
+          const date = new Date();
+          const formatter = new Intl.DateTimeFormat("en-US", {
+            timeZone: zone,
+            timeZoneName: "longOffset",
+          });
+          const offset = formatter.format(date).split(" ").pop();
+          return {
+            value: zone,
+            label: `${zone.replace(/_/g, " ")} (${offset})`,
+          };
+        })
+        .sort((a, b) => a.label.localeCompare(b.label));
+    } catch (error) {
+      console.error("Error getting timezones:", error);
+      return [];
+    }
+  }, []);
 
   const countrySelectStyles = {
     control: (styles, { isFocused }) => ({
@@ -577,7 +601,19 @@ export default function ProfileSettings() {
       setInputUserName("");
       setOriginalUserName(userName);
     }
-  }, [country, initialCountry, email, newEmail, userName, inputUserName]);
+
+    if (timeZone) {
+      setSelectedTimeZone(timeZone);
+    }
+  }, [
+    country,
+    initialCountry,
+    email,
+    newEmail,
+    userName,
+    inputUserName,
+    timeZone,
+  ]);
 
   useEffect(() => {
     if (!userName) return;
@@ -594,8 +630,17 @@ export default function ProfileSettings() {
       }
     }
 
-    setHasChanges(usernameChanged || countryChanged);
-  }, [inputUserName, selectedCountry, userName, country]);
+    const timezoneChanged = selectedTimeZone !== timeZone;
+
+    setHasChanges(usernameChanged || countryChanged || timezoneChanged);
+  }, [
+    inputUserName,
+    selectedCountry,
+    userName,
+    country,
+    selectedTimeZone,
+    timeZone,
+  ]);
 
   const handleSaveChanges = async () => {
     const usernameChanged = inputUserName !== "" && inputUserName !== userName;
@@ -610,7 +655,9 @@ export default function ProfileSettings() {
       }
     }
 
-    if (!usernameChanged && !countryChanged) {
+    const timezoneChanged = selectedTimeZone !== timeZone;
+
+    if (!usernameChanged && !countryChanged && !timezoneChanged) {
       setSuccessMessage(
         isEnglish ? "No changes to save" : "لا توجد تغييرات للحفظ"
       );
@@ -634,6 +681,10 @@ export default function ProfileSettings() {
 
       if (countryChanged && selectedCountry && selectedCountry.value) {
         formData.append("country", selectedCountry.value);
+      }
+
+      if (timezoneChanged) {
+        formData.append("time_zone", selectedTimeZone);
       }
 
       const response = await axios.post(
@@ -1165,31 +1216,30 @@ export default function ProfileSettings() {
                     className="hidden"
                   />
                   {!selectedImageFile && (
-                  <button
-                    onClick={handleUploadClick}
-                    disabled={uploading}
-                    className="bg-[#00D8C8] text-black font-bold hover:shadow-[0px_0px_15px_0px_#00D8C8] transition-all duration-300 px-5 py-2 rounded-md text-sm"
-                  >
-                    {isEnglish ? "Choose Image" :" رفع صورة"}
-                  </button>
-                  )}
-                  {selectedImageFile && (
-                    <>
-                      <button
+                    <button
                       onClick={handleUploadClick}
                       disabled={uploading}
                       className="bg-[#00D8C8] text-black font-bold hover:shadow-[0px_0px_15px_0px_#00D8C8] transition-all duration-300 px-5 py-2 rounded-md text-sm"
                     >
-                      {isEnglish ? "Choose Image" :" تعديل الصورة"}
+                      {isEnglish ? "Choose Image" : " رفع صورة"}
                     </button>
-                    <button
-                      onClick={handleRemoveImage}
-                      disabled={uploading}
-                      className="bg-transparent border-2 border-red-500 text-white hover:shadow-[0px_0px_15px_0px_#ff0000] transition-all duration-300 px-5 py-2 rounded-md text-sm"
-                    >
-                      {isEnglish ? "Remove" : "إزالة"}
-                    </button>
-                    
+                  )}
+                  {selectedImageFile && (
+                    <>
+                      <button
+                        onClick={handleUploadClick}
+                        disabled={uploading}
+                        className="bg-[#00D8C8] text-black font-bold hover:shadow-[0px_0px_15px_0px_#00D8C8] transition-all duration-300 px-5 py-2 rounded-md text-sm"
+                      >
+                        {isEnglish ? "Choose Image" : " تعديل الصورة"}
+                      </button>
+                      <button
+                        onClick={handleRemoveImage}
+                        disabled={uploading}
+                        className="bg-transparent border-2 border-red-500 text-white hover:shadow-[0px_0px_15px_0px_#ff0000] transition-all duration-300 px-5 py-2 rounded-md text-sm"
+                      >
+                        {isEnglish ? "Remove" : "إزالة"}
+                      </button>
                     </>
                   )}
                 </div>
@@ -1246,7 +1296,7 @@ export default function ProfileSettings() {
                             onClick={handleEmailUpdate}
                             className="bg-[#00D8C8] text-black rounded-xl font-bold px-4 hover:shadow-[0px_0px_15px_0px_#00D8C8] transition-all duration-300"
                           >
-                            {isEnglish ? "Save" : "حفظ"}  
+                            {isEnglish ? "Save" : "حفظ"}
                           </button>
                           <button
                             onClick={cancelEmailEdit}
@@ -1310,9 +1360,17 @@ export default function ProfileSettings() {
                   {isEnglish ? "Timezone" : "المنطقة الزمنية"}
                 </label>
                 <div className="relative">
-                  <select className="bg-black rounded-xl p-3 w-full appearance-none text-right pr-10 focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300">
-                    <option value="cairo">Egypt, Cairo</option>
-                    {/* Add more timezones as needed */}
+                  <select
+                    value={selectedTimeZone}
+                    onChange={(e) => setSelectedTimeZone(e.target.value)}
+                    className="bg-black rounded-xl p-3 w-full appearance-none text-right pr-10 focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300"
+                  >
+                    <option value={timeZone}>{timeZone}</option>
+                    {timeZones.map((zone) => (
+                      <option key={zone.value} value={zone.value}>
+                        {zone.label}
+                      </option>
+                    ))}
                   </select>
                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                     <svg

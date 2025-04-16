@@ -17,6 +17,7 @@ export function UserProfileProvider({ children }) {
   const [profileImage, setProfileImage] = useState(null);
   const [userName, setUserName] = useState("");
   const [country, setCountry] = useState("");
+  const [timeZone, setTimeZone] = useState("");
   const [discord, setDiscord] = useState(null);
   const [instagram, setInstagram] = useState(null);
   const [twitter, setTwitter] = useState(null);
@@ -56,6 +57,7 @@ export function UserProfileProvider({ children }) {
       setProfileImage(userData.profile_image);
       setUserName(userData.user_name);
       setCountry(userData.country);
+      setTimeZone(userData.time_zone);
 
       // Update how we handle socialMedia data
       if (userData.socialMedia) {
@@ -114,6 +116,7 @@ export function UserProfileProvider({ children }) {
       setProfileImage(userData.profile_image);
       setUserName(userData.user_name);
       setCountry(userData.country);
+      setTimeZone(userData.time_zone);
 
       // Update how we handle socialMedia data
       if (userData.socialMedia) {
@@ -156,6 +159,7 @@ export function UserProfileProvider({ children }) {
       setProfileImage(null);
       setUserName("");
       setCountry("");
+      setTimeZone("");
       setDiscord(null);
       setInstagram(null);
       setTwitter(null);
@@ -171,6 +175,7 @@ export function UserProfileProvider({ children }) {
         profileImage,
         userName,
         country,
+        timeZone,
         discord,
         instagram,
         twitter,
