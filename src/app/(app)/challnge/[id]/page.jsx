@@ -397,6 +397,7 @@ export default function ChallengePage() {
                   alt={`${challenge?.title || "Challenge"} icon`}
                 />
                 <p className="text-lg font-semibold">{challenge?.title}</p>
+             
               </div>
               <div>
                 <p className="font-bold">
@@ -409,6 +410,7 @@ export default function ChallengePage() {
               <p className="text-gray-300 text-[18px]">
                 {challenge?.description}
               </p>
+              <p className="bg-black/50 mt-2 text-white text-sm p-2 rounded-full w-fit">{challenge?.flag_type}</p>
               <p className="mt-10">
                 {isEnglish ? "Difficulty Level" : "مستوى الصعوبة"}:
                 {challenge?.difficulty === "سهل" && (
