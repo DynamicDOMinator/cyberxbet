@@ -262,7 +262,7 @@ export default function ForgotPassword() {
       );
 
       // If successful, move to OTP+Password step (skip OTP verification step)
-      console.log("Password reset requested:", response.data);
+    
       setStep(2); // Move directly to combined OTP + password step
       return {
         success: true,

@@ -18,6 +18,7 @@ import { CiSettings } from "react-icons/ci";
 import { MdLanguage } from "react-icons/md";
 import { RiLogoutCircleRLine } from "react-icons/ri";
 import { useLanguage } from "../context/LanguageContext";
+import { useLabs } from "../context/LabsContext";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
@@ -37,13 +38,13 @@ const gradientAnimation = `
 
 export default function Header() {
   const { isEnglish, setIsEnglish } = useLanguage();
+  const { labs } = useLabs();
   const [random, setRandom] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mobileChallengesOpen, setMobileChallengesOpen] = useState(false);
   const [mobileAddChallengeOpen, setMobileAddChallengeOpen] = useState(false);
   const [mobileUserMenuOpen, setMobileUserMenuOpen] = useState(false);
   const [userName, setUserName] = useState("");
-  const [labs, setLabs] = useState([]);
   const router = useRouter();
 
   const userProfile = useUserProfile();
@@ -55,28 +56,6 @@ export default function Header() {
 
   useEffect(() => {
     setRandom(Math.floor(Math.random() * 1000));
-  }, []);
-
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        const token = Cookies.get("token");
-        const response = await axios.get(`${apiUrl}/labs`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.data.status === "success") {
-          setLabs(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching labs:", error);
-      }
-    };
-
-    fetchUserProfile();
   }, []);
 
   const logout = async () => {

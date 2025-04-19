@@ -5,7 +5,7 @@ import { LanguageProvider } from "../context/LanguageContext";
 import Header from "../components/Header";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
+import { LabsProvider } from "../context/LabsContext";
 export default function AppLayout({ children }) {
   return (
     <AuthProvider>
@@ -52,8 +52,10 @@ function AuthStateWrapper({ children }) {
   return (
     <UserProfileProvider>
       <LanguageProvider>
-        <Header />
-        {children}
+        <LabsProvider>
+          <Header />
+          {children}
+        </LabsProvider>
       </LanguageProvider>
     </UserProfileProvider>
   );

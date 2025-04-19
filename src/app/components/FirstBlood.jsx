@@ -28,7 +28,7 @@ const FirstBlood = ({
       audioRef.current.volume = 0.5;
       audioRef.current
         .play()
-        .catch((e) => console.log("Audio playback prevented:", e));
+     
     }
 
     // After a delay, show the main content

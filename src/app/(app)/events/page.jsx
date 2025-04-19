@@ -42,7 +42,7 @@ export default function Events() {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log("API Response:", response.data);
+    
         setEvents(response.data.events);
       } catch (error) {
         console.error("Error fetching events:", error);
