@@ -37,6 +37,7 @@ export default function AddChallenge() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [showErrorNotification, setShowErrorNotification] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [flags, setFlags] = useState([{ id: 1, value: "" }]);
   const fileInputRef = useRef(null);
   const solutionFileInputRef = useRef(null);
@@ -54,6 +55,20 @@ export default function AddChallenge() {
       return () => clearTimeout(timer);
     }
   }, [errorMessage]);
+
+  // Reset success message after a delay
+  React.useEffect(() => {
+    if (successMessage) {
+      setShowSuccessMessage(true);
+      const timer = setTimeout(() => {
+        setShowSuccessMessage(false);
+        setTimeout(() => {
+          setSuccessMessage("");
+        }, 300);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   // Fetch categories
   useEffect(() => {
@@ -355,6 +370,7 @@ export default function AddChallenge() {
       setSuccessMessage(
         isEnglish ? "Challenge created successfully!" : "تم إنشاء التحدي بنجاح!"
       );
+      setShowSuccessMessage(true);
 
       // Reset form
       setChallengeData({
@@ -1074,14 +1090,22 @@ export default function AddChallenge() {
 
         {/* Success Message */}
         <AnimatePresence>
-          {successMessage && (
+          {showSuccessMessage && successMessage && (
             <motion.div
-              className="bg-green-500/20 border border-green-500 text-green-400 px-4 py-3 rounded-md mt-4"
-              initial={{ opacity: 0, y: 20 }}
+              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-green-500/20 border border-green-500 text-green-400 px-4 py-3 rounded-md shadow-lg flex items-center max-w-md w-full mx-4"
+              initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
             >
-              {successMessage}
+              <div className="mr-3">
+                <FaCheck className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium" dir={isEnglish ? "ltr" : "rtl"}>
+                  {successMessage}
+                </p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

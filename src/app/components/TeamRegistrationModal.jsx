@@ -12,11 +12,13 @@ export default function TeamRegistrationModal({
   eventTitle,
   minMembers,
   maxMembers,
+  onSuccess,
 }) {
   const { isEnglish } = useLanguage();
   const [currentStep, setCurrentStep] = useState("initial");
   const [createTeam, setCreateTeam] = useState("");
   const [joinTeam, setJoinTeam] = useState("");
+  const [teamPassword, setTeamPassword] = useState("");
   const { id } = useParams();
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -42,8 +44,8 @@ export default function TeamRegistrationModal({
         toast.success(
           isEnglish ? "Team created successfully!" : "تم إنشاء الفريق بنجاح!"
         );
+        if (onSuccess) onSuccess();
         onClose();
-     
       }
     } catch (error) {
       console.error("Error creating team:", error);
@@ -55,6 +57,55 @@ export default function TeamRegistrationModal({
         );
       } else {
         toast.error(isEnglish ? "Failed to create team" : "فشل إنشاء الفريق");
+      }
+    }
+  };
+
+  const handleJoinTeam = async () => {
+    try {
+      const response = await axios.post(
+        `${apiUrl}/teams/join`,
+        {
+          secret: teamPassword,
+          team_name: joinTeam,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data?.status === "success") {
+        const teamName = response.data?.data?.team?.name || joinTeam;
+        toast.success(
+          isEnglish
+            ? `Successfully joined team "${teamName}"!`
+            : `تم الانضمام إلى الفريق "${teamName}" بنجاح!`
+        );
+        if (onSuccess) onSuccess();
+        onClose();
+      } else {
+        toast.success(
+          isEnglish
+            ? "Joined team successfully!"
+            : "تم الانضمام إلى الفريق بنجاح!"
+        );
+        if (onSuccess) onSuccess();
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error joining team:", error);
+      if (error.response?.data?.message) {
+        toast.error(
+          isEnglish
+            ? error.response.data.message
+            : error.response.data.messageAr
+        );
+      } else {
+        toast.error(
+          isEnglish ? "Failed to join team" : "فشل الانضمام إلى الفريق"
+        );
       }
     }
   };
@@ -130,10 +181,12 @@ export default function TeamRegistrationModal({
                   {isEnglish ? "Team name" : "اسم الفريق"}
                 </label>
                 <input
-                  type="password"
+                  type="text"
+                  value={joinTeam}
+                  onChange={(e) => setJoinTeam(e.target.value)}
                   className="w-full bg-[#0B0D0F]  rounded-md p-2 focus:border-[#38FFE5] focus:outline-none"
                   placeholder={
-                    isEnglish ? "Enter team password" : "أدخل كلمة مرور الفريق"
+                    isEnglish ? "Enter team name" : "أدخل اسم الفريق"
                   }
                 />
               </div>
@@ -143,13 +196,18 @@ export default function TeamRegistrationModal({
                 </label>
                 <input
                   type="password"
+                  value={teamPassword}
+                  onChange={(e) => setTeamPassword(e.target.value)}
                   className="w-full bg-[#0B0D0F]  rounded-md p-2 focus:border-[#38FFE5] focus:outline-none"
                   placeholder={
                     isEnglish ? "Enter team password" : "أدخل كلمة مرور الفريق"
                   }
                 />
               </div>
-              <button className="md:w-2/3 w-full mt-10 bg-[#38FFE5] text-[#06373F] font-bold py-2 rounded-md hover:bg-[#38FFE5]/90 transition-colors">
+              <button
+                onClick={handleJoinTeam}
+                className="md:w-2/3 w-full mt-10 cursor-pointer bg-[#38FFE5] text-[#06373F] font-bold py-2 rounded-md hover:bg-[#38FFE5]/90 transition-colors"
+              >
                 {isEnglish ? "Join Team" : "انضم إلى الفريق"}
               </button>
               <button

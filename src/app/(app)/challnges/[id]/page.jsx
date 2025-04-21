@@ -197,11 +197,12 @@ const ChallengesPage = () => {
                 </div>
               </div>
               <div  className="flex items-center mt-4 gap-1 justify-between">
-                <span>{isEnglish ? "First Blood:" : " الدم الأول :"}</span>
+                <span>{isEnglish ? "First Blood:" : "الاختراقات :"}</span>
                 <div className="flex items-center gap-2">
                   <p className="font-bold text-sm">
                     {challenge.firstBloodBytes}
                   </p>
+                  
                   <Image
                     src="/card-user.png"
                     alt="user"
