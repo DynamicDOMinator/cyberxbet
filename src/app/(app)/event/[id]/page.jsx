@@ -219,6 +219,41 @@ export default function ChallengePage() {
         <LoadingPage />
       ) : (
         <div className="max-w-[2000px] pt-36 mx-auto pb-5">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          
           {challenge?.flag_type === "multiple_individual" ? (
             challenge?.flags_data?.map((flag, index) => (
               <div key={index} className="mb-8">

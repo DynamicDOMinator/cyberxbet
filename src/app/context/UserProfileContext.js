@@ -28,6 +28,102 @@ export function UserProfileProvider({ children }) {
   const [error, setError] = useState("");
   const { isAuthenticated } = useAuth();
 
+  // Get the current date and time in the user's timezone
+  const getCurrentDateInUserTimezone = useCallback(() => {
+    if (!timeZone) {
+      return new Date(); // Return current date in local timezone if no user timezone set
+    }
+
+    try {
+      // Create a formatter that will format the date in the user's timezone
+      const formatter = new Intl.DateTimeFormat("en-US", {
+        timeZone: timeZone,
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+        hour: "numeric",
+        minute: "numeric",
+        second: "numeric",
+        hour12: false,
+      });
+
+      // Get the parts of the formatted date
+      const parts = formatter.formatToParts(new Date());
+
+      // Convert parts to a date object
+      const dateObj = {};
+      parts.forEach((part) => {
+        if (part.type !== "literal") {
+          dateObj[part.type] = parseInt(part.value, 10);
+        }
+      });
+
+      // JavaScript months are 0-based
+      const month = dateObj.month - 1;
+
+      // Create date in user's timezone
+      return new Date(
+        dateObj.year,
+        month,
+        dateObj.day,
+        dateObj.hour,
+        dateObj.minute,
+        dateObj.second
+      );
+    } catch (error) {
+      console.error("Error getting date in user timezone:", error);
+      return new Date(); // Return current date in local timezone as fallback
+    }
+  }, [timeZone]);
+
+  // Convert a date to the user's timezone
+  const convertToUserTimezone = useCallback(
+    (date) => {
+      if (!date) return null;
+
+      try {
+        const dateObj = new Date(date);
+
+        // If no timezone is set or invalid date, return the date as is
+        if (!timeZone || isNaN(dateObj.getTime())) {
+          return dateObj;
+        }
+
+        // Format the date in the user's timezone
+        return new Date(dateObj.toLocaleString("en-US", { timeZone }));
+      } catch (error) {
+        console.error("Error converting date to user timezone:", error);
+        return new Date(date); // Return original date as fallback
+      }
+    },
+    [timeZone]
+  );
+
+  // Get a human-readable timezone name for display
+  const getFormattedTimezoneName = useCallback(() => {
+    if (!timeZone) return "";
+
+    try {
+      // Get current date in the user's timezone
+      const date = new Date();
+
+      // Format options to get the timezone name
+      const options = {
+        timeZoneName: "long",
+        timeZone: timeZone,
+      };
+
+      // Extract just the timezone part
+      const timeString = date.toLocaleString("en-US", options);
+      const timezonePart = timeString.split(",")[1] || timeZone;
+
+      return timezonePart.trim();
+    } catch (error) {
+      console.error("Error formatting timezone name:", error);
+      return timeZone; // Return raw timezone as fallback
+    }
+  }, [timeZone]);
+
   // Fetch user profile data - wrap with useCallback
   const fetchUserProfile = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -186,6 +282,9 @@ export function UserProfileProvider({ children }) {
         fetchUserProfile,
         updateUserProfile,
         setError,
+        convertToUserTimezone,
+        getFormattedTimezoneName,
+        getCurrentDateInUserTimezone,
       }}
     >
       {children}
