@@ -85,7 +85,7 @@ export default function Events() {
           }
         }
       } catch (error) {
-        console.error("Error fetching main event:", error);
+        return null;
       }
     };
 

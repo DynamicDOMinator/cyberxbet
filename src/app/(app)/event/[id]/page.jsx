@@ -25,6 +25,8 @@ export default function ChallengePage() {
   const [details, setDetails] = useState(true);
   const [activitiesData, setActivitiesData] = useState("");
   const [isLocked, setIsLocked] = useState(false);
+  const [teamData, setTeamData] = useState(null);
+  const [showEmptyState, setShowEmptyState] = useState(false);
 
   const { id } = useParams();
   const { isEnglish } = useLanguage();
@@ -67,7 +69,7 @@ export default function ChallengePage() {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = Cookies.get("token");
-      const response = await axios.post(
+      const response = await axios.get(
         `${apiUrl}/challenges/${id}/check`,
         {
           challange_uuid: id,
@@ -162,14 +164,11 @@ export default function ChallengePage() {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         const token = Cookies.get("token");
-        const response = await axios.get(
-          `${apiUrl}/challenges/${id}/check-solved-flags`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axios.get(`${apiUrl}/challenges/${id}/check`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (response.data.data.all_flags_solved === true) {
           setIsLocked(true);
@@ -185,32 +184,33 @@ export default function ChallengePage() {
   }, [id]);
 
   useEffect(() => {
-    const fetchActivitiesData = async () => {
+    const fetchTeamData = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         const token = Cookies.get("token");
-        const response = await axios.get(
-          `${apiUrl}/challenges/${id}/leaderboard`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await axios.get(`${apiUrl}/challenges/${id}/team-`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (response.data.status === "success") {
-          setActivitiesData(response.data.data);
+          setTeamData(response.data.data);
+          // Set activities data to members array from team response
+          if (response.data.data.members) {
+            setActivitiesData(response.data.data.members);
+          }
         } else {
           console.error("API returned non-success status:", response.data);
         }
       } catch (error) {
         console.error(
-          "Error fetching activities:",
+          "Error fetching team data:",
           error.response?.data || error.message
         );
       }
     };
-    fetchActivitiesData();
+    fetchTeamData();
   }, [id]);
 
   return (
@@ -219,41 +219,6 @@ export default function ChallengePage() {
         <LoadingPage />
       ) : (
         <div className="max-w-[2000px] pt-36 mx-auto pb-5">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-          
           {challenge?.flag_type === "multiple_individual" ? (
             challenge?.flags_data?.map((flag, index) => (
               <div key={index} className="mb-8">
@@ -682,12 +647,36 @@ export default function ChallengePage() {
                   </p>
                 </div>
 
-                <div
-                  dir={isEnglish ? "ltr" : "rtl"}
-                  className="mx-10 mb-5 pb-5 mt-10 bg-[#06373F26] px-5"
-                >
-                  {activitiesData?.length > 0 ? (
-                    activitiesData.map((user, index) => {
+                {!activitiesData ||
+                activitiesData.length === 0 ||
+                showEmptyState ? (
+                  <div className="bg-[#FFFFFF0D] rounded-lg p-4 sm:p-6 mt-4 mx-10">
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <Image
+                        src="/ranking.png"
+                        height={80}
+                        width={80}
+                        alt="activities"
+                        className="w-16 h-16 sm:w-20 sm:h-20 mb-4"
+                      />
+                      <h3 className="text-lg sm:text-xl font-medium text-center">
+                        {isEnglish
+                          ? "No activities to show yet"
+                          : "لا توجد أنشطة لعرضها حتى الآن"}
+                      </h3>
+                      <p className="text-sm text-gray-400 mt-2 text-center max-w-md">
+                        {isEnglish
+                          ? "Team activities will appear here once the event starts"
+                          : "ستظهر أنشطة الفريق هنا بمجرد بدء الفعالية"}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    dir={isEnglish ? "ltr" : "rtl"}
+                    className="mx-10 mb-5 pb-5 mt-10 bg-[#06373F26] px-5"
+                  >
+                    {activitiesData.map((user, index) => {
                       // Get the most recent solved_at time
                       const latestSolvedAt =
                         user.solved_flags?.length > 0
@@ -698,10 +687,17 @@ export default function ChallengePage() {
                                 )
                               )
                             )
+                          : user.solved_at
+                          ? new Date(user.solved_at)
                           : null;
 
                       // Format the time difference
                       const formatTimeAgo = (date) => {
+                        if (!date)
+                          return isEnglish
+                            ? "Not solved yet"
+                            : "لم يتم الحل بعد";
+
                         const now = new Date();
                         const diffInSeconds = Math.floor((now - date) / 1000);
 
@@ -735,7 +731,11 @@ export default function ChallengePage() {
                           <div className="flex items-center gap-8">
                             <div>
                               <Image
-                                src={index === 0 ? "/blood.png" : "/flag.png"}
+                                src={
+                                  index === 0 || user.is_first_blood
+                                    ? "/blood.png"
+                                    : "/flag.png"
+                                }
                                 alt="flag"
                                 width={32}
                                 height={32}
@@ -755,33 +755,14 @@ export default function ChallengePage() {
                           </div>
                           <div className="flex items-center gap-4">
                             <p className="text-[#BCC9DB] py-2 md:py-0 text-[18px]">
-                              {latestSolvedAt
-                                ? formatTimeAgo(latestSolvedAt)
-                                : isEnglish
-                                ? "Not solved yet"
-                                : "لم يتم الحل بعد"}
+                              {formatTimeAgo(latestSolvedAt)}
                             </p>
                           </div>
                         </div>
                       );
-                    })
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-10">
-                      <Image
-                        src="/notfound.png"
-                        alt="No activities"
-                        width={64}
-                        height={64}
-                        className="mb-4"
-                      />
-                      <p className="text-[#BCC9DB] text-[18px]">
-                        {isEnglish
-                          ? "No activities yet"
-                          : "لاتوجد أنشطة حتي الآن"}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                    })}
+                  </div>
+                )}
               </div>
             )}
           </div>
