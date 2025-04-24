@@ -5,13 +5,48 @@ import Image from "next/image";
 import Achievements from "@/app/components/Achievements";
 import LoadingPage from "@/app/components/LoadingPage";
 import { useState, useEffect } from "react";
+import axios from "axios";
+import Cookies from "js-cookie";
+import Link from "next/link";
+
 export default function Home() {
   const { isEnglish } = useLanguage();
   const [isLoaded, setIsLoaded] = useState(false);
+  const [latestChallenges, setLatestChallenges] = useState([]);
 
   useEffect(() => {
-    setIsLoaded(true);
+    const fetchChallenges = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = Cookies.get("token");
+        const response = await axios.get(`${apiUrl}/last-Three-challenges`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (response.data.status === "success") {
+          setLatestChallenges(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching challenges:", error);
+      }
+
+      setIsLoaded(true);
+    };
+
+    fetchChallenges();
   }, []);
+
+  // Function to determine difficulty color
+  const getDifficultyColor = (difficulty) => {
+    if (difficulty === "صعب" || difficulty === "صعب جدا") {
+      return "text-red-600";
+    } else if (difficulty === "متوسط") {
+      return "text-[#9DFF00]";
+    } else {
+      return "text-[#38FFE5]"; // Easy
+    }
+  };
 
   return isLoaded ? (
     <div className="max-w-[2000px] mx-auto pb-10 mt-20">
@@ -62,117 +97,6 @@ export default function Home() {
         >
           {isEnglish ? "Latest Challenges" : "آخر التحديات"}
         </h2>
-
-        <div
-          dir={isEnglish ? "ltr" : "rtl"}
-          className="grid grid-cols-1 lg:grid-cols-3 gap-8"
-        >
-          <div className="bg-white/3 backdrop-blur-xl rounded-lg p-4 flex flex-col justify-between min-h-[300px]">
-            <div>
-              <div className="flex items-center gap-4">
-                <Image src="/web.png" alt="progress" width={56} height={56} />
-                <h3 className="text-white text-[24px] font-bold">Quest</h3>
-              </div>
-              <p className="text-white text-left text-[18px] pt-5">
-                Test your skills in this dynamic web application challenge.
-                Analyze, adapt, and conquer!
-              </p>
-            </div>
-
-            <div className="flex  lg:flex lg:flex-wrap items-center justify-between gap-4 pt-10">
-              <p>
-                {isEnglish ? (
-                  <>
-                    Difficulty Level:{" "}
-                    <span className="text-red-600">Very Hard</span>
-                  </>
-                ) : (
-                  <>
-                    مستوي الصعوبة :{" "}
-                    <span className="text-red-600">صعب جدا</span>
-                  </>
-                )}
-              </p>
-              <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110">
-                {isEnglish ? "Start Now" : "ابدأ الآن"}
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-white/3 backdrop-blur-xl rounded-lg p-4 flex flex-col justify-between min-h-[300px]">
-            <div>
-              <div className="flex items-center gap-4">
-                <Image
-                  src="/challnge2.png"
-                  alt="progress"
-                  width={56}
-                  height={56}
-                />
-                <h3 className="text-white text-[24px] font-bold">Scray</h3>
-              </div>
-              <p className="text-white text-left text-[18px] pt-5">
-                Participants will encounter an audio file containing a hidden
-                flag. They must carefully analyze the file to uncover the hidden
-                message. Use your skills to explore this challenge!
-              </p>
-            </div>
-
-            <div className="flex  lg:flex lg:flex-wrap lg:flex-row items-center justify-between gap-4 pt-10">
-              <p>
-                {isEnglish ? (
-                  <>
-                    Difficulty Level:{" "}
-                    <span className="text-[#38FFE5]">Easy</span>
-                  </>
-                ) : (
-                  <>
-                    مستوي الصعوبة : <span className="text-[#38FFE5]">سهل</span>
-                  </>
-                )}
-              </p>
-              <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110">
-                {isEnglish ? "Start Now" : "ابدأ الآن"}
-              </p>
-            </div>
-          </div>
-
-          <div className="bg-white/3 backdrop-blur-xl rounded-lg p-4 flex flex-col justify-between min-h-[300px]">
-            <div>
-              <div className="flex items-center gap-4">
-                <Image
-                  src="/challnge3.png"
-                  alt="progress"
-                  width={56}
-                  height={56}
-                />
-                <h3 className="text-white text-[24px] font-bold">Quest</h3>
-              </div>
-              <p className="text-white text-left text-[18px] pt-5">
-                Sometimes RSA certificates are breakable. Can you find the
-                vulnerability?
-              </p>
-            </div>
-
-            <div className="flex lg:flex lg:flex-wrap items-center justify-between gap-4 pt-10">
-              <p>
-                {isEnglish ? (
-                  <>
-                    Difficulty Level:{" "}
-                    <span className="text-[#9DFF00]">Medium</span>
-                  </>
-                ) : (
-                  <>
-                    مستوي الصعوبة :{" "}
-                    <span className="text-[#9DFF00]">متوسط</span>
-                  </>
-                )}
-              </p>
-              <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110">
-                {isEnglish ? "Start Now" : "ابدأ الآن"}
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="lg:px-16 pt-20 px-5">
