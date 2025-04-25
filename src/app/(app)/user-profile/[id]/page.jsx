@@ -4,7 +4,7 @@ import { FaTiktok } from "react-icons/fa6";
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import Achievements from "@/app/components/Achievements";
+
 import { FaInstagram } from "react-icons/fa6";
 import { FaLinkedin } from "react-icons/fa";
 import { FaYoutube } from "react-icons/fa";
@@ -13,7 +13,7 @@ import { BsTwitterX } from "react-icons/bs";
 import ActivityChart from "@/app/components/ActivityChart";
 import LoadingPage from "@/app/components/LoadingPage";
 import { Inter } from "next/font/google";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import axios from "axios";
 
@@ -22,9 +22,9 @@ const inter = Inter({ subsets: ["latin"] });
 export default function Profile() {
   const { isEnglish } = useLanguage();
   const [activeTab, setActiveTab] = useState(0);
-  const [averageEyeLevel, setAverageEyeLevel] = useState(true);
-  const [youSelected, setYouSelected] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [averageEyeLevel, setAverageEyeLevel] = useState(false);
+  const [youSelected, setYouSelected] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [skillsVisible, setSkillsVisible] = useState(false);
   const [socialAccounts, setSocialAccounts] = useState({
     discord: { linked: false },
@@ -43,8 +43,41 @@ export default function Profile() {
     hard: 0,
     very_hard: 0,
   });
+  const [bytesByMonth, setBytesByMonth] = useState(null);
+  const [categories, setCategories] = useState({
+    Web: { percentage: 0 },
+    Cryptography: { percentage: 0 },
+    Forensics: { percentage: 0 },
+    "Reverse Engineering": { percentage: 0 },
+    Pwn: { percentage: 0 },
+    Misc: { percentage: 0 },
+  });
+  const [allUsersMedian, setAllUsersMedian] = useState({
+    Web: { median_percentage: 0 },
+    Cryptography: { median_percentage: 0 },
+    Forensics: { median_percentage: 0 },
+    "Reverse Engineering": { median_percentage: 0 },
+    Pwn: { median_percentage: 0 },
+    Misc: { median_percentage: 0 },
+  });
+  const [lab3Data, setLab3Data] = useState({
+    total_challenges: 0,
+    solved_challenges: 0,
+    percentage_solved: 0,
+    solved_by_difficulty: {
+      easy: 0,
+      medium: 0,
+      hard: 0,
+      very_hard: 0,
+    },
+    total_bytes: 0,
+    total_firstblood_bytes: 0,
+  });
   const skillsSectionRef = useRef(null);
+
   const params = useParams();
+  const router = useRouter();
+
   const fetchSocialMediaLinks = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -56,28 +89,76 @@ export default function Profile() {
         },
       });
 
+      // Check if response data is valid
+      if (
+        !response.data ||
+        !response.data.user ||
+        Object.keys(response.data.user).length === 0
+      ) {
+        console.error("User data not found");
+        router.push("/not-found");
+        return;
+      }
+
+      // Set user data if valid
       setUserData(response.data.user);
-      setChallangesStats(response.data.challenges);
+      setChallangesStats(response.data.challenges || {});
       setSolvedByDifficulty(
-        response.data.challenges.solved_by_difficulty || {
+        response.data.challenges?.solved_by_difficulty || {
           easy: 0,
           medium: 0,
           hard: 0,
           very_hard: 0,
         }
       );
+      setBytesByMonth(response.data.bytes_by_month || null);
+
+      // Set categories if available in the response
+      if (response.data.categories) {
+        setCategories(response.data.categories);
+      }
+
+      // Set median data if available
+      if (response.data.all_users_median) {
+        setAllUsersMedian(response.data.all_users_median);
+      }
+
+      // Set lab3 data if available
+      if (response.data.lab3) {
+        setLab3Data(response.data.lab3);
+      }
     } catch (error) {
-      console.error("Error fetching social media links:", error);
+      console.error("Error fetching user data:", error);
+
+      // Detect various error types that indicate user not found
+      const isNotFoundError =
+        (error.response && error.response.status === 404) ||
+        (error.response &&
+          error.response.data?.message?.includes(
+            "No query results for model"
+          )) ||
+        error.message?.includes("No query results for model");
+
+      if (isNotFoundError) {
+        router.push("/not-found");
+        return;
+      }
+
+      // For other types of errors, ensure data is set to defaults
+      setUserData({});
+      setChallangesStats({});
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    setIsLoaded(true);
+    setIsLoading(true);
     fetchSocialMediaLinks();
-  }, []);
+  }, [params.id]);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (isLoading) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -98,13 +179,25 @@ export default function Profile() {
         observer.disconnect();
       }
     };
-  }, [isLoaded]);
+  }, [isLoading]);
 
   const handleTabClick = (index) => {
     setActiveTab(index);
   };
 
-  return isLoaded ? (
+  const handleYouSelected = () => {
+    setYouSelected(true);
+    setAverageEyeLevel(false);
+  };
+
+  const handleAverageEyeLevel = () => {
+    setAverageEyeLevel(true);
+    setYouSelected(false);
+  };
+
+  return isLoading ? (
+    <LoadingPage />
+  ) : (
     <div
       dir={isEnglish ? "ltr" : "rtl"}
       className="pt-40 px-4 sm:px-10 max-w-[2000px] mx-auto"
@@ -263,18 +356,39 @@ export default function Profile() {
                 className="w-full pb-10"
               >
                 <div className="flex lg:flex-row flex-col lg:gap-14 gap-8 items-center justify-between pt-8">
-                  <div className="lg:basis-2/3 w-full bg-white/3 backdrop-blur-xl rounded-lg py-10 px-4 lg:px-10">
+                  <div className="lg:basis-2/3 w-full bg-white/3 backdrop-blur-xl rounded-lg py-6 sm:py-10 px-3 sm:px-4 lg:px-10">
                     <div
                       dir={isEnglish ? "ltr" : "rtl"}
-                      className="flex items-center gap-5"
+                      className="flex items-center justify-between sm:justify-start sm:gap-5 gap-2 w-full"
                     >
-                      <div className="w-[56px] h-[16px] bg-[#38FFE5] rounded-full"></div>
-                      <div className="w-[56px] h-[16px] bg-[#38FFE5] rounded-full"></div>
-                      <div className="w-[56px] h-[16px] bg-gradient-to-r from-[#06373F] to-[#38FFE5] rounded-full"></div>
-                      <div className="w-[56px] h-[16px] bg-[#003F49] rounded-full"></div>
-                      <div className="w-[56px] h-[16px] bg-[#003F49] rounded-full"></div>
-                      <div className="w-[56px] h-[16px] bg-[#003F49] rounded-full"></div>
-                      <div className="w-[56px] h-[16px] bg-[#003F49] rounded-full"></div>
+                      {/* Render progress dots based on percentage */}
+                      {[...Array(7)].map((_, index) => {
+                        // Each dot represents ~14.3% (100/7)
+                        const dotThreshold = (index + 1) * (100 / 7);
+                        const percentageCompleted =
+                          100 - (userData?.percentage_for_next_title || 0);
+
+                        // Determine the class based on the completion status
+                        let bgClass = "";
+                        if (percentageCompleted >= dotThreshold) {
+                          bgClass = "bg-[#38FFE5]"; // Completed
+                        } else if (
+                          percentageCompleted > dotThreshold - 100 / 7 &&
+                          percentageCompleted < dotThreshold
+                        ) {
+                          bgClass =
+                            "bg-gradient-to-r from-[#06373F] to-[#38FFE5]"; // In progress
+                        } else {
+                          bgClass = "bg-[#003F49]"; // Not started
+                        }
+
+                        return (
+                          <div
+                            key={index}
+                            className={`flex-1 max-w-[56px] h-[10px] sm:h-[16px] ${bgClass} rounded-full`}
+                          ></div>
+                        );
+                      })}
                     </div>
                     <p
                       dir={isEnglish ? "ltr" : "rtl"}
@@ -293,21 +407,21 @@ export default function Profile() {
                   </div>
 
                   <div className="lg:basis-1/3 w-full">
-                    <div className="flex flex-col items-center gap-4 bg-white/3 backdrop-blur-xl rounded-lg p-4">
+                    <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 backdrop-blur-xl rounded-lg p-3 sm:p-4">
                       <Image
                         src="/ranking.png"
                         alt="progress"
                         width={36}
                         height={36}
                       />
-                      <p className="text-[#BCC9DB] text-[18px]">
+                      <p className="text-[#BCC9DB] text-[16px] sm:text-[18px]">
                         {userData?.rank > 0
                           ? userData.rank
                           : isEnglish
                           ? "No Ranking"
                           : "لا يوجد تصنيف"}
                       </p>
-                      <p className="text-white text-[18px]">
+                      <p className="text-white text-[16px] sm:text-[18px]">
                         {isEnglish ? "Your Ranking" : "تصنيفك"}
                       </p>
                     </div>
@@ -378,100 +492,163 @@ export default function Profile() {
       </div>
 
       <div className="flex flex-col sm:flex-row gap-5 sm:gap-10 items-center my-10">
-        <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4">
-          <div className="flex gap-4 items-center">
-            <div>
-              <Image
-                src="/icon-challnge.png"
-                alt="challenges"
-                width={56}
-                height={56}
-              />
+        {lab3Data.solved_by_difficulty.easy > 0 ||
+        lab3Data.solved_by_difficulty.medium > 0 ||
+        lab3Data.solved_by_difficulty.hard > 0 ||
+        lab3Data.solved_by_difficulty.very_hard > 0 ? (
+          <>
+            <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4">
+              <div className="flex gap-4 items-center">
+                <div>
+                  <Image
+                    src="/icon-challnge.png"
+                    alt="challenges"
+                    width={56}
+                    height={56}
+                  />
+                </div>
+                <div>
+                  <h1>
+                    {isEnglish ? "Challenges Hacked" : "التحديات المخترقة"}
+                  </h1>
+                  <p className="font-bold pt-2">
+                    {isEnglish
+                      ? `${challangesStats?.solved} challenges`
+                      : `${challangesStats?.solved} التحديات`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-7 pt-10 flex flex-col gap-8">
+                <div className="flex items-center justify-between">
+                  <p>{solvedByDifficulty.easy || 0}</p>
+                  <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
+                    {isEnglish ? "Easy" : "سهل"}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <p>{solvedByDifficulty.medium || 0}</p>
+                  <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
+                    {isEnglish ? "Medium" : "متوسط"}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <p>{solvedByDifficulty.hard || 0}</p>
+                  <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
+                    {isEnglish ? "Hard" : "صعب"}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <p>{solvedByDifficulty.very_hard || 0}</p>
+                  <p className="text-[#FF1100] font-bold text-base sm:text-lg">
+                    {isEnglish ? "Very Hard" : "صعب جدا"}
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <h1>{isEnglish ? "Challenges Hacked" : "التحديات المخترقة"}</h1>
-              <p className="font-bold pt-2">
-                {isEnglish
-                  ? `${challangesStats?.solved} challenges`
-                  : `${challangesStats?.solved} التحديات`}
-              </p>
+
+            <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4">
+              <div className="flex gap-4 items-center">
+                <div>
+                  <Image src="/server.png" alt="lab3" width={56} height={56} />
+                </div>
+                <div>
+                  <h1>{isEnglish ? "Hacked Servers" : "الخوادم المخترقة"}</h1>
+                  <p className="font-bold pt-2">
+                    {isEnglish
+                      ? `${lab3Data?.solved_challenges || 0}
+                         servers`
+                      : `${lab3Data?.solved_challenges || 0} الخوادم`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-7 pt-10 flex flex-col gap-8">
+                <div className="flex items-center justify-between">
+                  <p>{lab3Data.solved_by_difficulty.easy || 0}</p>
+                  <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
+                    {isEnglish ? "Easy" : "سهل"}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <p>{lab3Data.solved_by_difficulty.medium || 0}</p>
+                  <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
+                    {isEnglish ? "Medium" : "متوسط"}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <p>{lab3Data.solved_by_difficulty.hard || 0}</p>
+                  <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
+                    {isEnglish ? "Hard" : "صعب"}
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <p>{lab3Data.solved_by_difficulty.very_hard || 0}</p>
+                  <p className="text-[#FF1100] font-bold text-base sm:text-lg">
+                    {isEnglish ? "Very Hard" : "صعب جدا"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="w-full bg-[#FFFFFF0D] rounded-lg p-4">
+            <div className="flex gap-4 items-center">
+              <div>
+                <Image
+                  src="/icon-challnge.png"
+                  alt="challenges"
+                  width={56}
+                  height={56}
+                />
+              </div>
+              <div>
+                <h1>{isEnglish ? "Challenges Hacked" : "التحديات المخترقة"}</h1>
+                <p className="font-bold pt-2">
+                  {isEnglish
+                    ? `${challangesStats?.solved} challenges`
+                    : `${challangesStats?.solved} التحديات`}
+                </p>
+              </div>
+            </div>
+
+            <div className="px-7 pt-10 flex flex-col gap-8">
+              <div className="flex items-center justify-between">
+                <p>{solvedByDifficulty.easy || 0}</p>
+                <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
+                  {isEnglish ? "Easy" : "سهل"}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <p>{solvedByDifficulty.medium || 0}</p>
+                <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
+                  {isEnglish ? "Medium" : "متوسط"}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <p>{solvedByDifficulty.hard || 0}</p>
+                <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
+                  {isEnglish ? "Hard" : "صعب"}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <p>{solvedByDifficulty.very_hard || 0}</p>
+                <p className="text-[#FF1100] font-bold text-base sm:text-lg">
+                  {isEnglish ? "Very Hard" : "صعب جدا"}
+                </p>
+              </div>
             </div>
           </div>
-
-          <div className="px-7 pt-10 flex flex-col gap-8">
-            <div className="flex items-center justify-between">
-              <p>{solvedByDifficulty.easy || 0}</p>
-              <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
-                {isEnglish ? "Easy" : "سهل"}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <p>{solvedByDifficulty.medium || 0}</p>
-              <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
-                {isEnglish ? "Medium" : "متوسط"}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <p>{solvedByDifficulty.hard || 0}</p>
-              <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
-                {isEnglish ? "Hard" : "صعب"}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <p>{solvedByDifficulty.very_hard || 0}</p>
-              <p className="text-[#FF1100] font-bold text-base sm:text-lg">
-                {isEnglish ? "Very Hard" : "صعب جدا"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4">
-          <div className="flex gap-4 items-center">
-            <div>
-              <Image src="/server.png" alt="servers" width={56} height={56} />
-            </div>
-            <div>
-              <h1>{isEnglish ? "Servers Hacked" : "الخوادم المخترقة"}</h1>
-              <p className="font-bold pt-2">
-                {isEnglish ? "0 servers" : "0 الخوادم"}
-              </p>
-            </div>
-          </div>
-
-          <div className="px-7 pt-10 flex flex-col gap-8">
-            <div className="flex items-center justify-between">
-              <p>0</p>
-              <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
-                {isEnglish ? "Easy" : "سهل"}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <p>0</p>
-              <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
-                {isEnglish ? "Medium" : "متوسط"}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <p>0</p>
-              <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
-                {isEnglish ? "Hard" : "صعب"}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <p>0</p>
-              <p className="text-[#FF1100] font-bold text-base sm:text-lg">
-                {isEnglish ? "Very Hard" : "صعب جدا"}
-              </p>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
       <div className="my-10" ref={skillsSectionRef}>
@@ -489,7 +666,7 @@ export default function Profile() {
                     ? "border-[#38FFE5] bg-transparent"
                     : "border-white bg-transparent"
                 } flex items-center justify-center cursor-pointer`}
-                onClick={() => setYouSelected(!youSelected)}
+                onClick={handleYouSelected}
               >
                 {youSelected && <span className="text-[#38FFE5]">✓</span>}
               </div>
@@ -504,7 +681,7 @@ export default function Profile() {
                     ? "border-[#38FFE5] bg-transparent"
                     : "border-white bg-transparent"
                 } flex items-center justify-center cursor-pointer`}
-                onClick={() => setAverageEyeLevel(!averageEyeLevel)}
+                onClick={handleAverageEyeLevel}
               >
                 {averageEyeLevel && <span className="text-[#38FFE5]">✓</span>}
               </div>
@@ -513,87 +690,120 @@ export default function Profile() {
         </div>
 
         <div className="space-y-5">
-          {/* Reversing Skill */}
+          {/* Reverse Engineering Skill */}
           <div className="flex items-center flex-row-reverse">
             <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out ${
-                    skillsVisible ? "w-[65%]" : "w-0"
-                  }`}
+                  className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out"
+                  style={{
+                    width: skillsVisible
+                      ? youSelected
+                        ? `${
+                            categories["Reverse Engineering"]?.percentage || 0
+                          }%`
+                        : `${
+                            allUsersMedian["Reverse Engineering"]
+                              ?.median_percentage || 0
+                          }%`
+                      : "0%",
+                  }}
                 ></div>
               </div>
             </div>
             <div
-              className={`min-w-[130px] ${
+              className={`min-w-[170px] ${
                 isEnglish ? "text-left" : "text-right"
               }`}
             >
-              <span className="font-medium text-white">Reverse</span>
+              <span className="font-medium text-white">
+                {isEnglish ? "Reverse Engineering" : "الهندسة العكسية"}
+              </span>
             </div>
           </div>
 
-          {/* Mobile Skill */}
+          {/* Web Skill */}
           <div className="flex items-center flex-row-reverse">
             <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-150 ${
-                    skillsVisible ? "w-[90%]" : "w-0"
-                  }`}
+                  className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-150"
+                  style={{
+                    width: skillsVisible
+                      ? youSelected
+                        ? `${categories["Web"]?.percentage || 0}%`
+                        : `${allUsersMedian["Web"]?.median_percentage || 0}%`
+                      : "0%",
+                  }}
                 ></div>
               </div>
             </div>
             <div
-              className={`min-w-[130px] ${
+              className={`min-w-[170px] ${
                 isEnglish ? "text-left" : "text-right"
               }`}
             >
-              <span className="font-medium text-white">Web</span>
+              <span className="font-medium text-white">
+                {isEnglish ? "Web" : "الويب"}
+              </span>
             </div>
           </div>
 
-          {/* PWM Skill */}
+          {/* Pwn Skill */}
           <div className="flex items-center flex-row-reverse">
             <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-300 ${
-                    skillsVisible ? "w-[75%]" : "w-0"
-                  }`}
+                  className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-300"
+                  style={{
+                    width: skillsVisible
+                      ? youSelected
+                        ? `${categories["Pwn"]?.percentage || 0}%`
+                        : `${allUsersMedian["Pwn"]?.median_percentage || 0}%`
+                      : "0%",
+                  }}
                 ></div>
               </div>
             </div>
             <div
-              className={`min-w-[130px] ${
+              className={`min-w-[170px] ${
                 isEnglish ? "text-left" : "text-right"
               }`}
             >
-              <span className="font-medium text-white">Misc</span>
+              <span className="font-medium text-white">
+                {isEnglish ? "Pwn" : "فن الاختراق"}
+              </span>
             </div>
           </div>
 
-          {/* MISC Skill */}
+          {/* Misc Skill */}
           <div className="flex items-center flex-row-reverse">
             <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-450 ${
-                    skillsVisible ? "w-[60%]" : "w-0"
-                  }`}
+                  className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-450"
+                  style={{
+                    width: skillsVisible
+                      ? youSelected
+                        ? `${categories["Misc"]?.percentage || 0}%`
+                        : `${allUsersMedian["Misc"]?.median_percentage || 0}%`
+                      : "0%",
+                  }}
                 ></div>
               </div>
             </div>
             <div
-              className={`min-w-[130px] ${
+              className={`min-w-[170px] ${
                 isEnglish ? "text-left" : "text-right"
               }`}
             >
-              <span className="font-medium text-white">Crypto</span>
+              <span className="font-medium text-white">
+                {isEnglish ? "Misc" : "متنوع"}
+              </span>
             </div>
           </div>
 
-          {/* Hardware Skill */}
+          {/* CyberXbytes Learning Skill (static) */}
           <div className="flex items-center flex-row-reverse">
             <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
@@ -605,12 +815,12 @@ export default function Profile() {
               </div>
             </div>
             <div
-              className={`min-w-[130px] ${
+              className={`min-w-[170px] ${
                 isEnglish ? "text-left" : "text-right"
               }`}
             >
               <span className="font-medium text-white">
-                CyberXbytes Learning
+                {isEnglish ? "CyberXbytes Learning" : "تعلم CyberXbytes"}
               </span>
             </div>
           </div>
@@ -620,47 +830,64 @@ export default function Profile() {
             <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-750 ${
-                    skillsVisible ? "w-[55%]" : "w-0"
-                  }`}
+                  className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-750"
+                  style={{
+                    width: skillsVisible
+                      ? youSelected
+                        ? `${categories["Forensics"]?.percentage || 0}%`
+                        : `${
+                            allUsersMedian["Forensics"]?.median_percentage || 0
+                          }%`
+                      : "0%",
+                  }}
                 ></div>
               </div>
             </div>
             <div
-              className={`min-w-[130px] ${
+              className={`min-w-[170px] ${
                 isEnglish ? "text-left" : "text-right"
               }`}
             >
-              <span className="font-medium text-white">Forensic</span>
+              <span className="font-medium text-white">
+                {isEnglish ? "Forensics" : "التحليل الجنائي"}
+              </span>
             </div>
           </div>
 
-          {/* Web Skill */}
+          {/* Cryptography Skill */}
           <div className="flex items-center flex-row-reverse">
             <div className="w-full">
               <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-900 ${
-                    skillsVisible ? "w-[80%]" : "w-0"
-                  }`}
+                  className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-900"
+                  style={{
+                    width: skillsVisible
+                      ? youSelected
+                        ? `${categories["Cryptography"]?.percentage || 0}%`
+                        : `${
+                            allUsersMedian["Cryptography"]?.median_percentage ||
+                            0
+                          }%`
+                      : "0%",
+                  }}
                 ></div>
               </div>
             </div>
             <div
-              className={`min-w-[130px] ${
+              className={`min-w-[170px] ${
                 isEnglish ? "text-left" : "text-right"
               }`}
             >
-              <span className="font-medium text-white">Web</span>
+              <span className="font-medium text-white">
+                {isEnglish ? "Cryptography" : "التشفير"}
+              </span>
             </div>
           </div>
         </div>
       </div>
       <div className="my-10">
-        <ActivityChart isEnglish={isEnglish} />
+        <ActivityChart isEnglish={isEnglish} bytesData={bytesByMonth} />
       </div>
     </div>
-  ) : (
-    <LoadingPage />
   );
 }
