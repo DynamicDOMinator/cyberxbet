@@ -2,6 +2,7 @@
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 import {
   FaUpload,
   FaTrash,
@@ -17,6 +18,14 @@ export default function AddChallenge() {
   const { isEnglish } = useLanguage();
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [statistics, setStatistics] = useState({
+    total: 0,
+    approved: 0,
+    declined: 0,
+    under_review: 0,
+    pending: 0,
+  });
+  const [statisticsLoading, setStatisticsLoading] = useState(true);
   const [dragActive, setDragActive] = useState(false);
   const [challengeData, setChallengeData] = useState({
     title: "",
@@ -94,6 +103,35 @@ export default function AddChallenge() {
     };
 
     fetchCategories();
+  }, []);
+
+  // Fetch statistics
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      setStatisticsLoading(true);
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = Cookies.get("token");
+        const response = await axios.get(
+          `${apiUrl}/user-challenges/statistics`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data && response.data.status === "success") {
+          setStatistics(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching statistics:", error);
+      } finally {
+        setStatisticsLoading(false);
+      }
+    };
+
+    fetchStatistics();
   }, []);
 
   // Handle form input changes
@@ -367,25 +405,29 @@ export default function AddChallenge() {
         },
       });
 
-      setSuccessMessage(
-        isEnglish ? "Challenge created successfully!" : "تم إنشاء التحدي بنجاح!"
-      );
-      setShowSuccessMessage(true);
+      if (response.data && response.data.status === "success") {
+        setSuccessMessage(
+          isEnglish
+            ? "Challenge created successfully!"
+            : "تم إنشاء التحدي بنجاح!"
+        );
+        setShowSuccessMessage(true);
 
-      // Reset form
-      setChallengeData({
-        title: "",
-        category: "",
-        description: "",
-        points: "",
-        difficulty: "medium",
-        notes: "",
-      });
-      setUploadedFile(null);
-      setFileScanComplete(false);
-      setUploadedSolutionFile(null);
-      setSolutionFileScanComplete(false);
-      setFlags([{ id: 1, value: "" }]);
+        // Reset form
+        setChallengeData({
+          title: "",
+          category: "",
+          description: "",
+          points: "",
+          difficulty: "medium",
+          notes: "",
+        });
+        setUploadedFile(null);
+        setFileScanComplete(false);
+        setUploadedSolutionFile(null);
+        setSolutionFileScanComplete(false);
+        setFlags([{ id: 1, value: "" }]);
+      }
     } catch (error) {
       console.error("Error creating challenge:", error);
       setErrorMessage(
@@ -481,14 +523,17 @@ export default function AddChallenge() {
                   <p className="text-white text-sm font-medium truncate max-w-xs">
                     {file.name}
                   </p>
-                  <p className="text-gray-400 text-xs">
+                  <p className="text-gray-400  ">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
               </div>
               <div>
                 {isScanning ? (
-                  <p dir={isEnglish ? "ltr" : "rtl"} className="text-gray-400 text-sm">
+                  <p
+                    dir={isEnglish ? "ltr" : "rtl"}
+                    className="text-gray-400 text-sm"
+                  >
                     {isEnglish ? "Uploading..." : "جاري التحميل..."}
                   </p>
                 ) : (
@@ -509,463 +554,728 @@ export default function AddChallenge() {
   );
 
   return (
-    <div className="w-full max-w-[1200px] mt-28 mx-auto px-4 py-8 text-right">
-      <h1
-        className={`text-white text-xl mb-6 font-bold ${
-          isEnglish ? "text-left" : "text-right"
-        }`}
-      >
-        {isEnglish ? "Add Challenge" : "إضافة تحدي"}
-      </h1>
+    <div className="w-full max-w-[2000px] mt-28 mx-auto">
+      {/* Statistics Section */}
+      <div className="bg-[#0B0D0F] px-4 py-6 rounded-lg mb-8">
+        <h2
+          dir={isEnglish ? "ltr" : "rtl"}
+          className="text-white mb-6 font-bold text-xl"
+        >
+          {isEnglish ? "Your Challenges" : "تحدياتك"}
+        </h2>
 
-      {/* Error Notification */}
-      <AnimatePresence>
-        {showErrorNotification && errorMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.3 }}
-            className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-red-600 text-white px-4 py-3 rounded-md shadow-lg flex items-center max-w-md w-full mx-4"
-          >
-            <div className="mr-3">
+        <div
+          dir={isEnglish ? "ltr" : "rtl"}
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 border-b-2 border-[#06373F] pb-10"
+        >
+          {/* Total Challenges */}
+          <div className="bg-[#131619] rounded-lg p-4 relative overflow-hidden">
+            <div className="flex items-center gap-1 ">
+              <Image
+                src="/uploaded.png"
+                alt="Total Challenges"
+                width={24}
+                height={24}
+              />
+              <h3 className="text-gray-400 text-sm mb-2">
+                {isEnglish ? "Total Challenges" : "جميع التحديات"}
+              </h3>
+            </div>
+
+            <p className="text-white text-center text-4xl font-bold">
+              {statisticsLoading ? "..." : statistics.total}
+            </p>
+            <p className="text-[#41C300] text-center   mt-2">
+              {isEnglish
+                ? "All challenges you've created"
+                : "جميع التحديات التي قمت بها"}
+            </p>
+          </div>
+
+          {/* Under Review */}
+          <div className="bg-[#131619] rounded-lg p-4 relative overflow-hidden">
+            <div className="flex items-center gap-1 ">
+              <Image
+                src="/wating.png"
+                alt="Under Review"
+                width={24}
+                height={24}
+              />
+              <h3 className="text-gray-400 text-sm mb-2">
+                {isEnglish ? "Under Review" : "تحت المراجعة"}
+              </h3>
+            </div>
+
+            <p className="text-white text-center text-4xl font-bold">
+              {statisticsLoading ? "..." : statistics.under_review}
+            </p>
+            <p className="text-[#0081D9] text-center   mt-2">
+              {isEnglish ? "In review" : "قيد المراجعة"}
+            </p>
+          </div>
+
+          {/* Approved Challenges */}
+          <div className="bg-[#131619] rounded-lg p-4 relative overflow-hidden">
+            <div className="flex items-center gap-1 ">
+              <Image
+                src="/reviewing.png"
+                alt="Approved Challenges"
+                width={24}
+                height={24}
+              />
+              <h3 className="text-gray-400 text-sm mb-2">
+                {isEnglish ? "Approved Challenges" : "التحديات المعتمدة"}
+              </h3>
+            </div>
+
+            <p className="text-white text-center text-4xl font-bold">
+              {statisticsLoading ? "..." : statistics.approved}
+            </p>
+            <p className="text-[#EC007E] text-center   mt-2">
+              {isEnglish ? "Approved challenges" : "التحديات المعتمدة"}
+            </p>
+          </div>
+
+          {/* Rejected Challenges */}
+          <div className="bg-[#131619] rounded-lg p-4 relative overflow-hidden">
+            <div className="flex items-center gap-1 ">
+              <Image
+                src="/rejected.png"
+                alt="Rejected Challenges"
+                width={24}
+                height={24}
+              />
+              <h3 className="text-gray-400 text-sm mb-2">
+                {isEnglish ? "Rejected Challenges" : "التحديات المرفوضة"}
+              </h3>
+            </div>
+
+            <p className="text-white text-center text-4xl font-bold">
+              {statisticsLoading ? "..." : statistics.declined}
+            </p>
+            <p className="text-[#D30E00] text-center   mt-2">
+              {isEnglish
+                ? "Challenges need to be modified"
+                : "تحديات تحتاج إلى تعديل"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Challenges List Section */}
+      <div className="bg-[#0B0D0F] px-4 py-6 rounded-lg mb-8">
+        <div
+          dir={isEnglish ? "ltr" : "rtl"}
+          className="flex flex-col   items-start mb-6 gap-4"
+        >
+          <div className="flex items-center gap-5 pb-2">
+            <button className="text-white border-b-2 border-[#38FFE5]  py-1 whitespace-nowrap">
+              {isEnglish ? "All" : "الكل"}
+            </button>
+            <button className="text-white px-2 py-1 whitespace-nowrap">
+              {isEnglish ? "Pending" : "المعلقة"}
+            </button>
+            <button className="text-white px-2 py-1 whitespace-nowrap">
+              {isEnglish ? "Under Review" : "تحت المراجعة"}
+            </button>
+            <button className="text-white px-2 py-1 whitespace-nowrap">
+              {isEnglish ? "Approved" : "المقبولة"}
+            </button>
+            <button className="text-white px-2 py-1 whitespace-nowrap">
+              {isEnglish ? "Rejected" : "المرفوضة"}
+            </button>
+          </div>
+          <div className="relative w-full border-b-2 border-[#06373F] md:w-auto md:min-w-[300px] mt-7">
+            <input
+              type="text"
+              placeholder={isEnglish ? "Challenge name" : "اسم التحدي"}
+              className="bg-[#131619] text-white px-4 py-2 rounded-md pr-10 rtl:pl-10 w-full focus:outline-none focus:ring-1 focus:ring-[#38FFE5]"
+              dir={isEnglish ? "ltr" : "rtl"}
+            />
+            <div
+              dir={isEnglish ? "ltr" : "rtl"}
+              className="absolute inset-y-0 right-0  flex items-center pr-3 rtl:pl-3"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
                 fill="none"
                 viewBox="0 0 24 24"
+                strokeWidth={1.5}
                 stroke="currentColor"
+                className="w-5 h-5 text-gray-400"
               >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"
                 />
               </svg>
             </div>
-            <div className="flex-1">
-              <p className="font-medium" dir={isEnglish ? "ltr" : "rtl"}>
-                {errorMessage}
-              </p>
-            </div>
-            <button
-              onClick={() => setShowErrorNotification(false)}
-              className="ml-4 text-white focus:outline-none"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        </div>
 
-      <form onSubmit={handleSubmit} className="w-full">
-        {/* Main Challenge Details */}
-        <div className="bg-[#131619] rounded-lg p-6 mb-6">
-          <div className="mb-4 ">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-10">
+          {/* Challenge Card 1 */}
+          <div className="bg-[#131619] rounded-lg overflow-hidden flex flex-col h-full">
+            <div className="p-4 flex flex-col h-full">
+              <div
+                dir={isEnglish ? "ltr" : "rtl"}
+                className="flex gap-2 items-center mb-4"
+              >
+                <Image
+                  src="/uploaded.png"
+                  alt="Total Challenges"
+                  width={32}
+                  height={32}
+                />
+                <p className="font-bold text-white">R$4c3rT</p>
+              </div>
+              <p className="text-gray-300 text-sm flex-grow">
+                Sometimes RSA certificates are breakable
+              </p>
+              <div
+                dir={isEnglish ? "ltr" : "rtl"}
+                className="flex justify-between items-center mt-4"
+              >
+                <div className="flex items-center">
+                  <span className=" text-gray-400">
+                    {isEnglish ? "Difficulty level" : "مستوى الصعوبة"}:{" "}
+                  </span>
+                  <span className=" text-yellow-500 ml-1 rtl:mr-1">
+                    {isEnglish ? "Medium" : "متوسط"}
+                  </span>
+                </div>
+                <span className="text-pink-500 ">
+                  {isEnglish ? "Under review" : "قيد المراجعة"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Challenge Card 2 */}
+          <div className="bg-[#131619] rounded-lg overflow-hidden flex flex-col h-full">
+            <div className="p-4 flex flex-col h-full">
+              <div
+                dir={isEnglish ? "ltr" : "rtl"}
+                className="flex gap-2 items-center mb-4"
+              >
+                <Image
+                  src="/uploaded.png"
+                  alt="Total Challenges"
+                  width={32}
+                  height={32}
+                />
+                <p className="font-bold text-white">scray</p>
+              </div>
+              <p className="text-gray-300 text-sm flex-grow">
+                participants will encounter an audio file containing a hidden
+                flag. They must carefully analyze the file to uncover the hidden
+                message. Use your skills to explore this challenge!
+              </p>
+              <div
+                dir={isEnglish ? "ltr" : "rtl"}
+                className="flex justify-between items-center mt-4"
+              >
+                <div className="flex items-center">
+                  <span className="  text-gray-400">
+                    {isEnglish ? "Difficulty level" : "مستوى الصعوبة"}:{" "}
+                  </span>
+                  <span className="  text-blue-400 ml-1 rtl:mr-1">
+                    {isEnglish ? "Easy" : "سهل"}
+                  </span>
+                </div>
+                <span className="text-red-500  ">
+                  {isEnglish ? "Rejected" : "مرفوض"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Challenge Card 3 */}
+          <div className="bg-[#131619] rounded-lg overflow-hidden flex flex-col h-full">
+            <div className="p-4 flex flex-col h-full">
+              <div
+                dir={isEnglish ? "ltr" : "rtl"}
+                className="flex gap-2 items-center mb-4"
+              >
+                <Image
+                  src="/uploaded.png"
+                  alt="Total Challenges"
+                  width={32}
+                  height={32}
+                />
+                <p className="font-bold text-white">Quest</p>
+              </div>
+              <p className="text-gray-300 text-sm flex-grow">
+                Test your skills in this dynamic web application challenge.
+                Analyze, adapt, and conquer!
+              </p>
+              <div
+                dir={isEnglish ? "ltr" : "rtl"}
+                className="flex justify-between items-center mt-4"
+              >
+                <div className="flex items-center">
+                  <span className="  text-gray-400">
+                    {isEnglish ? "Difficulty level" : "مستوى الصعوبة"}:{" "}
+                  </span>
+                  <span className="  text-red-500 ml-1 rtl:mr-1">
+                    {isEnglish ? "Very Hard" : "صعب جدا"}
+                  </span>
+                </div>
+                <span className="text-green-500  ">
+                  {isEnglish ? "Approved" : "مقبول"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 py-8 text-right">
+        <h1
+          className={`text-white text-xl mb-6 font-bold ${
+            isEnglish ? "text-left" : "text-right"
+          }`}
+        >
+          {isEnglish ? "Add Challenge" : "إضافة تحدي"}
+        </h1>
+
+        {/* Error Notification */}
+        <AnimatePresence>
+          {showErrorNotification && errorMessage && (
+            <div className="w-full h-full fixed inset-0 z-50">
+              <div className="absolute bottom-4 right-4 w-fit z-50">
+                <div className="bg-[#131619] border border-red-500 rounded-lg p-4 shadow-lg slide-in-animation">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <h3
+                        className="text-white text-lg font-semibold"
+                        dir={isEnglish ? "ltr" : "rtl"}
+                      >
+                        {errorMessage}
+                      </h3>
+                    </div>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6 text-red-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Success Notification */}
+        <AnimatePresence>
+          {showSuccessMessage && successMessage && (
+            <div className="w-full h-full fixed inset-0 z-50">
+              <div className="absolute bottom-4 right-4 w-fit z-50">
+                <div className="bg-[#131619] border border-[#38FFE5] rounded-lg p-4 shadow-lg slide-in-animation">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <h3
+                        className="text-white text-lg font-semibold"
+                        dir={isEnglish ? "ltr" : "rtl"}
+                      >
+                        {successMessage}
+                      </h3>
+                    </div>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6 text-[#38FFE5]"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        <style jsx global>{`
+          @keyframes slideInFromLeft {
+            0% {
+              transform: translateX(100%);
+              opacity: 0;
+            }
+            100% {
+              transform: translateX(0);
+              opacity: 1;
+            }
+          }
+
+          .slide-in-animation {
+            animation: slideInFromLeft 0.5s ease-out forwards;
+          }
+        `}</style>
+
+        <form onSubmit={handleSubmit} className="w-full">
+          {/* Main Challenge Details */}
+          <div className="bg-[#131619] rounded-lg p-6 mb-6">
+            <div className="mb-4 ">
+              <div
+                dir={isEnglish ? "ltr" : "rtl"}
+                className=" flex justify-start"
+              >
+                <label className={labelStyle}>
+                  {isEnglish ? "Challenge Name" : "اسم التحدي"}
+                </label>
+              </div>
+
+              <input
+                type="text"
+                name="title"
+                value={challengeData.title}
+                onChange={handleInputChange}
+                className={inputStyle}
+                dir={isEnglish ? "ltr" : "rtl"}
+                placeholder={
+                  isEnglish ? "Enter challenge name" : "أدخل اسم التحدي"
+                }
+              />
+            </div>
+
+            {/* Description Section */}
+
+            <div className="mb-2">
+              <div
+                dir={isEnglish ? "ltr" : "rtl"}
+                className=" flex justify-start"
+              >
+                <label className={labelStyle}>
+                  {isEnglish ? "Description" : "الوصف"}
+                </label>
+              </div>
+              <textarea
+                name="description"
+                value={challengeData.description}
+                onChange={handleInputChange}
+                className="w-full bg-[#0B0D0F] rounded-md px-4 py-3 text-white mt-4 focus:outline-none focus:ring-1 focus:ring-[#38FFE5] min-h-[120px]"
+                dir={isEnglish ? "ltr" : "rtl"}
+                placeholder={isEnglish ? "Enter description" : "أدخل الوصف"}
+              />
+            </div>
+
+            {/* Classification */}
+
+            <div className="mb-2">
+              <div
+                dir={isEnglish ? "ltr" : "rtl"}
+                className=" flex justify-start"
+              >
+                <label className={labelStyle}>
+                  {isEnglish ? "Classification" : "التصنيف"}
+                </label>
+              </div>
+              <div className="relative">
+                <select
+                  name="category"
+                  value={challengeData.category}
+                  onChange={handleInputChange}
+                  className={`${inputStyle} appearance-none pr-10`}
+                  dir={isEnglish ? "ltr" : "rtl"}
+                  disabled={categoriesLoading}
+                >
+                  <option value="" disabled>
+                    {isEnglish ? "Select classification" : "اختر التصنيف"}
+                  </option>
+                  {categories && categories.length > 0 ? (
+                    categories.map((category) => (
+                      <option key={category.uuid} value={category.uuid}>
+                        {category.name}
+                      </option>
+                    ))
+                  ) : (
+                    <>
+                      <option value="" disabled>
+                        {categoriesLoading
+                          ? isEnglish
+                            ? "Loading categories..."
+                            : "جاري تحميل التصنيفات..."
+                          : isEnglish
+                          ? "No categories available"
+                          : "لا توجد تصنيفات متاحة"}
+                      </option>
+                    </>
+                  )}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* Difficulty Section */}
             <div
               dir={isEnglish ? "ltr" : "rtl"}
-              className=" flex justify-start"
+              className="mb-2 pt-4 flex justify-between items-center"
             >
-              <label className={labelStyle}>
-                {isEnglish ? "Challenge Name" : "اسم التحدي"}
+              <h3 className="text-white text-lg">
+                {isEnglish ? "Difficulty" : "الصعوبة"}
+              </h3>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 place-items-center md:gap-0 lg:px-32  gap-4 mt-2 pt-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="difficulty"
+                  value="very_hard"
+                  checked={challengeData.difficulty === "very_hard"}
+                  onChange={handleInputChange}
+                  className="sr-only"
+                />
+                <span
+                  className={`inline-flex items-center justify-center w-4 h-4 border rounded-full transition-colors ${
+                    challengeData.difficulty === "very_hard"
+                      ? "bg-[#38FFE5] border-[#38FFE5]"
+                      : "border-gray-600 bg-transparent"
+                  }`}
+                >
+                  {challengeData.difficulty === "very_hard" && (
+                    <span className="w-2 h-2 rounded-full bg-black"></span>
+                  )}
+                </span>
+                <span className="text-gray-300">
+                  {isEnglish ? "Very Hard" : "صعب جدا"}
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="difficulty"
+                  value="hard"
+                  checked={challengeData.difficulty === "hard"}
+                  onChange={handleInputChange}
+                  className="sr-only"
+                />
+                <span
+                  className={`inline-flex items-center justify-center w-4 h-4 border rounded-full transition-colors ${
+                    challengeData.difficulty === "hard"
+                      ? "bg-[#38FFE5] border-[#38FFE5]"
+                      : "border-gray-600 bg-transparent"
+                  }`}
+                >
+                  {challengeData.difficulty === "hard" && (
+                    <span className="w-2 h-2 rounded-full bg-black"></span>
+                  )}
+                </span>
+                <span className="text-gray-300">
+                  {isEnglish ? "Hard" : "صعب"}
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="difficulty"
+                  value="medium"
+                  checked={challengeData.difficulty === "medium"}
+                  onChange={handleInputChange}
+                  className="sr-only"
+                />
+                <span
+                  className={`inline-flex items-center justify-center w-4 h-4 border rounded-full transition-colors ${
+                    challengeData.difficulty === "medium"
+                      ? "bg-[#38FFE5] border-[#38FFE5]"
+                      : "border-gray-600 bg-transparent"
+                  }`}
+                >
+                  {challengeData.difficulty === "medium" && (
+                    <span className="w-2 h-2 rounded-full bg-black"></span>
+                  )}
+                </span>
+                <span className="text-gray-300">
+                  {isEnglish ? "Medium" : "متوسط"}
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name="difficulty"
+                  value="easy"
+                  checked={challengeData.difficulty === "easy"}
+                  onChange={handleInputChange}
+                  className="sr-only"
+                />
+                <span
+                  className={`inline-flex items-center justify-center w-4 h-4 border rounded-full transition-colors ${
+                    challengeData.difficulty === "easy"
+                      ? "bg-[#38FFE5] border-[#38FFE5]"
+                      : "border-gray-600 bg-transparent"
+                  }`}
+                >
+                  {challengeData.difficulty === "easy" && (
+                    <span className="w-2 h-2 rounded-full bg-black"></span>
+                  )}
+                </span>
+                <span className="text-gray-300">
+                  {isEnglish ? "Easy" : "سهل"}
+                </span>
               </label>
             </div>
+          </div>
 
-            <input
-              type="text"
-              name="title"
-              value={challengeData.title}
+          {/* Flag Section */}
+          <div className="bg-[#131619] rounded-lg p-6 mb-6">
+            <div
+              dir={isEnglish ? "ltr" : "rtl"}
+              className="flex justify-between items-center mb-4"
+            >
+              <h3 className="text-white text-lg">
+                {isEnglish ? "Flags" : "الأعلام"}
+              </h3>
+            </div>
+
+            {flags.map((flag, index) => (
+              <div key={flag.id} className="mb-3 flex items-center">
+                <input
+                  type="text"
+                  value={flag.value}
+                  onChange={(e) => handleFlagChange(flag.id, e.target.value)}
+                  className={`${inputStyle} flex-grow`}
+                  placeholder={
+                    isEnglish
+                      ? `Enter flag ${index + 1}`
+                      : `أدخل العلم ${index + 1}`
+                  }
+                />
+                {flags.length > 1 && index > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => removeFlag(flag.id)}
+                    className="p-2 text-red-400 hover:text-red-300 focus:outline-none"
+                  >
+                    <FaTrash className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <div className="w-10"></div>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addFlag}
+              className="mt-3 text-black cursor-pointer px-4 py-2 bg-[#38FFE5] rounded-md hover:bg-[#2de0c8] focus:outline-none"
+            >
+              {isEnglish ? "Add Flag" : "إضافة علم"}
+            </button>
+          </div>
+
+          {/* File Uploads */}
+          {renderFileUpload(
+            uploadedFile,
+            uploadedFile,
+            fileScanning,
+            fileScanComplete,
+            fileInputRef,
+            handleFileChange,
+            handleDrop,
+            removeFile,
+            "Challenge File"
+          )}
+          {renderFileUpload(
+            uploadedSolutionFile,
+            uploadedSolutionFile,
+            solutionFileScanning,
+            solutionFileScanComplete,
+            solutionFileInputRef,
+            handleSolutionFileChange,
+            handleSolutionFileDrop,
+            removeSolutionFile,
+            "Solution File"
+          )}
+
+          {/* Notes/Remarks Section */}
+          <div className="bg-[#131619] rounded-lg p-6 mb-6">
+            <div dir={isEnglish ? "ltr" : "rtl"} className="flex justify-start">
+              <label className={labelStyle}>
+                {isEnglish ? "Notes" : "الملاحظات"}
+              </label>
+            </div>
+            <textarea
+              name="notes"
+              value={challengeData.notes || ""}
               onChange={handleInputChange}
-              className={inputStyle}
+              className="w-full bg-[#0B0D0F] rounded-md px-4 py-3 text-white mt-4 focus:outline-none focus:ring-1 focus:ring-[#38FFE5] min-h-[120px]"
               dir={isEnglish ? "ltr" : "rtl"}
               placeholder={
-                isEnglish ? "Enter challenge name" : "أدخل اسم التحدي"
+                isEnglish
+                  ? "Enter any additional notes"
+                  : "أدخل أي ملاحظات إضافية"
               }
             />
           </div>
 
-          {/* Description Section */}
-
-          <div className="mb-2">
-            <div
-              dir={isEnglish ? "ltr" : "rtl"}
-              className=" flex justify-start"
+          {/* Submit Button */}
+          <div dir={isEnglish ? "ltr" : "rtl"}>
+            <button
+              type="submit"
+              disabled={uploading}
+              className="mt-6 text-black px-7 cursor-pointer py-2 bg-[#38FFE5] rounded-md hover:bg-[#2de0c8] focus:outline-none flex items-center justify-center"
             >
-              <label className={labelStyle}>
-                {isEnglish ? "Description" : "الوصف"}
-              </label>
-            </div>
-            <textarea
-              name="description"
-              value={challengeData.description}
-              onChange={handleInputChange}
-              className="w-full bg-[#0B0D0F] rounded-md px-4 py-3 text-white mt-4 focus:outline-none focus:ring-1 focus:ring-[#38FFE5] min-h-[120px]"
-              dir={isEnglish ? "ltr" : "rtl"}
-              placeholder={isEnglish ? "Enter description" : "أدخل الوصف"}
-            />
-          </div>
-
-          {/* Classification */}
-
-          <div className="mb-2">
-            <div
-              dir={isEnglish ? "ltr" : "rtl"}
-              className=" flex justify-start"
-            >
-              <label className={labelStyle}>
-                {isEnglish ? "Classification" : "التصنيف"}
-              </label>
-            </div>
-            <div className="relative">
-              <select
-                name="category"
-                value={challengeData.category}
-                onChange={handleInputChange}
-                className={`${inputStyle} appearance-none pr-10`}
-                dir={isEnglish ? "ltr" : "rtl"}
-                disabled={categoriesLoading}
-              >
-                <option value="" disabled>
-                  {isEnglish ? "Select classification" : "اختر التصنيف"}
-                </option>
-                {categories && categories.length > 0 ? (
-                  categories.map((category) => (
-                    <option key={category.uuid} value={category.uuid}>
-                      {category.name}
-                    </option>
-                  ))
-                ) : (
-                  <>
-                    <option value="" disabled>
-                      {categoriesLoading
-                        ? isEnglish
-                          ? "Loading categories..."
-                          : "جاري تحميل التصنيفات..."
-                        : isEnglish
-                        ? "No categories available"
-                        : "لا توجد تصنيفات متاحة"}
-                    </option>
-                  </>
-                )}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path d="M19 9l-7 7-7-7"></path>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Difficulty Section */}
-          <div
-            dir={isEnglish ? "ltr" : "rtl"}
-            className="mb-2 pt-4 flex justify-between items-center"
-          >
-            <h3 className="text-white text-lg">
-              {isEnglish ? "Difficulty" : "الصعوبة"}
-            </h3>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 place-items-center md:gap-0 lg:px-32  gap-4 mt-2 pt-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="difficulty"
-                value="very_hard"
-                checked={challengeData.difficulty === "very_hard"}
-                onChange={handleInputChange}
-                className="sr-only"
-              />
-              <span
-                className={`inline-flex items-center justify-center w-4 h-4 border rounded-full transition-colors ${
-                  challengeData.difficulty === "very_hard"
-                    ? "bg-[#38FFE5] border-[#38FFE5]"
-                    : "border-gray-600 bg-transparent"
-                }`}
-              >
-                {challengeData.difficulty === "very_hard" && (
-                  <span className="w-2 h-2 rounded-full bg-black"></span>
-                )}
-              </span>
-              <span className="text-gray-300">
-                {isEnglish ? "Very Hard" : "صعب جدا"}
-              </span>
-            </label>
-
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="difficulty"
-                value="hard"
-                checked={challengeData.difficulty === "hard"}
-                onChange={handleInputChange}
-                className="sr-only"
-              />
-              <span
-                className={`inline-flex items-center justify-center w-4 h-4 border rounded-full transition-colors ${
-                  challengeData.difficulty === "hard"
-                    ? "bg-[#38FFE5] border-[#38FFE5]"
-                    : "border-gray-600 bg-transparent"
-                }`}
-              >
-                {challengeData.difficulty === "hard" && (
-                  <span className="w-2 h-2 rounded-full bg-black"></span>
-                )}
-              </span>
-              <span className="text-gray-300">
-                {isEnglish ? "Hard" : "صعب"}
-              </span>
-            </label>
-
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="difficulty"
-                value="medium"
-                checked={challengeData.difficulty === "medium"}
-                onChange={handleInputChange}
-                className="sr-only"
-              />
-              <span
-                className={`inline-flex items-center justify-center w-4 h-4 border rounded-full transition-colors ${
-                  challengeData.difficulty === "medium"
-                    ? "bg-[#38FFE5] border-[#38FFE5]"
-                    : "border-gray-600 bg-transparent"
-                }`}
-              >
-                {challengeData.difficulty === "medium" && (
-                  <span className="w-2 h-2 rounded-full bg-black"></span>
-                )}
-              </span>
-              <span className="text-gray-300">
-                {isEnglish ? "Medium" : "متوسط"}
-              </span>
-            </label>
-
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="difficulty"
-                value="easy"
-                checked={challengeData.difficulty === "easy"}
-                onChange={handleInputChange}
-                className="sr-only"
-              />
-              <span
-                className={`inline-flex items-center justify-center w-4 h-4 border rounded-full transition-colors ${
-                  challengeData.difficulty === "easy"
-                    ? "bg-[#38FFE5] border-[#38FFE5]"
-                    : "border-gray-600 bg-transparent"
-                }`}
-              >
-                {challengeData.difficulty === "easy" && (
-                  <span className="w-2 h-2 rounded-full bg-black"></span>
-                )}
-              </span>
-              <span className="text-gray-300">
-                {isEnglish ? "Easy" : "سهل"}
-              </span>
-            </label>
-          </div>
-        </div>
-
-        {/* Flag Section */}
-        <div className="bg-[#131619] rounded-lg p-6 mb-6">
-          <div
-            dir={isEnglish ? "ltr" : "rtl"}
-            className="flex justify-between items-center mb-4"
-          >
-            <h3 className="text-white text-lg">
-              {isEnglish ? "Flags" : "الأعلام"}
-            </h3>
-          </div>
-
-          {flags.map((flag, index) => (
-            <div key={flag.id} className="mb-3 flex items-center">
-              <input
-                type="text"
-                value={flag.value}
-                onChange={(e) => handleFlagChange(flag.id, e.target.value)}
-                className={`${inputStyle} flex-grow`}
-                placeholder={
-                  isEnglish ? `Flag ${index + 1}` : `العلم ${index + 1}`
-                }
-                dir={isEnglish ? "ltr" : "rtl"}
-              />
-              {flags.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeFlag(flag.id)}
-                  className="ml-2 p-2 bg-red-500/20 hover:bg-red-500/30 rounded-full text-red-400"
-                >
+              {uploading ? (
+                <>
                   <svg
+                    className="animate-spin  h-5 w-5 text-black"
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
+                    fill="none"
+                    viewBox="0 0 24 24"
                   >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
                     <path
-                      fillRule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
-                </button>
+                 
+                </>
+              ) : (
+                <>{isEnglish ? "Create" : "إنشاء"}</>
               )}
-            </div>
-          ))}
-
-          <button
-            type="button"
-            onClick={addFlag}
-            className="mt-3 text-[#38FFE5] text-sm hover:underline flex items-center justify-center w-full"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4 mr-1"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            {isEnglish ? "Add another flag" : "إضافة علم آخر"}
-          </button>
-        </div>
-
-        {/* Challenge File Upload */}
-        {renderFileUpload(
-          uploadedFile,
-          uploadedFile,
-          fileScanning,
-          fileScanComplete,
-          fileInputRef,
-          handleFileChange,
-          handleDrop,
-          removeFile,
-          "Challenge File"
-        )}
-
-        {/* Solution File Upload */}
-        {renderFileUpload(
-          uploadedSolutionFile,
-          uploadedSolutionFile,
-          solutionFileScanning,
-          solutionFileScanComplete,
-          solutionFileInputRef,
-          handleSolutionFileChange,
-          handleSolutionFileDrop,
-          removeSolutionFile,
-          "Solution File"
-        )}
-
-        {/* Notes Section */}
-        <div className="bg-[#131619] rounded-lg p-6 mb-6">
-          <div
-            dir={isEnglish ? "ltr" : "rtl"}
-            className="flex justify-between items-center mb-4"
-          >
-            <h3 className="text-white  text-lg">
-              {isEnglish ? "Notes" : "الملاحظات"}
-            </h3>
+            </button>
           </div>
-          <textarea
-            name="notes"
-            value={challengeData.notes || ""}
-            onChange={handleInputChange}
-            className="w-full bg-[#131619] rounded-md px-4 py-3 text-white border border-gray-800 focus:outline-none focus:ring-1 focus:ring-[#38FFE5] min-h-[100px]"
-            dir={isEnglish ? "ltr" : "rtl"}
-            placeholder={isEnglish ? "Enter notes" : "أدخل الملاحظات"}
-          />
-        </div>
-
-        {/* Action Buttons */}
-        <div className="">
-          <button
-            type="submit"
-            disabled={uploading}
-            className={`flex items-center ${
-              isEnglish ? "mr-auto" : "ml-auto"
-            } px-8 py-2 rounded-md text-black font-medium transition-all ${
-              uploading
-                ? "bg-gray-600 cursor-not-allowed"
-                : "bg-[#38FFE5] hover:bg-[#38FFE5]/90"
-            }`}
-          >
-            {uploading ? (
-              <>
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-black"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                {isEnglish ? "Creating..." : "جارٍ الإنشاء..."}
-              </>
-            ) : (
-              <>{isEnglish ? "Create" : "انشاء"}</>
-            )}
-          </button>
-        </div>
-
-        {/* Success Message */}
-        <AnimatePresence>
-          {showSuccessMessage && successMessage && (
-            <motion.div
-              className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 bg-green-500/20 border border-green-500 text-green-400 px-4 py-3 rounded-md shadow-lg flex items-center max-w-md w-full mx-4"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="mr-3">
-                <FaCheck className="h-6 w-6" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium" dir={isEnglish ? "ltr" : "rtl"}>
-                  {successMessage}
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

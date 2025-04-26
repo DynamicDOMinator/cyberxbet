@@ -25,7 +25,7 @@ export default function ChallengePage() {
   const [details, setDetails] = useState(true);
   const [activitiesData, setActivitiesData] = useState("");
   const [isLocked, setIsLocked] = useState(false);
-
+  const [isAvailable, setIsAvailable] = useState(true);
   const { id } = useParams();
   const { isEnglish } = useLanguage();
   const fetchInitialData = async () => {
@@ -40,7 +40,9 @@ export default function ChallengePage() {
         },
       });
       setChallenge(challengeResponse.data.data);
-
+      if (challengeResponse.data.data.available === false) {
+        setIsAvailable(false);
+      }
       // Fetch solved flags data
       const solvedResponse = await axios.post(
         `${apiUrl}/check-if-solved`,
@@ -410,14 +412,16 @@ export default function ChallengePage() {
                 {challenge?.description}
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
-               
-                {challenge?.keywords && challenge.keywords.length > 0 && 
+                {challenge?.keywords &&
+                  challenge.keywords.length > 0 &&
                   challenge.keywords.map((keyword, index) => (
-                    <p key={index} className="bg-black/50 text-white text-sm p-2 rounded-full w-fit">
+                    <p
+                      key={index}
+                      className="bg-black/50 text-white text-sm p-2 rounded-full w-fit"
+                    >
                       {keyword}
                     </p>
-                  ))
-                }
+                  ))}
               </div>
               <p className="mt-10">
                 {isEnglish ? "Difficulty Level" : "مستوى الصعوبة"}:
@@ -444,317 +448,334 @@ export default function ChallengePage() {
               </p>
             </div>
           </div>
-
-          <div className="relative">
-            <div
-              dir={isEnglish ? "ltr" : "rtl"}
-              className="flex mx-10 pt-10 items-center gap-4"
-            >
-              <button
-                onClick={() => {
-                  setDetails(true);
-                  setActivities(false);
-                }}
-                className={`text-lg font-semibold pb-2 cursor-pointer ${
-                  details ? "border-b-4 border-[#38FFE5]" : ""
-                }`}
-              >
-                {isEnglish ? "Challenge Details" : "تفاصيل التحدي"}
-              </button>
-
-              <button
-                onClick={() => {
-                  setDetails(false);
-                  setActivities(true);
-                }}
-                className={`text-lg font-semibold pb-2 cursor-pointer ${
-                  activities ? "border-b-4 border-[#38FFE5]" : ""
-                }`}
-              >
-                {isEnglish ? "Activities" : "الأنشطة"}
-              </button>
-            </div>
-
-            {details && (
-              <div
-                dir={isEnglish ? "rtl" : "ltr"}
-                className={`grid grid-cols-1 md:grid-cols-${
-                  challenge?.file && challenge?.link ? "3" : "2"
-                } gap-6 mx-10 mt-10`}
-              >
-                {/* Flag Submission Section */}
+          <div className="relative mx-10 mt-10">
+            {isAvailable ? (
+              <div>
                 <div
                   dir={isEnglish ? "ltr" : "rtl"}
-                  className="bg-[#FFFFFF0D] relative rounded-lg p-6 flex flex-col min-h-[250px]"
+                  className="flex pt-10 items-center gap-4"
                 >
-                  <div className="flex items-center gap-4 mb-6">
-                    <Image
-                      src="/flag.png"
-                      alt="Flag"
-                      width={32}
-                      height={32}
-                      priority
-                    />
-                    <h3 className="text-lg font-semibold">
-                      {isEnglish ? "Submit Flag" : "تسليم العلم"}
-                    </h3>
-                  </div>
-                  <p className="text-sm text-gray-400">
-                    {isEnglish
-                      ? "Found the flag? Enter it below"
-                      : "هل وجدت العلم؟ أدخله بالأسفل"}
-                  </p>
-                  {challenge?.flag_type === "multiple_all" && (
-                    <button
-                      onClick={() => {
-                        setflags(true);
-                      }}
-                      className="text-[#38FFE5] text-right pt-1 cursor-pointer"
-                    >
-                      {isEnglish ? "See More" : "see more"}
-                    </button>
-                  )}
+                  <button
+                    onClick={() => {
+                      setDetails(true);
+                      setActivities(false);
+                    }}
+                    className={`text-lg font-semibold pb-2 cursor-pointer ${
+                      details ? "border-b-4 border-[#38FFE5]" : ""
+                    }`}
+                  >
+                    {isEnglish ? "Challenge Details" : "تفاصيل التحدي"}
+                  </button>
 
-                  {isLocked ? (
-                    <div className="absolute bottom-7 w-full  right-1/2 translate-x-1/2">
-                      <Image
-                        className="mx-auto"
-                        src="/lock2.png"
-                        alt="Lock"
-                        width={48}
-                        height={48}
-                      />
-                      <p className="text-white text-[20px] text-center ">
-                        تهانينا! لقد التقط جميع الأعلام بنجاح
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center lg:flex-row flex-col gap-4 mt-auto">
-                        <div className=" w-full lg:w-2/3">
-                          <input
-                            type="text"
-                            placeholder={isEnglish ? "Flag" : "العلم"}
-                            className="bg-[#0B0D0F] w-full border border-gray-700 rounded-lg p-3 text-white"
-                            value={flagInput}
-                            onChange={(e) => setFlagInput(e.target.value)}
-                          />
-                        </div>
-
-                        <button
-                          onClick={submitFlag}
-                          disabled={isLoading}
-                          className="bg-[#38FFE5] w-full lg:w-1/3 py-3 cursor-pointer hover:bg-[#38FFE5]/90 text-black font-semibold px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isLoading ? (
-                            <div className="flex items-center justify-center">
-                              <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
-                            </div>
-                          ) : isEnglish ? (
-                            "Submit"
-                          ) : (
-                            "تسليم"
-                          )}
-                        </button>
-                      </div>
-
-                      {error && (
-                        <p className="text-red-500 text-sm mt-2">{error}</p>
-                      )}
-                    </>
-                  )}
+                  <button
+                    onClick={() => {
+                      setDetails(false);
+                      setActivities(true);
+                    }}
+                    className={`text-lg font-semibold pb-2 cursor-pointer ${
+                      activities ? "border-b-4 border-[#38FFE5]" : ""
+                    }`}
+                  >
+                    {isEnglish ? "Activities" : "الأنشطة"}
+                  </button>
                 </div>
 
-                {/* Challenge Files Section */}
-                {challenge?.file && (
+                {details && (
                   <div
-                    dir={isEnglish ? "ltr" : "rtl"}
-                    className="bg-[#FFFFFF0D] rounded-lg p-6 flex flex-col min-h-[250px]"
+                    dir={isEnglish ? "rtl" : "ltr"}
+                    className={`grid grid-cols-1 md:grid-cols-${
+                      challenge?.file && challenge?.link ? "3" : "2"
+                    } gap-6 mt-10`}
                   >
-                    <div className="flex items-center gap-4 mb-6">
-                      <Image
-                        src="/files.png"
-                        alt="Files"
-                        width={32}
-                        height={32}
-                        priority
-                      />
-                      <h3 className="text-lg font-semibold">
-                        {isEnglish ? "Challenge Files" : "ملفات التحدي"}
-                      </h3>
+                    {/* Flag Submission Section */}
+                    <div
+                      dir={isEnglish ? "ltr" : "rtl"}
+                      className="bg-[#FFFFFF0D] relative rounded-lg p-6 flex flex-col min-h-[250px]"
+                    >
+                      <div className="flex items-center gap-4 mb-6">
+                        <Image
+                          src="/flag.png"
+                          alt="Flag"
+                          width={32}
+                          height={32}
+                          priority
+                        />
+                        <h3 className="text-lg font-semibold">
+                          {isEnglish ? "Submit Flag" : "تسليم العلم"}
+                        </h3>
+                      </div>
+                      <p className="text-sm text-gray-400">
+                        {isEnglish
+                          ? "Found the flag? Enter it below"
+                          : "هل وجدت العلم؟ أدخله بالأسفل"}
+                      </p>
+                      {challenge?.flag_type === "multiple_all" && (
+                        <button
+                          onClick={() => {
+                            setflags(true);
+                          }}
+                          className="text-[#38FFE5] text-right pt-1 cursor-pointer"
+                        >
+                          {isEnglish ? "See More" : "see more"}
+                        </button>
+                      )}
+
+                      {isLocked ? (
+                        <div className="absolute bottom-7 w-full  right-1/2 translate-x-1/2">
+                          <Image
+                            className="mx-auto"
+                            src="/lock2.png"
+                            alt="Lock"
+                            width={48}
+                            height={48}
+                          />
+                          <p className="text-white text-[20px] text-center ">
+                            تهانينا! لقد التقط جميع الأعلام بنجاح
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center lg:flex-row flex-col gap-4 mt-auto">
+                            <div className=" w-full lg:w-2/3">
+                              <input
+                                type="text"
+                                placeholder={isEnglish ? "Flag" : "العلم"}
+                                className="bg-[#0B0D0F] w-full border border-gray-700 rounded-lg p-3 text-white"
+                                value={flagInput}
+                                onChange={(e) => setFlagInput(e.target.value)}
+                              />
+                            </div>
+
+                            <button
+                              onClick={submitFlag}
+                              disabled={isLoading}
+                              className="bg-[#38FFE5] w-full lg:w-1/3 py-3 cursor-pointer hover:bg-[#38FFE5]/90 text-black font-semibold px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isLoading ? (
+                                <div className="flex items-center justify-center">
+                                  <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+                                </div>
+                              ) : isEnglish ? (
+                                "Submit"
+                              ) : (
+                                "تسليم"
+                              )}
+                            </button>
+                          </div>
+
+                          {error && (
+                            <p className="text-red-500 text-sm mt-2">{error}</p>
+                          )}
+                        </>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-400">
-                      {isEnglish
-                        ? "Download required challenge files"
-                        : "تحميل الملفات المطلوبة للتحدي"}
-                    </p>
-                    <div className="mt-auto">
-                      <a
-                        href={challenge.file}
-                        download
-                        className="lg:w-1/2 bg-transparent w-full cursor-pointer border border-[#38FFE5] hover:bg-[#38FFE5]/10 text-[#38FFE5] font-semibold py-3 rounded-lg transition-all inline-block text-center"
+
+                    {/* Challenge Files Section */}
+                    {challenge?.file && (
+                      <div
+                        dir={isEnglish ? "ltr" : "rtl"}
+                        className="bg-[#FFFFFF0D] rounded-lg p-6 flex flex-col min-h-[250px]"
                       >
-                        {isEnglish ? "Download File" : "تحميل الملف"}
-                      </a>
-                    </div>
+                        <div className="flex items-center gap-4 mb-6">
+                          <Image
+                            src="/files.png"
+                            alt="Files"
+                            width={32}
+                            height={32}
+                            priority
+                          />
+                          <h3 className="text-lg font-semibold">
+                            {isEnglish ? "Challenge Files" : "ملفات التحدي"}
+                          </h3>
+                        </div>
+                        <p className="text-sm text-gray-400">
+                          {isEnglish
+                            ? "Download required challenge files"
+                            : "تحميل الملفات المطلوبة للتحدي"}
+                        </p>
+                        <div className="mt-auto">
+                          <a
+                            href={challenge.file}
+                            download
+                            className="lg:w-1/2 bg-transparent w-full cursor-pointer border border-[#38FFE5] hover:bg-[#38FFE5]/10 text-[#38FFE5] font-semibold py-3 rounded-lg transition-all inline-block text-center"
+                          >
+                            {isEnglish ? "Download File" : "تحميل الملف"}
+                          </a>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Challenge Link Section */}
+                    {challenge?.link && (
+                      <div
+                        dir={isEnglish ? "ltr" : "rtl"}
+                        className="bg-[#FFFFFF0D] rounded-lg p-6 flex flex-col min-h-[250px]"
+                      >
+                        <div className="flex items-center gap-4 mb-6">
+                          <Image
+                            src="/links.png"
+                            alt="Link"
+                            width={32}
+                            height={32}
+                            priority
+                          />
+                          <h3 className="text-lg font-semibold">
+                            {isEnglish
+                              ? "Click to go to challenge page"
+                              : "اضغط للانتقال إلى صفحة التحدي"}
+                          </h3>
+                        </div>
+                        <p className="text-sm text-gray-400">
+                          {isEnglish
+                            ? "Click to go to challenge page"
+                            : "اضغط للانتقال إلى صفحة التحدي"}
+                        </p>
+                        <div className="mt-auto">
+                          <button
+                            onClick={() =>
+                              window.open(challenge.link, "_blank")
+                            }
+                            className="lg:w-1/2 w-full bg-transparent cursor-pointer border border-[#38FFE5] hover:bg-[#38FFE5]/10 text-[#38FFE5] font-semibold py-3 rounded-lg transition-all"
+                          >
+                            {isEnglish ? "Start Challenge" : "ابدأ التحدي"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* Challenge Link Section */}
-                {challenge?.link && (
-                  <div
-                    dir={isEnglish ? "ltr" : "rtl"}
-                    className="bg-[#FFFFFF0D] rounded-lg p-6 flex flex-col min-h-[250px]"
-                  >
-                    <div className="flex items-center gap-4 mb-6">
-                      <Image
-                        src="/links.png"
-                        alt="Link"
-                        width={32}
-                        height={32}
-                        priority
-                      />
-                      <h3 className="text-lg font-semibold">
+                {/* activities table  */}
+                {activities && (
+                  <div>
+                    <div dir={isEnglish ? "ltr" : "rtl"} className="pt-10 pb-2">
+                      <h2 className="text-white text-2xl font-semibold">
+                        {isEnglish ? "Challenge Hackers" : "مخترقو التحدي"}
+                      </h2>
+                      <p className="text-[#BCC9DB] pt-2 text-[18px]">
                         {isEnglish
-                          ? "Click to go to challenge page"
-                          : "اضغط للانتقال إلى صفحة التحدي"}
-                      </h3>
+                          ? "All players who hacked the challenge"
+                          : "جميع اللاعبون الذين اخترقوا التحدي"}
+                      </p>
                     </div>
-                    <p className="text-sm text-gray-400">
-                      {isEnglish
-                        ? "Click to go to challenge page"
-                        : "اضغط للانتقال إلى صفحة التحدي"}
-                    </p>
-                    <div className="mt-auto">
-                      <button
-                        onClick={() => window.open(challenge.link, "_blank")}
-                        className="lg:w-1/2 w-full bg-transparent cursor-pointer border border-[#38FFE5] hover:bg-[#38FFE5]/10 text-[#38FFE5] font-semibold py-3 rounded-lg transition-all"
-                      >
-                        {isEnglish ? "Start Challenge" : "ابدأ التحدي"}
-                      </button>
+
+                    <div
+                      dir={isEnglish ? "ltr" : "rtl"}
+                      className="mb-5 pb-5 mt-10 bg-[#06373F26] px-5"
+                    >
+                      {activitiesData?.length > 0 ? (
+                        activitiesData.map((user, index) => {
+                          // Get the most recent solved_at time
+                          const latestSolvedAt =
+                            user.solved_flags?.length > 0
+                              ? new Date(
+                                  Math.max(
+                                    ...user.solved_flags.map(
+                                      (flag) => new Date(flag.solved_at)
+                                    )
+                                  )
+                                )
+                              : null;
+
+                          // Format the time difference
+                          const formatTimeAgo = (date) => {
+                            const now = new Date();
+                            const diffInSeconds = Math.floor(
+                              (now - date) / 1000
+                            );
+
+                            if (diffInSeconds < 60)
+                              return isEnglish ? "Just now" : "الآن";
+                            if (diffInSeconds < 3600) {
+                              const minutes = Math.floor(diffInSeconds / 60);
+                              return isEnglish
+                                ? `${minutes} minutes ago`
+                                : `منذ ${minutes} دقيقة`;
+                            }
+                            if (diffInSeconds < 86400) {
+                              const hours = Math.floor(diffInSeconds / 3600);
+                              return isEnglish
+                                ? `${hours} hours ago`
+                                : `منذ ${hours} ساعة`;
+                            }
+                            const days = Math.floor(diffInSeconds / 86400);
+                            return isEnglish
+                              ? `${days} days ago`
+                              : `منذ ${days} يوم`;
+                          };
+
+                          return (
+                            <div
+                              key={index}
+                              className={`flex items-center justify-between flex-wrap py-5 rounded-lg px-5 ${
+                                index % 2 === 0
+                                  ? "bg-transparent"
+                                  : "bg-[#06373F]"
+                              }`}
+                            >
+                              <div className="flex items-center gap-8">
+                                <div>
+                                  <Image
+                                    src={
+                                      index === 0 ? "/blood.png" : "/flag.png"
+                                    }
+                                    alt="flag"
+                                    width={32}
+                                    height={32}
+                                  />
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <Image
+                                    src={user.profile_image || "/icon1.png"}
+                                    alt="profile"
+                                    width={32}
+                                    height={32}
+                                  />
+                                  <p className="text-xl font-semibold">
+                                    {user.user_name}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <p className="text-[#BCC9DB] py-2 md:py-0 text-[18px]">
+                                  {latestSolvedAt
+                                    ? formatTimeAgo(latestSolvedAt)
+                                    : isEnglish
+                                    ? "Not solved yet"
+                                    : "لم يتم الحل بعد"}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-10">
+                          <Image
+                            src="/notfound.png"
+                            alt="No activities"
+                            width={64}
+                            height={64}
+                            className="mb-4"
+                          />
+                          <p className="text-[#BCC9DB] text-[18px]">
+                            {isEnglish
+                              ? "No activities yet"
+                              : "لاتوجد أنشطة حتي الآن"}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
               </div>
-            )}
-
-            {/* activities table  */}
-            {activities && (
-              <div>
-                <div
-                  dir={isEnglish ? "ltr" : "rtl"}
-                  className="pt-10 pb-2 mx-10"
-                >
-                  <h2 className="text-white text-2xl font-semibold">
-                    {isEnglish ? "Challenge Hackers" : "مخترقو التحدي"}
-                  </h2>
-                  <p className="text-[#BCC9DB] pt-2 text-[18px]">
-                    {isEnglish
-                      ? "All players who hacked the challenge"
-                      : "جميع اللاعبون الذين اخترقوا التحدي"}
-                  </p>
-                </div>
-
-                <div
-                  dir={isEnglish ? "ltr" : "rtl"}
-                  className="mx-10 mb-5 pb-5 mt-10 bg-[#06373F26] px-5"
-                >
-                  {activitiesData?.length > 0 ? (
-                    activitiesData.map((user, index) => {
-                      // Get the most recent solved_at time
-                      const latestSolvedAt =
-                        user.solved_flags?.length > 0
-                          ? new Date(
-                              Math.max(
-                                ...user.solved_flags.map(
-                                  (flag) => new Date(flag.solved_at)
-                                )
-                              )
-                            )
-                          : null;
-
-                      // Format the time difference
-                      const formatTimeAgo = (date) => {
-                        const now = new Date();
-                        const diffInSeconds = Math.floor((now - date) / 1000);
-
-                        if (diffInSeconds < 60)
-                          return isEnglish ? "Just now" : "الآن";
-                        if (diffInSeconds < 3600) {
-                          const minutes = Math.floor(diffInSeconds / 60);
-                          return isEnglish
-                            ? `${minutes} minutes ago`
-                            : `منذ ${minutes} دقيقة`;
-                        }
-                        if (diffInSeconds < 86400) {
-                          const hours = Math.floor(diffInSeconds / 3600);
-                          return isEnglish
-                            ? `${hours} hours ago`
-                            : `منذ ${hours} ساعة`;
-                        }
-                        const days = Math.floor(diffInSeconds / 86400);
-                        return isEnglish
-                          ? `${days} days ago`
-                          : `منذ ${days} يوم`;
-                      };
-
-                      return (
-                        <div
-                          key={index}
-                          className={`flex items-center justify-between flex-wrap py-5 rounded-lg px-5 ${
-                            index % 2 === 0 ? "bg-transparent" : "bg-[#06373F]"
-                          }`}
-                        >
-                          <div className="flex items-center gap-8">
-                            <div>
-                              <Image
-                                src={index === 0 ? "/blood.png" : "/flag.png"}
-                                alt="flag"
-                                width={32}
-                                height={32}
-                              />
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <Image
-                                src={user.profile_image || "/icon1.png"}
-                                alt="profile"
-                                width={32}
-                                height={32}
-                              />
-                              <p className="text-xl font-semibold">
-                                {user.user_name}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <p className="text-[#BCC9DB] py-2 md:py-0 text-[18px]">
-                              {latestSolvedAt
-                                ? formatTimeAgo(latestSolvedAt)
-                                : isEnglish
-                                ? "Not solved yet"
-                                : "لم يتم الحل بعد"}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-10">
-                      <Image
-                        src="/notfound.png"
-                        alt="No activities"
-                        width={64}
-                        height={64}
-                        className="mb-4"
-                      />
-                      <p className="text-[#BCC9DB] text-[18px]">
-                        {isEnglish
-                          ? "No activities yet"
-                          : "لاتوجد أنشطة حتي الآن"}
-                      </p>
-                    </div>
-                  )}
-                </div>
+            ) : (
+              <div className="bg-[#040405CC] rounded-lg p-10  flex flex-col justify-center items-center">
+                <Image src="/lock.png" alt="lock" width={160} height={160} />
+                <p className="text-white font-semibold text-xl mt-4">
+                  {isEnglish
+                    ? "Challenge is not available yet"
+                    : "التحدي غير متاح حالياً"}
+                </p>
               </div>
             )}
           </div>

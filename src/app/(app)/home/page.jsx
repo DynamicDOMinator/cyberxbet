@@ -51,11 +51,14 @@ export default function Home() {
             setUserData(userResponse.data.user);
           }
         }
+
+        // Only set isLoaded to true after all data has been processed
+        setIsLoaded(true);
       } catch (error) {
         console.error("Error fetching data:", error);
+        // Even in case of error, we should set isLoaded to true to prevent infinite loading
+        setIsLoaded(true);
       }
-
-      setIsLoaded(true);
     };
 
     fetchData();
