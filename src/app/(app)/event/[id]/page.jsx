@@ -7,6 +7,7 @@ import Image from "next/image";
 import ConfettiAnimation from "@/components/ConfettiAnimation";
 import LoadingPage from "../../../components/LoadingPage";
 import { useLanguage } from "@/app/context/LanguageContext";
+import { useUserProfile } from "@/app/context/UserProfileContext";
 
 export default function ChallengePage() {
   const [challenge, setChallenge] = useState(null);
@@ -30,6 +31,55 @@ export default function ChallengePage() {
 
   const { id } = useParams();
   const { isEnglish } = useLanguage();
+  const { convertToUserTimezone } = useUserProfile();
+
+  // Handle parsing API date strings correctly (assuming API returns UTC+3)
+  const parseApiDate = (dateString) => {
+    if (!dateString) return null;
+
+    try {
+      console.log("Original API dateString:", dateString);
+
+      // Handle ISO format with timezone info (like 2025-04-26T02:16:17+03:00)
+      if (dateString.includes("T") && dateString.includes("+")) {
+        const date = new Date(dateString);
+        console.log("Parsed ISO date with timezone:", date.toISOString());
+        return date;
+      }
+
+      // Parse the date string (YYYY-MM-DD HH:MM:SS)
+      const [datePart, timePart] = dateString.split(" ");
+      if (!datePart || !timePart) return new Date(dateString);
+
+      const [year, month, day] = datePart.split("-").map(Number);
+      const [hour, minute, second] = timePart.split(":").map(Number);
+
+      // Create date object (API server is in UTC+3, so we convert to UTC)
+      // Month is 0-indexed in JavaScript Date
+      // For UTC+3 timezone, subtract 3 hours to get UTC time
+      const date = new Date(
+        Date.UTC(year, month - 1, day, hour, minute, second)
+      );
+
+      // Adjust for server timezone (UTC+3)
+      const serverTimezoneOffsetHours = 3;
+      date.setUTCHours(date.getUTCHours() - serverTimezoneOffsetHours);
+
+      // Debug timezone info
+      console.log("API Date String:", dateString);
+      console.log("Parsed to UTC Date:", date.toISOString());
+      console.log(
+        "User browser timezone:",
+        Intl.DateTimeFormat().resolvedOptions().timeZone
+      );
+
+      return date;
+    } catch (error) {
+      console.error("Error parsing API date:", error);
+      return new Date(dateString);
+    }
+  };
+
   const fetchInitialData = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -680,15 +730,17 @@ export default function ChallengePage() {
                       // Get the most recent solved_at time
                       const latestSolvedAt =
                         user.solved_flags?.length > 0
-                          ? new Date(
-                              Math.max(
-                                ...user.solved_flags.map(
-                                  (flag) => new Date(flag.solved_at)
+                          ? convertToUserTimezone(
+                              new Date(
+                                Math.max(
+                                  ...user.solved_flags.map((flag) =>
+                                    parseApiDate(flag.solved_at).getTime()
+                                  )
                                 )
                               )
                             )
                           : user.solved_at
-                          ? new Date(user.solved_at)
+                          ? convertToUserTimezone(parseApiDate(user.solved_at))
                           : null;
 
                       // Format the time difference
@@ -698,27 +750,55 @@ export default function ChallengePage() {
                             ? "Not solved yet"
                             : "لم يتم الحل بعد";
 
+                        // Debug time
+                        console.log("Formatted date for relative time:", date);
+
+                        // Get current date for comparison
                         const now = new Date();
+
+                        // Calculate time difference in seconds
                         const diffInSeconds = Math.floor((now - date) / 1000);
 
+                        // Format relative time
                         if (diffInSeconds < 60)
                           return isEnglish ? "Just now" : "الآن";
+
                         if (diffInSeconds < 3600) {
                           const minutes = Math.floor(diffInSeconds / 60);
                           return isEnglish
-                            ? `${minutes} minutes ago`
+                            ? `${minutes} minute${minutes !== 1 ? "s" : ""} ago`
                             : `منذ ${minutes} دقيقة`;
                         }
+
                         if (diffInSeconds < 86400) {
                           const hours = Math.floor(diffInSeconds / 3600);
                           return isEnglish
-                            ? `${hours} hours ago`
+                            ? `${hours} hour${hours !== 1 ? "s" : ""} ago`
                             : `منذ ${hours} ساعة`;
                         }
+
                         const days = Math.floor(diffInSeconds / 86400);
                         return isEnglish
-                          ? `${days} days ago`
+                          ? `${days} day${days !== 1 ? "s" : ""} ago`
                           : `منذ ${days} يوم`;
+                      };
+
+                      // Add function to show actual date and time
+                      const formatFullDateTime = (date) => {
+                        if (!date) return "";
+
+                        const options = {
+                          year: "numeric",
+                          month: "numeric",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        };
+
+                        return date.toLocaleString(
+                          isEnglish ? "en-US" : "ar-SA",
+                          options
+                        );
                       };
 
                       return (
@@ -753,8 +833,8 @@ export default function ChallengePage() {
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4">
-                            <p className="text-[#BCC9DB] py-2 md:py-0 text-[18px]">
+                          <div className="flex flex-col items-end gap-2">
+                            <p className="text-[#BCC9DB] text-[18px]">
                               {formatTimeAgo(latestSolvedAt)}
                             </p>
                           </div>

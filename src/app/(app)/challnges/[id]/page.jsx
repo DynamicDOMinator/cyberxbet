@@ -8,13 +8,33 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import LoadingPage from "@/app/components/LoadingPage";
 import Link from "next/link";
+import { IoIosArrowBack } from "react-icons/io";
+
 const ChallengesPage = () => {
   const { isEnglish } = useLanguage();
- 
+
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categoryData, setCategoryData] = useState(null);
+  const [sectionData, setSectionData] = useState(null);
   const { id } = useParams();
+
+  // Get the appropriate color based on difficulty level
+  const getDifficultyColor = (difficulty) => {
+    switch (difficulty) {
+      case "سهل":
+      case "Easy":
+        return "text-[#00D0FF]";
+      case "متوسط":
+      case "Medium":
+        return "text-[#9DFF00]";
+      case "صعب":
+      case "Hard":
+        return "text-red-500";
+      default:
+        return "text-[#00D0FF]";
+    }
+  };
 
   useEffect(() => {
     const fetchChallenges = async () => {
@@ -38,9 +58,8 @@ const ChallengesPage = () => {
 
         if (response.data.status === "success") {
           setChallenges(response.data.data);
-      
+          setSectionData(response.data);
 
-         
           if (response.data.data.length > 0) {
             setCategoryData(response.data.data[0].category);
           }
@@ -55,8 +74,6 @@ const ChallengesPage = () => {
     fetchChallenges();
   }, [id, isEnglish]);
 
-  
-
   if (loading) {
     return <LoadingPage />;
   }
@@ -69,10 +86,27 @@ const ChallengesPage = () => {
           isEnglish ? "text-left" : "text-right"
         }`}
       >
-        <div className="text-teal-400">
-          {isEnglish
-            ? `Training Challenges > ${categoryData?.name || ""}`
-            : `${categoryData?.name || ""} < التحديات التدريبية`}
+        <div
+          className={`${
+            isEnglish ? "mr-auto" : "ml-auto"
+          } flex items-center gap-2`}
+        >
+          <p
+            dir={isEnglish ? "ltr" : "rtl"}
+            className="flex items-center gap-2"
+          >
+            <Link href={`/labs/${sectionData?.lab?.uuid}`}>
+              {" "}
+              {isEnglish ? sectionData?.lab?.name : sectionData?.lab?.ar_name}
+            </Link>
+            <IoIosArrowBack />
+
+            <span className="text-[#38FFE5]">
+              {isEnglish
+                ? sectionData?.lab_category?.title
+                : sectionData?.lab_category?.ar_title}
+            </span>
+          </p>
         </div>
       </div>
 
@@ -92,21 +126,12 @@ const ChallengesPage = () => {
             }`}
           >
             <div>
-              {categoryData?.icon_url ? (
-                <Image
-                  src={categoryData.icon_url}
-                  alt={categoryData.name}
-                  width={100}
-                  height={100}
-                />
-              ) : (
-                <Image
-                  src="/icon1-1.png"
-                  alt="default"
-                  width={100}
-                  height={100}
-                />
-              )}
+              <Image
+                src={sectionData?.lab_category?.image}
+                alt={categoryData.name}
+                width={100}
+                height={100}
+              />
             </div>
             <div className={`${isEnglish ? "text-left" : "text-right"}`}>
               <div
@@ -127,23 +152,60 @@ const ChallengesPage = () => {
           </div>
 
           {/* Progress Circle */}
-          <div className="relative mx-auto md:mx-0 w-32 h-32">
+          <div className="relative mx-auto md:mx-0 w-36 h-32">
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative w-24 h-24 rounded-full">
-                <div className="absolute inset-0 rounded-full border-4 border-gray-700"></div>
-                <div
-                  className="absolute inset-0 rounded-full border-4 border-teal-400 border-r-transparent border-b-transparent border-l-transparent"
-                  
-                ></div>
+              <div className="relative w-28 h-24 rounded-full">
+                <div className="absolute inset-0">
+                  <svg className="w-full h-full" viewBox="0 0 100 100">
+                    {/* Background gray circle */}
+                    <circle 
+                      cx="50" 
+                      cy="50" 
+                      r="40" 
+                      fill="transparent"
+                      stroke="#06373F" 
+                      strokeWidth="6"
+                    />
+                    {/* Progress circle overlay */}
+                    <circle 
+                      cx="50" 
+                      cy="50" 
+                      r="40" 
+                      fill="transparent"
+                      stroke="#38FFE5"
+                      strokeWidth="6"
+                      strokeDasharray={`${2 * Math.PI * 40}`}
+                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - sectionData?.stats?.solved_percentage / 100)}`}
+                      transform="rotate(-90 50 50)"
+                    />
+                  </svg>
+                </div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-xl text-teal-400">40%</span>
+                  <span className="text-xl text-teal-400">
+                    {Math.floor(sectionData?.stats?.solved_percentage)}%
+                  </span>
                 </div>
               </div>
             </div>
-            <div className="absolute -bottom-3 text-xs text-center w-full text-gray-400">
-              {isEnglish
-                ? `10/20 Bytes`
-                : `بايتس 10/20`}
+            <div
+              dir={isEnglish ? "ltr" : "rtl"}
+              className={`absolute ${
+                isEnglish ? "-right-6" : "-left-6"
+              } -bottom-3 flex items-center gap-1 text-xs text-center w-full text-gray-400`}
+            >
+              <p>
+                {isEnglish
+                  ? `${sectionData?.stats?.earned_bytes} `
+                  : `${sectionData?.stats?.earned_bytes}`}
+              </p>
+
+              <span>/</span>
+              <p>
+                {isEnglish
+                  ? `${sectionData?.stats?.total_bytes} `
+                  : `${sectionData?.stats?.total_bytes}`}
+              </p>
+              <span>{isEnglish ? "Bytes" : "بايتس"}</span>
             </div>
           </div>
         </div>
@@ -190,19 +252,19 @@ const ChallengesPage = () => {
 
             <div className="justify-between text-sm mb-6">
               <div className="flex items-center mt-2 gap-1 justify-between">
-                <span >{isEnglish ? "Bytes:" : " بايتس :"}</span>
+                <span>{isEnglish ? "Bytes:" : " بايتس :"}</span>
                 <div className="flex items-center gap-2">
                   <p className="font-bold text-sm">{challenge.bytes}</p>
                   <Image src="/byte.png" alt="byte" width={18} height={18} />
                 </div>
               </div>
-              <div  className="flex items-center mt-4 gap-1 justify-between">
+              <div className="flex items-center mt-4 gap-1 justify-between">
                 <span>{isEnglish ? "First Blood:" : "الاختراقات :"}</span>
                 <div className="flex items-center gap-2">
                   <p className="font-bold text-sm">
                     {challenge.firstBloodBytes}
                   </p>
-                  
+
                   <Image
                     src="/card-user.png"
                     alt="user"
@@ -214,19 +276,22 @@ const ChallengesPage = () => {
             </div>
 
             <div className="flex justify-between">
-              <div
-                className={`flex items-center gap-1 ${
-                  isEnglish ? "" : ""
-                }`}
-              >
+              <div className={`flex items-center gap-1 ${isEnglish ? "" : ""}`}>
                 <span className="text-white">
                   {isEnglish ? "Difficulty:" : "مستوى الصعوبة:"}
                 </span>
-                <span className="text-red-500 font-bold">
+                <span
+                  className={`font-bold ${getDifficultyColor(
+                    challenge.difficulty
+                  )}`}
+                >
                   {challenge.difficulty}
                 </span>
               </div>
-              <Link href={`/challnge/${challenge.uuid}`} className="text-[#38FFE5] hover:px-1 py-1 rounded hover:bg-[#38FFE5]/10 hover:transition-all duration-300">
+              <Link
+                href={`/challnge/${challenge.uuid}`}
+                className="text-[#38FFE5] hover:px-1 py-1 rounded hover:bg-[#38FFE5]/10 hover:transition-all duration-300"
+              >
                 {isEnglish ? "Start Now" : "ابدأ الآن"}
               </Link>
             </div>

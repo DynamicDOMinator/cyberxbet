@@ -14,10 +14,12 @@ import { IoCopy } from "react-icons/io5";
 import toast, { Toaster } from "react-hot-toast";
 import { useUserProfile } from "@/app/context/UserProfileContext";
 import { SiHackaday } from "react-icons/si";
+import LoadingPage from "@/app/components/LoadingPage";
 
 export default function EventPage() {
   const { isEnglish } = useLanguage();
-  const { getCurrentDateInUserTimezone, timeZone } = useUserProfile();
+  const { getCurrentDateInUserTimezone, timeZone, convertToUserTimezone } =
+    useUserProfile();
 
   const [event, setEvent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,6 +39,9 @@ export default function EventPage() {
   });
   const [showRegisterButton, setShowRegisterButton] = useState(true);
   const [showCopiedToast, setShowCopiedToast] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [successIcon, setSuccessIcon] = useState(null);
   const [eventStartDate, setEventStartDate] = useState(null);
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("challenges");
@@ -54,6 +59,7 @@ export default function EventPage() {
   const [updateError, setUpdateError] = useState("");
   const [isEventScoreBoard, setIsEventScoreBoard] = useState(false);
   const [scoreboardData, setScoreboardData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Update the current date/time based on user's timezone
@@ -132,8 +138,20 @@ export default function EventPage() {
   useEffect(() => {
     // Initial data loading - only run once when component mounts or ID changes
     const loadInitialData = async () => {
-      await getChallenges();
-      await getTeams();
+      setIsLoading(true);
+      try {
+        await Promise.all([
+          getChallenges(),
+          getTeams(),
+          checkEventStatus(),
+          getEvent(),
+          eventScoreBoard(),
+        ]);
+      } catch (error) {
+        console.error("Error loading initial data:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadInitialData();
@@ -204,29 +222,45 @@ export default function EventPage() {
     }
   };
 
-  useEffect(() => {
-    // Only check event status and get event data once when component mounts
-    const checkEventStatus = async () => {
-      try {
-        const api = process.env.NEXT_PUBLIC_API_URL;
-        const res = await axios.get(`${api}/${id}/check-if-event-started`, {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("token")}`,
-          },
-        });
+  const checkEventStatus = async () => {
+    try {
+      const api = process.env.NEXT_PUBLIC_API_URL;
+      const res = await axios.get(`${api}/${id}/check-if-event-started`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("token")}`,
+        },
+      });
 
-        // Default to hiding the button
-        setShowRegisterButton(false);
+      // Default to hiding the button
+      setShowRegisterButton(false);
 
-        // Force team formation button if the message indicates team formation
-        if (
-          res.data.data &&
-          res.data.data.message === "Team formation is open"
-        ) {
+      // Force team formation button if the message indicates team formation
+      if (res.data.data && res.data.data.message === "Team formation is open") {
+        setShowRegisterButton(true);
+        setIsRegistering(true);
+        setButtonText(isEnglish ? "Join Team" : "انضمام");
+        setCurrentPhase("team_formation");
+
+        // Check if user is already in a team
+        await checkIfInTeam();
+
+        // Skip registration check for team formation
+        return;
+      }
+
+      // Handle different phases
+      if (res.data.data && res.data.data.phase) {
+        const phase = res.data.data.phase;
+        setCurrentPhase(phase); // Store the current phase
+
+        if (phase === "registration") {
+          setShowRegisterButton(true);
+          setIsRegistering(true);
+          setButtonText(isEnglish ? "Register Now" : "سجل الآن");
+        } else if (phase === "team_formation") {
           setShowRegisterButton(true);
           setIsRegistering(true);
           setButtonText(isEnglish ? "Join Team" : "انضمام");
-          setCurrentPhase("team_formation");
 
           // Check if user is already in a team
           await checkIfInTeam();
@@ -234,63 +268,38 @@ export default function EventPage() {
           // Skip registration check for team formation
           return;
         }
-
-        // Handle different phases
-        if (res.data.data && res.data.data.phase) {
-          const phase = res.data.data.phase;
-          setCurrentPhase(phase); // Store the current phase
-
-          if (phase === "registration") {
-            setShowRegisterButton(true);
-            setIsRegistering(true);
-            setButtonText(isEnglish ? "Register Now" : "سجل الآن");
-          } else if (phase === "team_formation") {
-            setShowRegisterButton(true);
-            setIsRegistering(true);
-            setButtonText(isEnglish ? "Join Team" : "انضمام");
-
-            // Check if user is already in a team
-            await checkIfInTeam();
-
-            // Skip registration check for team formation
-            return;
-          }
-        }
-
-        // For backwards compatibility
-        if (
-          res.data.data &&
-          res.data.data.message === "Event is currently running"
-        ) {
-          setIsEventStarted(false);
-          setShowRegisterButton(false); // Hide during event
-          setEveentIsActive(true);
-        }
-
-        // Only check registration status if not in team formation
-        await checkRegistrationStatus();
-      } catch (error) {
-        console.error("Error checking event status:", error);
       }
-    };
 
-    const getEvent = async () => {
-      try {
-        const api = process.env.NEXT_PUBLIC_API_URL;
-        const res = await axios.get(`${api}/events/${id}`, {
-          headers: {
-            Authorization: `Bearer ${Cookies.get("token")}`,
-          },
-        });
-        setEvent(res.data.event);
-      } catch (error) {
-        console.error("Error fetching event:", error);
+      // For backwards compatibility
+      if (
+        res.data.data &&
+        res.data.data.message === "Event is currently running"
+      ) {
+        setIsEventStarted(false);
+        setShowRegisterButton(false); // Hide during event
+        setEveentIsActive(true);
       }
-    };
 
-    checkEventStatus();
-    getEvent();
-  }, [id]);
+      // Only check registration status if not in team formation
+      await checkRegistrationStatus();
+    } catch (error) {
+      console.error("Error checking event status:", error);
+    }
+  };
+
+  const getEvent = async () => {
+    try {
+      const api = process.env.NEXT_PUBLIC_API_URL;
+      const res = await axios.get(`${api}/events/${id}`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("token")}`,
+        },
+      });
+      setEvent(res.data.event);
+    } catch (error) {
+      console.error("Error fetching event:", error);
+    }
+  };
 
   const getTeams = async () => {
     // If we've already checked and there's no team, we still want to try again
@@ -394,12 +403,30 @@ export default function EventPage() {
       setIsRegistering(false);
       setButtonText(isEnglish ? "Already Registered" : "تم التسجيل ");
 
-      // Show success toast
-      toast.success(
+      // Show success notification
+      setSuccessMessage(
         isEnglish
           ? "Successfully registered for the event"
           : "تم التسجيل في الفعالية بنجاح"
       );
+      setSuccessIcon(
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#38FFE5"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      );
+      setShowSuccessToast(true);
+      setTimeout(() => setShowSuccessToast(false), 3000);
     } catch (error) {
       console.error("Error registering now:", error);
       // Show error toast
@@ -533,9 +560,31 @@ export default function EventPage() {
           await getTeams();
         }
 
-        toast.success(
+        // Show success notification
+        setSuccessMessage(
           isEnglish ? "Team updated successfully" : "تم تحديث الفريق بنجاح"
         );
+        setSuccessIcon(
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#38FFE5"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        );
+        setShowSuccessToast(true);
+        setTimeout(() => setShowSuccessToast(false), 3000);
+
         setIsEditModalOpen(false);
 
         // Clear the image state after successful update
@@ -596,7 +645,25 @@ export default function EventPage() {
     }
   }, [activeTab, isInTeam, teams]);
 
-  return (
+  // Function to determine difficulty color
+  const getDifficultyColor = (difficulty) => {
+    if (
+      difficulty === "صعب" ||
+      difficulty === "صعب جدا" ||
+      difficulty === "Hard" ||
+      difficulty === "Very Hard"
+    ) {
+      return "text-red-500";
+    } else if (difficulty === "متوسط" || difficulty === "Medium") {
+      return "text-[#9DFF00]";
+    } else {
+      return "text-[#38FFE5]"; // Easy
+    }
+  };
+
+  return isLoading ? (
+    <LoadingPage />
+  ) : (
     <div className="mt-28 lg:mt-36 px-4 sm:px-6 md:px-8 lg:px-10 max-w-[2000px] mx-auto">
       <Toaster
         position="top-center"
@@ -633,6 +700,75 @@ export default function EventPage() {
           },
         }}
       />
+
+      {/* Custom notification component */}
+      {showCopiedToast && (
+        <div className="w-full h-full fixed inset-0 z-50">
+          <div className="absolute bottom-4 right-4 w-fit z-50">
+            <div className="bg-[#131619] border border-[#38FFE5] rounded-lg p-4 shadow-lg slide-in-animation">
+              <div className="flex items-center gap-3">
+                <div>
+                  <h3 className="text-white text-lg font-semibold">
+                    {isEnglish
+                      ? "Copied to clipboard successfully!"
+                      : "تم النسخ إلى الحافظة بنجاح!"}
+                  </h3>
+                </div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#38FFE5"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success notification component */}
+      {showSuccessToast && (
+        <div className="w-full h-full fixed inset-0 z-50">
+          <div className="absolute bottom-4 right-4 w-fit z-50">
+            <div className="bg-[#131619] border border-[#38FFE5] rounded-lg p-4 shadow-lg slide-in-animation">
+              <div className="flex items-center gap-3">
+                <div>
+                  <h3 className="text-white text-lg font-semibold">
+                    {successMessage}
+                  </h3>
+                </div>
+                {successIcon}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style jsx global>{`
+        @keyframes slideInFromLeft {
+          0% {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          100% {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+
+        .slide-in-animation {
+          animation: slideInFromLeft 0.5s ease-out forwards;
+        }
+      `}</style>
+
       <div dir={isEnglish ? "ltr" : "rtl"}>
         <h1 className="text-xl md:text-2xl font-bold flex items-center gap-1">
           <Link href="/events">{isEnglish ? "Events" : "الفعاليات"}</Link>
@@ -677,61 +813,134 @@ export default function EventPage() {
               </p>
             </div>
             <div className="basis-full md:basis-1/2 pt-2 sm:pt-4 md:pt-8 lg:pt-16">
-              <div className="flex flex-col sm:flex-row items-center justify-between sm:justify-end gap-4 sm:gap-8 md:gap-12 lg:gap-20 pt-4 sm:pt-6 md:pt-8 lg:pt-10">
-                <div>
-                  <p className="text-sm sm:text-base md:text-[18px] justify-center flex items-center gap-2">
-                    أعضاء
-                    <span>
-                      {event.team_maximum_members}-{event.team_minimum_members}
-                    </span>
-                    فريق من
-                    <span className="text-[#38FFE5] text-lg sm:text-xl md:text-2xl lg:text-[24px] font-bold">
-                      <HiOutlineUsers />
-                    </span>
-                  </p>
-                </div>
-                <div className="w-full sm:w-auto">
-                  {showRegisterButton && (
-                    <button
-                      onClick={() => {
-                        if (
-                          (buttonText === "انضمام" ||
-                            buttonText === "Join Team" ||
-                            currentPhase === "team_formation") &&
-                          !isInTeam
-                        ) {
-                          setIsModalOpen(true);
-                        } else if (isRegistering) {
-                          registerNow();
-                        }
-                      }}
-                      disabled={
-                        (currentPhase === "team_formation" && isInTeam) ||
-                        (!isRegistering && currentPhase !== "team_formation")
-                      }
-                      className={`${
-                        (isRegistering && !isInTeam) ||
-                        (currentPhase === "team_formation" && !isInTeam)
-                          ? "bg-[#38FFE5] hover:bg-[#38FFE5]/90"
-                          : "bg-[#38FFE5] "
-                      } cursor-${
-                        (isRegistering && !isInTeam) ||
-                        (currentPhase === "team_formation" && !isInTeam)
-                          ? "pointer"
-                          : "not-allowed"
-                      } text-[#06373F] font-bold px-4 sm:px-6 py-2 rounded-md transition-colors w-full sm:w-auto`}
+              <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row-reverse items-center gap-3 sm:gap-4 lg:gap-6 xl:gap-10 pt-3 sm:pt-4 md:pt-6 lg:pt-8 justify-center">
+                <p
+                  className={`flex items-center ${
+                    isEnglish ? "flex-row-reverse" : ""
+                  } text-sm sm:text-base md:text-[18px] gap-2`}
+                >
+                  {isEnglish ? "Starts at " : "بدء في "}
+                  {formatDate(event.start_date)}
+                  <span className="text-[#38FFE5] flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="sm:w-5 sm:h-5 md:w-6 md:h-6"
                     >
-                      {currentPhase === "team_formation"
-                        ? isInTeam
-                          ? isEnglish
-                            ? "Already in Team"
-                            : "تم الانضمام"
-                          : isEnglish
-                          ? "Join Team"
-                          : "انضمام"
-                        : buttonText}
-                    </button>
-                  )}
+                      <rect
+                        x="3"
+                        y="4"
+                        width="18"
+                        height="18"
+                        rx="2"
+                        ry="2"
+                      ></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                  </span>
+                </p>
+                <p
+                  className={`flex items-center ${
+                    isEnglish ? "flex-row-reverse" : ""
+                  } text-sm sm:text-base md:text-[18px] gap-2`}
+                >
+                  {isEnglish ? "Ends at " : "انتهي في "}
+                  {formatDate(event.end_date)}
+                  <span className="text-[#38FFE5] flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="sm:w-5 sm:h-5 md:w-6 md:h-6"
+                    >
+                      <rect
+                        x="3"
+                        y="4"
+                        width="18"
+                        height="18"
+                        rx="2"
+                        ry="2"
+                      ></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                  </span>
+                </p>
+              </div>
+              <div>
+                <div className="flex flex-col sm:flex-row items-center justify-between sm:justify-end gap-4 sm:gap-8 md:gap-12 lg:gap-20 pt-4 sm:pt-6 md:pt-8 lg:pt-10">
+                  <div>
+                    <p className="text-sm sm:text-base md:text-[18px] justify-center flex items-center gap-2">
+                      أعضاء
+                      <span>
+                        {event.team_maximum_members}-
+                        {event.team_minimum_members}
+                      </span>
+                      فريق من
+                      <span className="text-[#38FFE5] text-lg sm:text-xl md:text-2xl lg:text-[24px] font-bold">
+                        <HiOutlineUsers />
+                      </span>
+                    </p>
+                  </div>
+                  <div className="w-full sm:w-auto">
+                    {showRegisterButton && (
+                      <button
+                        onClick={() => {
+                          if (
+                            (buttonText === "انضمام" ||
+                              buttonText === "Join Team" ||
+                              currentPhase === "team_formation") &&
+                            !isInTeam
+                          ) {
+                            setIsModalOpen(true);
+                          } else if (isRegistering) {
+                            registerNow();
+                          }
+                        }}
+                        disabled={
+                          (currentPhase === "team_formation" && isInTeam) ||
+                          (!isRegistering && currentPhase !== "team_formation")
+                        }
+                        className={`${
+                          (isRegistering && !isInTeam) ||
+                          (currentPhase === "team_formation" && !isInTeam)
+                            ? "bg-[#38FFE5] hover:bg-[#38FFE5]/90"
+                            : "bg-[#38FFE5] "
+                        } cursor-${
+                          (isRegistering && !isInTeam) ||
+                          (currentPhase === "team_formation" && !isInTeam)
+                            ? "pointer"
+                            : "not-allowed"
+                        } text-[#06373F] font-bold px-4 sm:px-6 py-2 rounded-md transition-colors w-full sm:w-auto`}
+                      >
+                        {currentPhase === "team_formation"
+                          ? isInTeam
+                            ? isEnglish
+                              ? "Already in Team"
+                              : "تم الانضمام"
+                            : isEnglish
+                            ? "Join Team"
+                            : "انضمام"
+                          : buttonText}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -933,7 +1142,7 @@ export default function EventPage() {
                   <span className="text-white">
                     {isEnglish ? "Difficulty:" : "مستوى الصعوبة:"}
                   </span>
-                  <span className="text-red-500 font-bold">
+                  <span className={getDifficultyColor(challenge.difficulty)}>
                     {challenge.difficulty}
                   </span>
                 </div>
@@ -1168,12 +1377,6 @@ export default function EventPage() {
                                   : "عرض كلمة المرور"}
                               </p>
                             </button>
-
-                            {showCopiedToast && (
-                              <div className="absolute -top-10 right-0 bg-[#38FFE5] text-[#06373F] px-3 py-1 rounded-md text-xs sm:text-sm">
-                                {isEnglish ? "Copied!" : "تم النسخ!"}
-                              </div>
-                            )}
                           </div>
                         </div>
                       ) : (
@@ -1256,286 +1459,310 @@ export default function EventPage() {
 
               {teamView === "activities" && (
                 <>
-                  {/* Header row - Desktop */}
-                  <div
-                    dir={isEnglish ? "ltr" : "rtl"}
-                    className="hidden md:grid grid-cols-5 place-items-start px-4 md:px-10 gap-4 mb-6 md:mb-9 bg-[#38FFE50D] py-3 rounded-md"
-                  >
-                    <div className="col-span-2 text-center text-white font-semibold flex justify-center items-center">
-                      <span
-                        className={`${
-                          isEnglish ? "pr-20 md:pr-28" : "pl-20 md:pl-28"
-                        }`}
+                  {/* Check if there are any activities to show */}
+                  {teams?.members?.flatMap(
+                    (member) => member.challenge_completions || []
+                  ).length > 0 ? (
+                    <>
+                      {/* Header row - Desktop */}
+                      <div
+                        dir={isEnglish ? "ltr" : "rtl"}
+                        className="hidden md:grid grid-cols-5 place-items-start px-4 md:px-10 gap-4 mb-6 md:mb-9 bg-[#38FFE50D] py-3 rounded-md"
                       >
-                        {isEnglish ? "Member" : "العضو"}
-                      </span>
-                    </div>
-                    <div className="col-span-1 text-center text-white font-semibold">
-                      {isEnglish ? "Challenge" : "التحدي"}
-                    </div>
-                    <div className="col-span-1 text-center text-white font-semibold">
-                      {isEnglish ? "Bytes" : "البايتس"}
-                    </div>
-                    <div className="col-span-1 text-center text-white font-semibold">
-                      {isEnglish ? "Completed At" : "تاريخ الإكمال"}
-                    </div>
-                  </div>
-
-                  {/* Mobile header - only shown on small screens */}
-                  <div
-                    dir={isEnglish ? "ltr" : "rtl"}
-                    className="md:hidden text-center text-lg font-bold mb-4 bg-[#38FFE50D] py-3 rounded-md"
-                  >
-                    {isEnglish ? "Team Activities" : "أنشطة الفريق"}
-                  </div>
-
-                  <div className="overflow-x-auto md:overflow-visible">
-                    {teams?.members?.flatMap((member, memberIndex) =>
-                      member.challenge_completions?.map(
-                        (challenge, challengeIndex) => (
-                          <div
-                            dir={isEnglish ? "ltr" : "rtl"}
-                            key={`${member.uuid}-${challenge.challenge_uuid}`}
-                            className={`rounded-lg mb-3 px-4 md:px-10 py-3 ${
-                              (memberIndex + challengeIndex) % 2 === 0
-                                ? "bg-[#06373F]"
-                                : "bg-transparent"
+                        <div className="col-span-2 text-center text-white font-semibold flex justify-center items-center">
+                          <span
+                            className={`${
+                              isEnglish ? "pr-20 md:pr-28" : "pl-20 md:pl-28"
                             }`}
                           >
-                            {/* Desktop view */}
-                            <div className="hidden md:grid grid-cols-5 place-items-start gap-4">
-                              <div className="col-span-2 flex justify-center">
-                                <div className="flex items-center gap-2 md:gap-4 ml-4 md:ml-16">
-                                  <Image
-                                    src={member.profile_image || "/icon1.png"}
-                                    alt="member avatar"
-                                    width={40}
-                                    height={40}
-                                    className="rounded-full object-cover w-8 h-8 md:w-10 md:h-10"
-                                    unoptimized={true}
-                                  />
-                                  <div className="flex flex-col">
-                                    <span className="text-white text-sm md:text-lg font-bold">
-                                      {member.username}
-                                    </span>
-                                    {member.role === "leader" && (
-                                      <span className="text-[#38FFE4] text-xs">
-                                        {isEnglish ? "Leader" : "قائد"}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="col-span-1 flex justify-center">
-                                <div
-                                  dir={isEnglish ? "ltr" : "rtl"}
-                                  className={`flex ${
-                                    isEnglish ? "flex-row" : "flex-row-reverse"
-                                  } items-center gap-2`}
-                                >
-                                  <span className="text-white text-sm md:text-lg">
-                                    {challenge.challenge_name}
-                                  </span>
-                                  {challenge.is_first_blood && (
-                                    <Image
-                                      src="/blood.png"
-                                      alt="first blood"
-                                      width={20}
-                                      height={20}
-                                      className="w-4 h-4 md:w-5 md:h-5"
-                                      title={
-                                        isEnglish
-                                          ? "First Blood"
-                                          : "البايتس الأولى"
-                                      }
-                                    />
-                                  )}
-                                </div>
-                              </div>
-
-                              <div className="col-span-1 flex justify-center">
-                                <div className="flex flex-row-reverse items-center gap-2">
-                                  <Image
-                                    src="/byte.png"
-                                    alt="bytes"
-                                    width={25}
-                                    height={25}
-                                    className="w-5 h-5 md:w-6 md:h-6"
-                                  />
-                                  <span className="text-white text-sm md:text-xl">
-                                    {challenge.bytes}
-                                  </span>
-                                </div>
-                              </div>
-
-                              <div className="col-span-1 flex justify-center">
-                                <span className="text-white text-sm md:text-lg">
-                                  {(() => {
-                                    const completedDate = new Date(
-                                      challenge.completed_at
-                                    );
-                                    const now = getCurrentDateInUserTimezone();
-                                    const diffInMillis = now - completedDate;
-
-                                    // Convert to minutes
-                                    const diffInMinutes = Math.floor(
-                                      diffInMillis / (1000 * 60)
-                                    );
-
-                                    if (diffInMinutes < 60) {
-                                      return isEnglish
-                                        ? `${diffInMinutes} min ago`
-                                        : `منذ ${diffInMinutes} دقيقة`;
-                                    } else if (diffInMinutes < 1440) {
-                                      // Less than 24 hours
-                                      const hours = Math.floor(
-                                        diffInMinutes / 60
-                                      );
-                                      return isEnglish
-                                        ? `${hours} hour${
-                                            hours > 1 ? "s" : ""
-                                          } ago`
-                                        : `منذ ${hours} ساعة`;
-                                    } else {
-                                      // More than 24 hours, show date
-                                      const days = Math.floor(
-                                        diffInMinutes / 1440
-                                      );
-                                      return isEnglish
-                                        ? `${days} day${
-                                            days > 1 ? "s" : ""
-                                          } ago`
-                                        : `منذ ${days} يوم`;
-                                    }
-                                  })()}
-                                </span>
-                              </div>
-                            </div>
-
-                            {/* Mobile view */}
-                            <div className="md:hidden flex flex-col">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <Image
-                                    src={member.profile_image || "/icon1.png"}
-                                    alt="member avatar"
-                                    width={30}
-                                    height={30}
-                                    className="rounded-full object-cover w-7 h-7"
-                                    unoptimized={true}
-                                  />
-                                  <div className="flex flex-col">
-                                    <span className="text-white text-sm font-bold">
-                                      {member.username}
-                                    </span>
-                                    {member.role === "leader" && (
-                                      <span className="text-[#38FFE4] text-xs">
-                                        {isEnglish ? "Leader" : "قائد"}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <span className="text-white text-xs">
-                                  {(() => {
-                                    const completedDate = new Date(
-                                      challenge.completed_at
-                                    );
-                                    const now = getCurrentDateInUserTimezone();
-                                    const diffInMillis = now - completedDate;
-
-                                    // Convert to minutes
-                                    const diffInMinutes = Math.floor(
-                                      diffInMillis / (1000 * 60)
-                                    );
-
-                                    if (diffInMinutes < 60) {
-                                      return isEnglish
-                                        ? `${diffInMinutes} min ago`
-                                        : `منذ ${diffInMinutes} دقيقة`;
-                                    } else if (diffInMinutes < 1440) {
-                                      // Less than 24 hours
-                                      const hours = Math.floor(
-                                        diffInMinutes / 60
-                                      );
-                                      return isEnglish
-                                        ? `${hours} hour${
-                                            hours > 1 ? "s" : ""
-                                          } ago`
-                                        : `منذ ${hours} ساعة`;
-                                    } else {
-                                      // More than 24 hours, show date
-                                      const days = Math.floor(
-                                        diffInMinutes / 1440
-                                      );
-                                      return isEnglish
-                                        ? `${days} day${
-                                            days > 1 ? "s" : ""
-                                          } ago`
-                                        : `منذ ${days} يوم`;
-                                    }
-                                  })()}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between mt-1">
-                                <div
-                                  dir={isEnglish ? "ltr" : "rtl"}
-                                  className={`flex ${
-                                    isEnglish ? "flex-row" : "flex-row-reverse"
-                                  } items-center gap-1`}
-                                >
-                                  <span className="text-white text-xs">
-                                    {challenge.challenge_name}
-                                  </span>
-                                  {challenge.is_first_blood && (
-                                    <Image
-                                      src="/blood.png"
-                                      alt="first blood"
-                                      width={16}
-                                      height={16}
-                                      className="w-4 h-4"
-                                      title={
-                                        isEnglish
-                                          ? "First Blood"
-                                          : "البايتس الأولى"
-                                      }
-                                    />
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <span className="text-white text-sm">
-                                    {challenge.bytes}
-                                  </span>
-                                  <Image
-                                    src="/byte.png"
-                                    alt="bytes"
-                                    width={18}
-                                    height={18}
-                                    className="w-4 h-4"
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )
-                      )
-                    ) || (
-                      <div className="flex flex-col items-center justify-center py-8">
-                        <Image
-                          src="/notfound.png"
-                          height={80}
-                          width={80}
-                          alt="activities"
-                          className="w-16 h-16 sm:w-20 sm:h-20 mb-4"
-                        />
-                        <h3 className="text-lg sm:text-xl font-medium text-center">
-                          {isEnglish
-                            ? "No activities to show yet"
-                            : "لا توجد أنشطة لعرضها حتى الآن"}
-                        </h3>
+                            {isEnglish ? "Member" : "العضو"}
+                          </span>
+                        </div>
+                        <div className="col-span-1 text-center text-white font-semibold">
+                          {isEnglish ? "Challenge" : "التحدي"}
+                        </div>
+                        <div className="col-span-1 text-center text-white font-semibold">
+                          {isEnglish ? "Bytes" : "البايتس"}
+                        </div>
+                        <div className="col-span-1 text-center text-white font-semibold">
+                          {isEnglish ? "Completed At" : "تاريخ الإكمال"}
+                        </div>
                       </div>
-                    )}
-                  </div>
+
+                      {/* Mobile header - only shown on small screens */}
+                      <div
+                        dir={isEnglish ? "ltr" : "rtl"}
+                        className="md:hidden text-center text-lg font-bold mb-4 bg-[#38FFE50D] py-3 rounded-md"
+                      >
+                        {isEnglish ? "Team Activities" : "أنشطة الفريق"}
+                      </div>
+
+                      <div className="overflow-x-auto md:overflow-visible">
+                        {teams?.members?.flatMap((member, memberIndex) =>
+                          member.challenge_completions?.map(
+                            (challenge, challengeIndex) => (
+                              <div
+                                dir={isEnglish ? "ltr" : "rtl"}
+                                key={`${member.uuid}-${challenge.challenge_uuid}`}
+                                className={`rounded-lg mb-3 px-4 md:px-10 py-3 ${
+                                  (memberIndex + challengeIndex) % 2 === 0
+                                    ? "bg-[#06373F]"
+                                    : "bg-transparent"
+                                }`}
+                              >
+                                {/* Desktop view */}
+                                <div className="hidden md:grid grid-cols-5 place-items-start gap-4">
+                                  <div className="col-span-2 flex justify-center">
+                                    <div className="flex items-center gap-2 md:gap-4 ml-4 md:ml-16">
+                                      <Image
+                                        src={
+                                          member.profile_image || "/icon1.png"
+                                        }
+                                        alt="member avatar"
+                                        width={40}
+                                        height={40}
+                                        className="rounded-full object-cover w-8 h-8 md:w-10 md:h-10"
+                                        unoptimized={true}
+                                      />
+                                      <div className="flex flex-col">
+                                        <span className="text-white text-sm md:text-lg font-bold">
+                                          {member.username}
+                                        </span>
+                                        {member.role === "leader" && (
+                                          <span className="text-[#38FFE4] text-xs">
+                                            {isEnglish ? "Leader" : "قائد"}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="col-span-1 flex justify-center">
+                                    <div
+                                      dir={isEnglish ? "ltr" : "rtl"}
+                                      className={`flex ${
+                                        isEnglish
+                                          ? "flex-row"
+                                          : "flex-row-reverse"
+                                      } items-center gap-2`}
+                                    >
+                                      <span className="text-white text-sm md:text-lg">
+                                        {challenge.challenge_name}
+                                      </span>
+                                      {challenge.is_first_blood && (
+                                        <Image
+                                          src="/blood.png"
+                                          alt="first blood"
+                                          width={20}
+                                          height={20}
+                                          className="w-4 h-4 md:w-5 md:h-5"
+                                          title={
+                                            isEnglish
+                                              ? "First Blood"
+                                              : "البايتس الأولى"
+                                          }
+                                        />
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="col-span-1 flex justify-center">
+                                    <div className="flex flex-row-reverse items-center gap-2">
+                                      <Image
+                                        src="/byte.png"
+                                        alt="bytes"
+                                        width={25}
+                                        height={25}
+                                        className="w-5 h-5 md:w-6 md:h-6"
+                                      />
+                                      <span className="text-white text-sm md:text-xl">
+                                        {challenge.bytes}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  <div className="col-span-1  flex justify-center">
+                                    <span className="text-white text-sm md:text-lg">
+                                      {(() => {
+                                        // Convert the completed_at date to the user's timezone
+                                        const completedDate =
+                                          convertToUserTimezone(
+                                            new Date(challenge.completed_at)
+                                          );
+                                        const now =
+                                          getCurrentDateInUserTimezone();
+                                        const diffInMillis =
+                                          now - completedDate;
+
+                                        // Convert to minutes
+                                        const diffInMinutes = Math.floor(
+                                          diffInMillis / (1000 * 60)
+                                        );
+
+                                        if (diffInMinutes < 60) {
+                                          return isEnglish
+                                            ? `${diffInMinutes} min ago`
+                                            : `منذ ${diffInMinutes} دقيقة`;
+                                        } else if (diffInMinutes < 1440) {
+                                          // Less than 24 hours
+                                          const hours = Math.floor(
+                                            diffInMinutes / 60
+                                          );
+                                          return isEnglish
+                                            ? `${hours} hour${
+                                                hours > 1 ? "s" : ""
+                                              } ago`
+                                            : `منذ ${hours} ساعة`;
+                                        } else {
+                                          // More than 24 hours, show date
+                                          const days = Math.floor(
+                                            diffInMinutes / 1440
+                                          );
+                                          return isEnglish
+                                            ? `${days} day${
+                                                days > 1 ? "s" : ""
+                                              } ago`
+                                            : `منذ ${days} يوم`;
+                                        }
+                                      })()}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Mobile view */}
+                                <div className="md:hidden flex flex-col">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      <Image
+                                        src={
+                                          member.profile_image || "/icon1.png"
+                                        }
+                                        alt="member avatar"
+                                        width={30}
+                                        height={30}
+                                        className="rounded-full object-cover w-7 h-7"
+                                        unoptimized={true}
+                                      />
+                                      <div className="flex flex-col">
+                                        <span className="text-white text-sm font-bold">
+                                          {member.username}
+                                        </span>
+                                        {member.role === "leader" && (
+                                          <span className="text-[#38FFE4] text-xs">
+                                            {isEnglish ? "Leader" : "قائد"}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <span className="text-white text-xs">
+                                      {(() => {
+                                        // Convert the completed_at date to the user's timezone
+                                        const completedDate =
+                                          convertToUserTimezone(
+                                            new Date(challenge.completed_at)
+                                          );
+                                        const now =
+                                          getCurrentDateInUserTimezone();
+                                        const diffInMillis =
+                                          now - completedDate;
+
+                                        // Convert to minutes
+                                        const diffInMinutes = Math.floor(
+                                          diffInMillis / (1000 * 60)
+                                        );
+
+                                        if (diffInMinutes < 60) {
+                                          return isEnglish
+                                            ? `${diffInMinutes} min ago`
+                                            : `منذ ${diffInMinutes} دقيقة`;
+                                        } else if (diffInMinutes < 1440) {
+                                          // Less than 24 hours
+                                          const hours = Math.floor(
+                                            diffInMinutes / 60
+                                          );
+                                          return isEnglish
+                                            ? `${hours} hour${
+                                                hours > 1 ? "s" : ""
+                                              } ago`
+                                            : `منذ ${hours} ساعة`;
+                                        } else {
+                                          // More than 24 hours, show date
+                                          const days = Math.floor(
+                                            diffInMinutes / 1440
+                                          );
+                                          return isEnglish
+                                            ? `${days} day${
+                                                days > 1 ? "s" : ""
+                                              } ago`
+                                            : `منذ ${days} يوم`;
+                                        }
+                                      })()}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center justify-between mt-1">
+                                    <div
+                                      dir={isEnglish ? "ltr" : "rtl"}
+                                      className={`flex ${
+                                        isEnglish
+                                          ? "flex-row"
+                                          : "flex-row-reverse"
+                                      } items-center gap-1`}
+                                    >
+                                      <span className="text-white text-xs">
+                                        {challenge.challenge_name}
+                                      </span>
+                                      {challenge.is_first_blood && (
+                                        <Image
+                                          src="/blood.png"
+                                          alt="first blood"
+                                          width={16}
+                                          height={16}
+                                          className="w-4 h-4"
+                                          title={
+                                            isEnglish
+                                              ? "First Blood"
+                                              : "البايتس الأولى"
+                                          }
+                                        />
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-white text-sm">
+                                        {challenge.bytes}
+                                      </span>
+                                      <Image
+                                        src="/byte.png"
+                                        alt="bytes"
+                                        width={18}
+                                        height={18}
+                                        className="w-4 h-4"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )
+                          )
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    // Only show a simple message when there are no activities
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <Image
+                        src="/notfound.png"
+                        height={80}
+                        width={80}
+                        alt="activities"
+                        className="w-16 h-16 sm:w-20 sm:h-20 mb-4"
+                      />
+                      <h3 className="text-lg sm:text-xl font-medium text-center">
+                        {isEnglish
+                          ? "No activities to show yet"
+                          : "لا توجد أنشطة لعرضها حتى الآن"}
+                      </h3>
+                    </div>
+                  )}
                 </>
               )}
             </>
@@ -1631,7 +1858,7 @@ export default function EventPage() {
                         />
                       ) : (
                         <div className="w-10 h-10 flex items-center justify-center bg-[#06373F] rounded-full">
-                          <SiHackaday className="text-[#38FFE5] text-xl" />
+                          <SiHackaday className="text-[#38FFE5] text-xl sm:text-2xl" />
                         </div>
                       )}
                       <span className="text-white text-xl font-bold">

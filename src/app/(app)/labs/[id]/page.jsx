@@ -109,172 +109,56 @@ export default function TrainingChallenges() {
         dir={isEnglish ? "ltr" : "rtl"}
         className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-20"
       >
-        {latestChallenges.length > 0 ? (
-          latestChallenges.map((challenge) => (
-            <div
-              key={challenge.uuid}
-              className="bg-white/3 backdrop-blur-xl rounded-lg p-4 flex flex-col justify-between min-h-[300px]"
-            >
-              <div>
-                <div className="flex items-center gap-4">
-                  <Image
-                    src={
-                      challenge.category_icon_url ||
-                      `/${challenge.category_icon}`
-                    }
-                    alt={challenge.category?.name || "challenge"}
-                    width={56}
-                    height={56}
-                  />
-                  <h3 className="text-white text-[24px] font-bold">
-                    {challenge.title}
-                  </h3>
-                </div>
-                <p className="text-white text-left text-[18px] pt-5">
-                  {challenge.description}
-                </p>
+        {latestChallenges.map((challenge) => (
+          <div
+            key={challenge.uuid}
+            className="bg-white/3 backdrop-blur-xl rounded-lg p-4 flex flex-col justify-between min-h-[300px]"
+          >
+            <div>
+              <div className="flex items-center gap-4">
+                <Image
+                  src={
+                    challenge.category_icon_url || `/${challenge.category_icon}`
+                  }
+                  alt={challenge.category?.name || "challenge"}
+                  width={56}
+                  height={56}
+                />
+                <h3 className="text-white text-[24px] font-bold">
+                  {challenge.title}
+                </h3>
               </div>
-
-              <div className="flex lg:flex lg:flex-wrap items-center justify-between gap-4 pt-10">
-                <p>
-                  {isEnglish ? (
-                    <>
-                      Difficulty Level:{" "}
-                      <span
-                        className={getDifficultyColor(challenge.difficulty)}
-                      >
-                        {challenge.difficulty}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      مستوي الصعوبة :{" "}
-                      <span
-                        className={getDifficultyColor(challenge.difficulty)}
-                      >
-                        {challenge.difficulty}
-                      </span>
-                    </>
-                  )}
-                </p>
-                <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110">
-                  <Link href={`/challnge/${challenge.uuid}`}>
-                    {isEnglish ? "Start Now" : "ابدأ الآن"}
-                  </Link>
-                </p>
-              </div>
-            </div>
-          ))
-        ) : (
-          <>
-            <div className="bg-white/3 backdrop-blur-xl rounded-lg p-4 flex flex-col justify-between min-h-[300px]">
-              <div>
-                <div className="flex items-center gap-4">
-                  <Image src="/web.png" alt="progress" width={56} height={56} />
-                  <h3 className="text-white text-[24px] font-bold">Quest</h3>
-                </div>
-                <p className="text-white text-left text-[18px] pt-5">
-                  Test your skills in this dynamic web application challenge.
-                  Analyze, adapt, and conquer!
-                </p>
-              </div>
-
-              <div className="flex  lg:flex lg:flex-wrap items-center justify-between gap-4 pt-10">
-                <p>
-                  {isEnglish ? (
-                    <>
-                      Difficulty Level:{" "}
-                      <span className="text-red-600">Very Hard</span>
-                    </>
-                  ) : (
-                    <>
-                      مستوي الصعوبة :{" "}
-                      <span className="text-red-600">صعب جدا</span>
-                    </>
-                  )}
-                </p>
-                <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110">
-                  <Link href="#">{isEnglish ? "Start Now" : "ابدأ الآن"}</Link>
-                </p>
-              </div>
+              <p className="text-white text-left text-[18px] pt-5">
+                {challenge.description}
+              </p>
             </div>
 
-            <div className="bg-white/3 backdrop-blur-xl rounded-lg p-4 flex flex-col justify-between min-h-[300px]">
-              <div>
-                <div className="flex items-center gap-4">
-                  <Image
-                    src="/challnge2.png"
-                    alt="progress"
-                    width={56}
-                    height={56}
-                  />
-                  <h3 className="text-white text-[24px] font-bold">Scray</h3>
-                </div>
-                <p className="text-white text-left text-[18px] pt-5">
-                  Participants will encounter an audio file containing a hidden
-                  flag. They must carefully analyze the file to uncover the
-                  hidden message. Use your skills to explore this challenge!
-                </p>
-              </div>
-
-              <div className="flex  lg:flex lg:flex-wrap lg:flex-row items-center justify-between gap-4 pt-10">
-                <p>
-                  {isEnglish ? (
-                    <>
-                      Difficulty Level:{" "}
-                      <span className="text-[#38FFE5]">Easy</span>
-                    </>
-                  ) : (
-                    <>
-                      مستوي الصعوبة :{" "}
-                      <span className="text-[#38FFE5]">سهل</span>
-                    </>
-                  )}
-                </p>
-                <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110">
-                  <Link href="#">{isEnglish ? "Start Now" : "ابدأ الآن"}</Link>
-                </p>
-              </div>
+            <div className="flex lg:flex lg:flex-wrap items-center justify-between gap-4 pt-10">
+              <p>
+                {isEnglish ? (
+                  <>
+                    Difficulty Level:{" "}
+                    <span className={getDifficultyColor(challenge.difficulty)}>
+                      {challenge.difficulty}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    مستوي الصعوبة :{" "}
+                    <span className={getDifficultyColor(challenge.difficulty)}>
+                      {challenge.difficulty}
+                    </span>
+                  </>
+                )}
+              </p>
+              <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110">
+                <Link href={`/challnge/${challenge.uuid}`}>
+                  {isEnglish ? "Start Now" : "ابدأ الآن"}
+                </Link>
+              </p>
             </div>
-
-            <div className="bg-white/3 backdrop-blur-xl rounded-lg p-4 flex flex-col justify-between min-h-[300px]">
-              <div>
-                <div className="flex items-center gap-4">
-                  <Image
-                    src="/challnge3.png"
-                    alt="progress"
-                    width={56}
-                    height={56}
-                  />
-                  <h3 className="text-white text-[24px] font-bold">Quest</h3>
-                </div>
-                <p className="text-white text-left text-[18px] pt-5">
-                  Sometimes RSA certificates are breakable. Can you find the
-                  vulnerability?
-                </p>
-              </div>
-
-              <div className="flex lg:flex lg:flex-wrap items-center justify-between gap-4 pt-10">
-                <p>
-                  {isEnglish ? (
-                    <>
-                      Difficulty Level:{" "}
-                      <span className="text-[#9DFF00]">Medium</span>
-                    </>
-                  ) : (
-                    <>
-                      مستوي الصعوبة :{" "}
-                      <span className="text-[#9DFF00]">متوسط</span>
-                    </>
-                  )}
-                </p>
-                <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110">
-                  <Link href="#">{isEnglish ? "Start Now" : "ابدأ الآن"}</Link>
-                </p>
-              </div>
-            </div>
-          </>
-        )}
+          </div>
+        ))}
       </div>
 
       {/* New Challenges Grid */}
@@ -285,10 +169,10 @@ export default function TrainingChallenges() {
         {categoryData?.data?.map((category, index) => (
           <Link key={index} href={`/challnges/${category.uuid}`}>
             <div
-              className="bg-white/1 cursor-pointer rounded-lg p-6 flex flex-col lg:min-h-[400px]"
+              className="bg-white/1 cursor-pointer rounded-lg p-6 flex items-center justify-center flex-col lg:min-h-[400px]"
               style={{ boxShadow: "0px -5px 20px 0px #38FFE5 inset" }}
             >
-              <div className="flex flex-col h-full justify-center gap-4 items-center mb-4">
+              <div className="flex  flex-col  justify-center gap-4 items-center mb-4">
                 <div className="flex items-center justify-center mb-4">
                   <Image
                     src={category.image}

@@ -155,12 +155,12 @@ export default function AddChallenge() {
 
   // Process the file
   const handleFile = (file) => {
-    // Check file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
+    // Check file size (max 200MB)
+    if (file.size > 200 * 1024 * 1024) {
       setErrorMessage(
         isEnglish
-          ? "File size should be less than 2MB"
-          : "يجب أن يكون حجم الملف أقل من 2 ميغابايت"
+          ? "File size should be less than 200MB"
+          : "يجب أن يكون حجم الملف أقل من 200 ميغابايت"
       );
       return;
     }
@@ -203,12 +203,12 @@ export default function AddChallenge() {
 
   // Process the solution file
   const handleSolutionFile = (file) => {
-    // Check file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
+    // Check file size (max 200MB)
+    if (file.size > 200 * 1024 * 1024) {
       setErrorMessage(
         isEnglish
-          ? "Solution file size should be less than 2MB"
-          : "يجب أن يكون حجم ملف الحل أقل من 2 ميغابايت"
+          ? "Solution file size should be less than 200MB"
+          : "يجب أن يكون حجم ملف الحل أقل من 200 ميغابايت"
       );
       return;
     }
@@ -429,9 +429,9 @@ export default function AddChallenge() {
         </h3>
       </div>
       <div
-        className={`relative border border-dashed rounded-lg p-6 transition-all ${
+        className={`relative rounded-lg transition-all ${
           dragActive
-            ? "border-[#38FFE5] bg-[#38FFE5]/5"
+            ? "border-[#38FFE5] bg-[#131619]"
             : "border-gray-600 hover:border-gray-500"
         } ${isUploaded ? "bg-[#131619]" : ""}`}
         onDragEnter={handleDrag}
@@ -447,8 +447,10 @@ export default function AddChallenge() {
         />
 
         {!isUploaded ? (
-          <div className="text-center">
-            <FaUpload className="mx-auto h-12 w-12 text-gray-400" />
+          <div
+            dir={isEnglish ? "ltr" : "rtl"}
+            className="text-center bg-[#0B0D0F] py-12 rounded-lg gap-2 flex justify-center items-center "
+          >
             <p className="mt-2 text-sm text-gray-400">
               {isEnglish
                 ? "Drag and drop your file here, or"
@@ -457,194 +459,48 @@ export default function AddChallenge() {
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
-              className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-black bg-[#38FFE5] hover:bg-[#38FFE5]/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#38FFE5]"
+              className="mt-2 text-[#38FFE5] font-semibold cursor-pointer"
             >
-              {isEnglish ? "Browse Files" : "تصفح الملفات"}
+              {isEnglish ? "Browse " : "تصفح "}
             </button>
-
-            <div className="mt-3 flex justify-center items-center relative group">
-              <FaInfoCircle className="text-[#38FFE5] h-4 w-4" />
-              <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 bg-gray-800 text-white p-2 rounded-md text-xs shadow-lg z-10">
-                {isEnglish
-                  ? "Max: 2MB (.zip files only)"
-                  : "الحد الأقصى: 2 ميغابايت (ملفات .zip فقط)"}
-              </div>
-            </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center">
-            <AnimatePresence mode="wait">
-              {isScanning && (
-                <motion.div
-                  className="w-full mb-4 relative overflow-hidden"
-                  initial={{ y: 100, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  exit={{ y: -100, opacity: 0 }}
-                  transition={{ duration: 0.5, ease: "easeOut" }}
-                  key="scanning"
-                >
-                  {/* Document container with scanning effects */}
-                  <div className="h-32 w-full bg-[#131619] rounded-md overflow-hidden relative mb-3 border border-gray-700">
-                    {/* Document Preview */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-30">
-                      <FaFileAlt className="text-gray-500 h-12 w-12" />
-                    </div>
-
-                    {/* Main scanning line that moves up and down */}
-                    <motion.div
-                      className="absolute left-0 right-0 h-2 bg-gradient-to-r from-transparent via-[#38FFE5] to-transparent"
-                      initial={{ top: "100%" }}
-                      animate={{ top: ["100%", "0%", "100%"] }}
-                      transition={{
-                        duration: 3,
-                        ease: "linear",
-                        times: [0, 0.5, 1],
-                        repeat: Infinity,
-                        repeatType: "loop",
-                      }}
-                    />
-
-                    {/* Horizontal scanning lines that fade in and out */}
-                    <div className="absolute inset-0">
-                      {Array.from({ length: 16 }).map((_, index) => (
-                        <motion.div
-                          key={index}
-                          className={`h-[1px] w-full bg-[#38FFE5] absolute`}
-                          style={{ top: `${index * 6 + 2}%` }}
-                          initial={{ scaleX: 0, opacity: 0 }}
-                          animate={{
-                            scaleX: [0, 1, 0],
-                            opacity: [0, 0.3, 0],
-                          }}
-                          transition={{
-                            duration: 2,
-                            delay: index * 0.08,
-                            repeat: Infinity,
-                            repeatType: "loop",
-                          }}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Glowing dots that appear randomly */}
-                    <div className="absolute inset-0">
-                      {[...Array(8)].map((_, index) => {
-                        // Pre-calculate random positions
-                        const leftPos = Math.floor(Math.random() * 90 + 5);
-                        const topPos = Math.floor(Math.random() * 90 + 5);
-
-                        return (
-                          <motion.div
-                            key={`dot-${index}`}
-                            className="absolute h-1 w-1 rounded-full bg-[#38FFE5] shadow-lg shadow-[#38FFE5]/50"
-                            style={{
-                              left: `${leftPos}%`,
-                              top: `${topPos}%`,
-                            }}
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{
-                              opacity: [0, 1, 0],
-                              scale: [0.5, 1.2, 0.5],
-                            }}
-                            transition={{
-                              duration: 1.5,
-                              delay: index * 0.2,
-                              repeat: Infinity,
-                              repeatType: "loop",
-                            }}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <p
-                    dir={isEnglish ? "ltr" : "rtl"}
-                    className="text-center text-sm text-[#38FFE5]"
-                  >
-                    {isEnglish ? "Uploading file..." : "جاري رفع الملف ..."}
-                  </p>
-                </motion.div>
-              )}
-
-              {isScanComplete && (
-                <motion.div
-                  className="flex flex-col items-center justify-center w-full mb-4"
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 200,
-                    damping: 15,
-                  }}
-                  key="complete"
-                >
-                  <div className="relative h-32 w-full bg-[#131619] rounded-md overflow-hidden border border-gray-700 flex items-center justify-center mb-3">
-                    <FaFileAlt className="text-gray-500 h-10 w-10 z-10" />
-
-                    {/* Success overlay effect */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-b from-green-500/0 to-green-500/10"
-                      initial={{ y: "100%" }}
-                      animate={{ y: 0 }}
-                      transition={{ duration: 0.5 }}
-                    />
-
-                    {/* Background glow */}
-                    <motion.div
-                      className="absolute inset-0 bg-green-500/5"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: [0, 1, 0.5] }}
-                      transition={{ duration: 1, times: [0, 0.5, 1] }}
-                    />
-
-                    {/* Success checkmark */}
-                    <motion.div
-                      className="absolute inset-0 flex items-center justify-center"
-                      initial={{ opacity: 0, scale: 0.5 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{
-                        delay: 0.3,
-                        duration: 0.5,
-                        type: "spring",
-                      }}
-                    >
-                      <div className="bg-green-500/20 rounded-full p-3">
-                        <BsFillFileEarmarkCheckFill className="h-10 w-10 text-green-400" />
-                      </div>
-                    </motion.div>
-                  </div>
-
-                  <div className="flex items-center justify-center space-x-2 text-green-400">
-                    <span>
-                      {isEnglish
-                        ? "File uploaded successfully"
-                        : "تم رفع الملف بنجاح"}
-                    </span>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <div className="flex items-center justify-between w-full bg-[#131619] rounded-md p-3">
-              <div className="flex items-center space-x-3">
-                <FaFileAlt className="h-10 w-10 text-[#38FFE5]" />
+          <div className="bg-[#0B0D0F] py-6 rounded-lg">
+            <div className="flex items-center justify-between px-4">
+              <div className="flex items-center">
+                <div className="mr-3">
+                  {isScanning ? (
+                    <div className="w-6 h-6 border-2 border-[#38FFE5] border-t-transparent rounded-full animate-spin"></div>
+                  ) : isScanComplete ? (
+                    <BsFillFileEarmarkCheckFill className="text-[#38FFE5] h-6 w-6" />
+                  ) : (
+                    <FaFileAlt className="text-gray-400 h-6 w-6" />
+                  )}
+                </div>
                 <div>
-                  <p className="text-sm font-medium text-white truncate max-w-[200px]">
+                  <p className="text-white text-sm font-medium truncate max-w-xs">
                     {file.name}
                   </p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-gray-400 text-xs">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={handleRemove}
-                className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-full text-red-400"
-              >
-                <FaTrash className="h-4 w-4" />
-              </button>
+              <div>
+                {isScanning ? (
+                  <p dir={isEnglish ? "ltr" : "rtl"} className="text-gray-400 text-sm">
+                    {isEnglish ? "Uploading..." : "جاري التحميل..."}
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleRemove}
+                    className="p-2 text-red-400 hover:text-red-300 focus:outline-none"
+                  >
+                    <FaTrash className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}

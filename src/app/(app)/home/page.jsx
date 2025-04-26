@@ -2,40 +2,64 @@
 
 import { useLanguage } from "../../context/LanguageContext";
 import Image from "next/image";
-import Achievements from "@/app/components/Achievements";
 import LoadingPage from "@/app/components/LoadingPage";
 import { useState, useEffect } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import Link from "next/link";
+import { useUserProfile } from "@/app/context/UserProfileContext";
 
 export default function Home() {
   const { isEnglish } = useLanguage();
+  const { userName } = useUserProfile();
   const [isLoaded, setIsLoaded] = useState(false);
   const [latestChallenges, setLatestChallenges] = useState([]);
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    const fetchChallenges = async () => {
+    const fetchData = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         const token = Cookies.get("token");
-        const response = await axios.get(`${apiUrl}/last-Three-challenges`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (response.data.status === "success") {
-          setLatestChallenges(response.data.data);
+
+        // Fetch challenges
+        const challengesResponse = await axios.get(
+          `${apiUrl}/last-Three-challenges`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (challengesResponse.data.status === "success") {
+          setLatestChallenges(challengesResponse.data.data);
+        }
+
+        // Fetch user data - using the same endpoint as user-profile page
+        if (userName) {
+          const userResponse = await axios.get(
+            `${apiUrl}/user/stats/${userName}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (userResponse.data && userResponse.data.user) {
+            setUserData(userResponse.data.user);
+          }
         }
       } catch (error) {
-        console.error("Error fetching challenges:", error);
+        console.error("Error fetching data:", error);
       }
 
       setIsLoaded(true);
     };
 
-    fetchChallenges();
-  }, []);
+    fetchData();
+  }, [userName]);
 
   // Function to determine difficulty color
   const getDifficultyColor = (difficulty) => {
@@ -86,7 +110,76 @@ export default function Home() {
           {isEnglish ? "Progress Level" : "مستوى التقدم"}
         </h2>
 
-        <Achievements />
+        <div className="flex lg:flex-row flex-col lg:gap-14 gap-8 items-center justify-between pt-8">
+          <div className="lg:basis-2/3 w-full bg-white/3 backdrop-blur-xl rounded-lg py-6 sm:py-10 px-3 sm:px-4 lg:px-10">
+            <div
+              dir={isEnglish ? "ltr" : "rtl"}
+              className="flex items-center justify-between sm:justify-start sm:gap-5 gap-2 w-full"
+            >
+              {/* Render progress dots based on percentage */}
+              {[...Array(7)].map((_, index) => {
+                // Each dot represents ~14.3% (100/7)
+                const dotThreshold = (index + 1) * (100 / 7);
+                const percentageCompleted =
+                  100 - (userData?.percentage_for_next_title || 0);
+
+                // Determine the class based on the completion status
+                let bgClass = "";
+                if (percentageCompleted >= dotThreshold) {
+                  bgClass = "bg-[#38FFE5]"; // Completed
+                } else if (
+                  percentageCompleted > dotThreshold - 100 / 7 &&
+                  percentageCompleted < dotThreshold
+                ) {
+                  bgClass = "bg-gradient-to-r from-[#06373F] to-[#38FFE5]"; // In progress
+                } else {
+                  bgClass = "bg-[#003F49]"; // Not started
+                }
+
+                return (
+                  <div
+                    key={index}
+                    className={`flex-1 max-w-[56px] h-[10px] sm:h-[16px] ${bgClass} rounded-full`}
+                  ></div>
+                );
+              })}
+            </div>
+            <p
+              dir={isEnglish ? "ltr" : "rtl"}
+              className={`text-[#BCC9DB] ${
+                isEnglish ? "text-left" : "text-right"
+              } pt-10 text-[18px]`}
+            >
+              {isEnglish
+                ? `${
+                    userData?.percentage_for_next_title || 0
+                  }% remaining to achieve ${
+                    userData?.next_title || "Professional"
+                  } status`
+                : `متبقي ${
+                    userData?.percentage_for_next_title
+                      ? Math.floor(userData.percentage_for_next_title)
+                      : 0
+                  }% للحصول على  لقب ${userData?.next_title || ""}`}
+            </p>
+          </div>
+
+          <div className="lg:basis-1/3 w-full">
+            <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 backdrop-blur-xl rounded-lg p-3 sm:p-4">
+              <Image src="/ranking.png" alt="progress" width={36} height={36} />
+              <p className="text-[#BCC9DB] text-[16px] sm:text-[18px]">
+                {userData?.rank > 0
+                  ? userData.rank
+                  : isEnglish
+                  ? "No Ranking"
+                  : "لا يوجد تصنيف"}
+              </p>
+              <p className="text-white text-[16px] sm:text-[18px]">
+                {isEnglish ? "Your Ranking" : "تصنيفك"}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="lg:px-16 pt-20 px-5  ">
@@ -99,7 +192,63 @@ export default function Home() {
         </h2>
       </div>
 
-      <div className="lg:px-16 pt-20 px-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8  lg:px-16 pt-10 px-5">
+        {latestChallenges.map((challenge) => (
+          <div
+            key={challenge.uuid}
+            className="bg-white/3 backdrop-blur-xl rounded-lg p-4 flex flex-col justify-between min-h-[300px]"
+          >
+            <div>
+              <div className="flex items-center gap-4">
+                <Image
+                  src={
+                    challenge.category_icon_url || `/${challenge.category_icon}`
+                  }
+                  alt={challenge.category?.name || "challenge"}
+                  width={56}
+                  height={56}
+                />
+                <h3 className="text-white text-[24px] font-bold">
+                  {challenge.title}
+                </h3>
+              </div>
+              <p className="text-white text-left text-[18px] pt-5">
+                {challenge.description}
+              </p>
+            </div>
+
+            <div
+              dir={isEnglish ? "ltr" : "rtl"}
+              className="flex lg:flex lg:flex-wrap items-center justify-between gap-4 pt-10"
+            >
+              <p>
+                {isEnglish ? (
+                  <>
+                    Difficulty Level:{" "}
+                    <span className={getDifficultyColor(challenge.difficulty)}>
+                      {challenge.difficulty}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    مستوي الصعوبة :{" "}
+                    <span className={getDifficultyColor(challenge.difficulty)}>
+                      {challenge.difficulty}
+                    </span>
+                  </>
+                )}
+              </p>
+              <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110">
+                <Link href={`/challnge/${challenge.uuid}`}>
+                  {isEnglish ? "Start Now" : "ابدأ الآن"}
+                </Link>
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="lg:px-16 pt-20 ">
         <h2
           className={`text-white text-[18px] pb-8 ${
             isEnglish ? "text-left" : "text-right"
@@ -183,7 +332,7 @@ export default function Home() {
                               1000
                             </span>
                             <Image
-                              src="/point.png"
+                              src="/byte.png"
                               alt="points"
                               width={20}
                               height={24}

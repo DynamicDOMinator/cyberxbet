@@ -366,7 +366,7 @@ export default function Events() {
 
           {mainEvent && (
             <div
-              className="bg-cover bg-no-repeat bg-center relative rounded-lg mt-6 md:mt-8 lg:mt-12 h-[400px] md:h-[450px] lg:h-[500px] w-full overflow-hidden"
+              className="bg-cover bg-no-repeat bg-center relative rounded-lg mt-6 md:mt-8 lg:mt-12 min-h-[400px] md:h-[450px] lg:h-[500px] w-full overflow-hidden"
               style={{
                 backgroundImage: `url(${mainEvent.image})`,
               }}
@@ -399,7 +399,7 @@ export default function Events() {
                       {mainEvent.title}
                     </h2>
 
-                    <p className="text-center md:text-left text-base sm:text-lg md:text-xl lg:text-2xl mt-2 sm:mt-4 md:mt-6 lg:mt-8 md:pr-6 lg:pr-10 line-clamp-3 md:line-clamp-none">
+                    <p className="text-center lg:w-full break-words text-wrap whitespace-break-spaces md:text-left text-base sm:text-lg md:text-xl lg:text-2xl mt-2 sm:mt-4 md:mt-6 lg:mt-8 md:pr-6 lg:pr-10 line-clamp-3 md:line-clamp-none">
                       {mainEvent.description}
                     </p>
                   </div>
@@ -412,11 +412,7 @@ export default function Events() {
                         } text-sm sm:text-base md:text-[18px] gap-2`}
                       >
                         {isEnglish ? "Starts at " : "بدء في "}
-                        {
-                          new Date(mainEvent.start_date)
-                            .toISOString()
-                            .split("T")[0]
-                        }
+                        {formatDate(mainEvent.start_date)}
                         <span className="text-[#38FFE5] flex items-center">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -450,11 +446,7 @@ export default function Events() {
                         } text-sm sm:text-base md:text-[18px] gap-2`}
                       >
                         {isEnglish ? "Ends at " : "انتهي في "}
-                        {
-                          new Date(mainEvent.end_date)
-                            .toISOString()
-                            .split("T")[0]
-                        }
+                        {formatDate(mainEvent.end_date)}
                         <span className="text-[#38FFE5] flex items-center">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -484,7 +476,7 @@ export default function Events() {
                       </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 md:gap-6 pt-3 sm:pt-4 md:pt-6 lg:pt-8">
+                    <div className="flex flex-col sm:flex-row items-center justify-center mx-auto gap-3 sm:gap-4 md:gap-20 pt-3 sm:pt-4 md:pt-6 lg:pt-8">
                       <div className="w-full sm:w-auto">
                         <p className="text-sm sm:text-base md:text-[18px] justify-center flex items-center gap-2">
                           أعضاء
@@ -549,7 +541,7 @@ export default function Events() {
 
           <div
             dir={isEnglish ? "ltr" : "rtl"}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 md:mt-16 gap-4 md:gap-6"
+            className="grid mt-20  grid-cols-1 md:grid-cols-2 lg:grid-cols-3 md:mt-16 gap-4 md:gap-6"
           >
             {event.map((event) => (
               <div
