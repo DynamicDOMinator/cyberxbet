@@ -13,7 +13,7 @@ import TeamRegistrationModal from "@/app/components/TeamRegistrationModal";
 import { IoCopy } from "react-icons/io5";
 import toast, { Toaster } from "react-hot-toast";
 import { useUserProfile } from "@/app/context/UserProfileContext";
-import { SiHackaday } from "react-icons/si";
+
 import LoadingPage from "@/app/components/LoadingPage";
 import { useRouter } from "next/navigation";
 export default function EventPage() {
@@ -1201,7 +1201,13 @@ export default function EventPage() {
                       />
                     ) : (
                       <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-[50px] md:h-[50px] flex items-center justify-center bg-[#06373F] rounded-full">
-                        <SiHackaday className="text-[#38FFE5] text-xl sm:text-2xl" />
+                        <Image
+                          src="/icon1.png"
+                          alt="team"
+                          width={40}
+                          height={40}
+                          className="text-[#38FFE5] text-xl sm:text-2xl"
+                        />
                       </div>
                     )}
                     <p className="text-sm sm:text-base">{teams?.name}</p>
@@ -1866,7 +1872,13 @@ export default function EventPage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-[#06373F]">
-                            <SiHackaday className="text-[#FFD700] text-3xl" />
+                            <Image
+                              src="/icon1.png"
+                              alt="team"
+                              width={40}
+                              height={40}
+                              className="text-[#FFD700] text-3xl"
+                            />
                           </div>
                         )}
                       </div>
@@ -1878,7 +1890,7 @@ export default function EventPage() {
                 </p>
 
                 {/* Three score indicators */}
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-2  ">
                   <div className="flex items-center gap-1">
                     <Image
                       src="/byte.png"
@@ -1946,7 +1958,13 @@ export default function EventPage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-[#06373F]">
-                            <SiHackaday className="text-[#FFA500] text-2xl" />
+                            <Image
+                              src="/icon1.png"
+                              alt="team"
+                              width={40}
+                              height={40}
+                              className="text-[#FFA500] text-2xl"
+                            />
                           </div>
                         )}
                       </div>
@@ -1958,7 +1976,7 @@ export default function EventPage() {
                 </p>
 
                 {/* Three score indicators */}
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 bg-[#0A1316] rounded-lg p-2 mt-2">
                   <div className="flex items-center gap-1">
                     <Image
                       src="/byte.png"
@@ -2025,7 +2043,13 @@ export default function EventPage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-[#06373F]">
-                            <SiHackaday className="text-[#FFD700] text-3xl" />
+                            <Image
+                              src="/icon1.png"
+                              alt="team"
+                              width={40}
+                              height={40}
+                              className="text-[#FFD700] text-3xl"
+                            />
                           </div>
                         )}
                       </div>
@@ -2037,7 +2061,7 @@ export default function EventPage() {
                 </p>
 
                 {/* Three score indicators */}
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-2 bg-[#0A1316] rounded-lg p-2">
                   <div className="flex items-center gap-1">
                     <Image
                       src="/byte.png"
@@ -2105,7 +2129,13 @@ export default function EventPage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-[#06373F]">
-                            <SiHackaday className="text-[#C0C0C0] text-2xl" />
+                            <Image
+                              src="/icon1.png"
+                              alt="team"
+                              width={40}
+                              height={40}
+                              className="text-[#C0C0C0] text-2xl"
+                            />
                           </div>
                         )}
                       </div>
@@ -2117,7 +2147,7 @@ export default function EventPage() {
                 </p>
 
                 {/* Three score indicators */}
-                <div className="flex items-center gap-2 mt-2">
+                <div className="flex items-center gap-2 mt-2 bg-[#0A1316] rounded-lg p-2">
                   <div className="flex items-center gap-1">
                     <Image
                       src="/byte.png"
@@ -2235,7 +2265,13 @@ export default function EventPage() {
                             />
                           ) : (
                             <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-[#06373F] rounded-full">
-                              <SiHackaday className="text-[#38FFE5] text-base md:text-xl sm:text-2xl" />
+                              <Image
+                                src="/icon1.png"
+                                alt="team"
+                                width={40}
+                                height={40}
+                                className="text-[#38FFE5] text-base md:text-xl sm:text-2xl"
+                              />
                             </div>
                           )}
                           <span className="text-white text-sm md:text-xl font-bold truncate max-w-[120px] md:max-w-[200px]">

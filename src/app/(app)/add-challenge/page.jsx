@@ -988,7 +988,11 @@ export default function AddChallenge() {
 
         <div
           dir={isEnglish ? "ltr" : "rtl"}
-          className="flex items-center overflow-x-scroll gap-5 pt-10"
+          className={`flex items-center gap-5 pt-10 ${
+            filteredChallenges.length > 3 || challengesLoading
+              ? "overflow-x-scroll custom-scrollbar"
+              : "flex-wrap"
+          }`}
           style={{ width: "100%" }}
         >
           {challengesLoading ? (
@@ -1182,6 +1186,31 @@ export default function AddChallenge() {
 
           .slide-in-animation {
             animation: slideInFromLeft 0.5s ease-out forwards;
+          }
+
+          /* Custom scrollbar styling */
+          .custom-scrollbar::-webkit-scrollbar {
+            height: 6px;
+          }
+
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0b0d0f;
+            border-radius: 10px;
+          }
+
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #38ffe5;
+            border-radius: 10px;
+          }
+
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #2be0c8;
+          }
+
+          /* Firefox */
+          .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #38ffe5 #0b0d0f;
           }
         `}</style>
 

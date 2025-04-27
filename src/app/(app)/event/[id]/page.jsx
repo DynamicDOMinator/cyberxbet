@@ -1056,21 +1056,39 @@ export default function ChallengePage() {
           {/* notfication flag  */}
 
           {notfication && (
-            <div className="fixed inset-0 flex items-center justify-center z-50">
-              <div className="bg-[#131619] border border-[#38FFE5] rounded-lg p-4 shadow-lg animate-fade-in">
-                <div className="flex items-center gap-3">
-                  <div>
-                    <h3 className="text-white text-lg font-semibold">
-                      {isEnglish
-                        ? "Congratulations! You captured the flag"
-                        : "تهانينا! لقد التقط العلم"}
-                    </h3>
-                  </div>
-                  <Image src="/flag.png" alt="Flag" width={24} height={24} />
-                </div>
-              </div>
-            </div>
+             <div className="w-full h-full fixed inset-0 z-50">
+             <div className="absolute bottom-4 right-4 w-fit z-50">
+               <div className="bg-[#131619] border border-[#38FFE5] rounded-lg p-4 shadow-lg slide-in-animation">
+                 <div className="flex items-center gap-3">
+                   <div>
+                     <h3 className="text-white text-lg font-semibold">
+                       {isEnglish
+                         ? "Congratulations! You captured the flag"
+                         : "تهانينا! لقد التقط العلم"}
+                     </h3>
+                   </div>
+                   <Image src="/flag.png" alt="Flag" width={24} height={24} />
+                 </div>
+               </div>
+             </div>
+           </div>
           )}
+            <style jsx global>{`
+            @keyframes slideInFromLeft {
+              0% {
+                transform: translateX(100%);
+                opacity: 0;
+              }
+              100% {
+                transform: translateX(0);
+                opacity: 1;
+              }
+            }
+
+            .slide-in-animation {
+              animation: slideInFromLeft 0.5s ease-out forwards;
+            }
+          `}</style>
         </div>
       )}
     </>
