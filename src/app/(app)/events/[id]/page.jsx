@@ -46,6 +46,7 @@ export default function EventPage() {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState("challenges");
   const [eventIsActive, setEveentIsActive] = useState(false);
+  const [eventHasEnded, setEventHasEnded] = useState(false);
 
   const [currentPhase, setCurrentPhase] = useState(null);
   const [isInTeam, setIsInTeam] = useState(false);
@@ -267,6 +268,10 @@ export default function EventPage() {
 
           // Skip registration check for team formation
           return;
+        } else if (phase === "ended") {
+          setEventHasEnded(true);
+          setIsEventStarted(false);
+          setShowRegisterButton(false);
         }
       }
 
@@ -801,6 +806,23 @@ export default function EventPage() {
           </div>
         )}
 
+        {eventHasEnded && (
+          <div className="absolute flex flex-col items-center justify-center w-full h-full bg-black/80">
+            <div>
+              <p className="text-xl sm:text-2xl font-bold flex items-center gap-4">
+                تم انتهاء الفاعليه
+                <span
+                  style={{
+                    animation: "pulse 3s ease-in-out infinite",
+                    boxShadow: "0 0 5px #FF3838",
+                  }}
+                  className="w-2 sm:w-3 h-2 sm:h-3 bg-[#FF3838] rounded-full"
+                ></span>
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col h-full justify-end pb-4 sm:pb-6 md:pb-8 lg:pb-10">
           <div className="flex flex-col md:flex-row items-center p-3 sm:p-4 md:p-6">
             <div className="basis-full md:basis-1/2 lg:basis-2/3 mb-4 sm:mb-6 md:mb-0">
@@ -1019,7 +1041,7 @@ export default function EventPage() {
           </h2>
         </div>
 
-        {isEventStarted && activeTab === "challenges" && (
+        {isEventStarted && !eventHasEnded && activeTab === "challenges" && (
           <div className="w-full h-full">
             <div className="flex flex-col w-full h-full justify-center items-center gap-2">
               <Image src="/lock.png" alt="lock" width={160} height={160} />
@@ -1235,13 +1257,11 @@ export default function EventPage() {
                     className="w-7 h-7 sm:w-8 sm:h-8 md:w-[32px] md:h-[32px]"
                   />
                   <div>
-                    <p className="text-sm sm:text-base">
+                    <p className="text-sm sm:text-base ">
                       {isEnglish ? "Ranking" : "التصنيف"}
                     </p>
                     <div className="flex items-center gap-2 pt-1 sm:pt-3">
-                      <p className="text-sm sm:text-base">
-                        {isEnglish ? "No Ranking" : "لا يوجد تصنيف"}
-                      </p>
+                      <p className="text-sm sm:text-base">{teams?.rank || 0}</p>
                     </div>
                   </div>
                 </div>
@@ -1434,21 +1454,28 @@ export default function EventPage() {
                           </div>
 
                           <div className="flex items-center gap-2 basis-1/3 justify-end">
-                            {isRemove && member.role !== "leader" && (
+                            {isRemove &&
+                              member.role !== "leader" &&
+                              // Only show delete button if the event is in team_formation phase
+                              // Hide it during event_active or event has ended
+                              currentPhase === "team_formation" && (
+                                <button
+                                  onClick={() => deleteMember(member.username)}
+                                  className="text-red-500 cursor-pointer text-xs sm:text-sm rounded-lg py-1 sm:py-2 px-2 sm:px-4 border-2 border-red-500"
+                                >
+                                  {isEnglish ? "Remove" : "إزالة"}
+                                </button>
+                              )}
+
+                            {/* Only show the "..." button during team_formation phase */}
+                            {currentPhase === "team_formation" && (
                               <button
-                                onClick={() => deleteMember(member.username)}
-                                className="text-red-500 cursor-pointer text-xs sm:text-sm rounded-lg py-1 sm:py-2 px-2 sm:px-4 border-2 border-red-500"
+                                onClick={() => setIsRemove(!isRemove)}
+                                className="cursor-pointer text-lg sm:text-xl"
                               >
-                                {isEnglish ? "Remove" : "إزالة"}
+                                ...
                               </button>
                             )}
-
-                            <button
-                              onClick={() => setIsRemove(!isRemove)}
-                              className="cursor-pointer text-lg sm:text-xl"
-                            >
-                              ...
-                            </button>
                           </div>
                         </div>
                       ))}
@@ -1787,129 +1814,467 @@ export default function EventPage() {
 
       {activeTab === "leaderboard" && isEventScoreBoard ? (
         <>
-          <div
-            dir={isEnglish ? "ltr" : "rtl"}
-            className="grid grid-cols-5 place-items-start px-10 gap-4 mb-9  bg-[#38FFE50D] py-3 rounded-md"
-          >
-            <div className="col-span-2 text-center text-white font-semibold flex justify-center items-center ">
-              <span className={`${isEnglish ? "pr-28" : "pl-28"}`}>
-                {isEnglish ? "Rank" : "التصنيف"}
-              </span>
-              <span className={`${isEnglish ? "ml-2" : "mr-2"}`}>
-                {isEnglish ? "Team" : "الفريق"}
-              </span>
-            </div>
-            <div className="col-span-1 text-center text-white font-semibold">
-              {isEnglish ? "Points" : "النقاط"}
-            </div>
-            <div className="col-span-1 text-center text-white font-semibold">
-              {isEnglish ? "Challenges" : "التحديات"}
-            </div>
-            <div className="col-span-1 text-center text-white font-semibold">
-              {isEnglish ? "First Blood" : "البايتس الأولى"}
-            </div>
-          </div>
+          {/* Top 3 Users Display */}
+          <div className="flex flex-col md:flex-row justify-center items-center gap-4 sm:gap-8 md:gap-16 lg:gap-24 mb-10 mt-4">
+            {/* First Place (Middle) */}
 
-          {/* Table Rows */}
-          {scoreboardData.map((team, index) => (
-            <div
-              dir={isEnglish ? "ltr" : "rtl"}
-              key={index}
-              className={`rounded-lg mb-3 px-10 py-3 ${
-                index % 2 === 0 ? "bg-[#06373F]" : "bg-transparent"
-              }`}
-            >
-              <div
-                className={`grid grid-cols-5 ${
-                  isEnglish ? "place-items-start" : "place-items-start"
-                } gap-4`}
-              >
-                <div className="col-span-2 flex justify-center">
-                  <div className="flex gap-12 items-center">
-                    <div className="w-[35px] flex justify-center">
-                      {index < 3 ? (
-                        <Image
-                          src={
-                            index === 0
-                              ? "/first.png"
-                              : index === 1
-                              ? "/second.png"
-                              : "/third.png"
-                          }
-                          alt={`rank ${index + 1}`}
-                          width={35}
-                          height={35}
-                        />
-                      ) : (
-                        <span className="text-white text-xl font-bold">
-                          {index + 1}
-                        </span>
-                      )}
+            {scoreboardData.length > 0 && (
+              <div className="flex flex-col items-center lg:hidden   md:mb-28">
+                <div className="relative">
+                  <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 relative">
+                    {/* Background laurel wreath image */}
+                    <div className="absolute inset-0 z-10 mt-10 flex items-center justify-center">
+                      <Image
+                        src="/gold.png"
+                        alt="gold laurel wreath"
+                        width={160}
+                        height={160}
+                        className="w-full h-full object-contain"
+                      />
                     </div>
-                    <div className="flex items-center gap-2 ml-16">
-                      {team.team_icon ? (
-                        <Image
-                          src={team.team_icon}
-                          alt="team avatar"
-                          width={40}
-                          height={40}
-                          className="rounded-full object-cover"
-                          unoptimized={true}
-                        />
-                      ) : (
-                        <div className="w-10 h-10 flex items-center justify-center bg-[#06373F] rounded-full">
-                          <SiHackaday className="text-[#38FFE5] text-xl sm:text-2xl" />
-                        </div>
-                      )}
-                      <span className="text-white text-xl font-bold">
-                        {team.team_name}
-                      </span>
+
+                    {/* Profile image */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-[80%] h-[80%] rounded-full overflow-hidden">
+                        {scoreboardData[0].team_icon ? (
+                          <Image
+                            src={scoreboardData[0].team_icon}
+                            alt={scoreboardData[0].team_name}
+                            width={128}
+                            height={128}
+                            className="w-full h-full object-cover"
+                            unoptimized={true}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-[#06373F]">
+                            <SiHackaday className="text-[#FFD700] text-3xl" />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
+                <p className="mt-2 font-bold text-white text-lg">
+                  {scoreboardData[0].team_name}
+                </p>
 
-                <div className="col-span-1 flex justify-center">
-                  <div className="flex flex-row-reverse items-center gap-2">
+                {/* Three score indicators */}
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-1">
                     <Image
                       src="/byte.png"
                       alt="points"
-                      width={25}
-                      height={25}
+                      width={16}
+                      height={16}
                     />
-                    <span className="text-white text-xl ">{team.points}</span>
+                    <span className="text-white text-xs">
+                      {scoreboardData[0].points}
+                    </span>
                   </div>
-                </div>
-
-                <div className="col-span-1 flex justify-center">
-                  <div className="flex flex-row-reverse items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <Image
                       src="/icon-challnge.png"
                       alt="challenges"
-                      width={25}
-                      height={25}
+                      width={16}
+                      height={16}
                     />
-                    <span className="text-white text-xl ">
-                      {team.challenges_solved}
+                    <span className="text-white text-xs">
+                      {scoreboardData[0].challenges_solved}
                     </span>
                   </div>
-                </div>
-
-                <div className="col-span-1 flex justify-center">
-                  <div className="flex flex-row-reverse items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <Image
                       src="/blood.png"
                       alt="first blood"
-                      width={25}
-                      height={25}
+                      width={16}
+                      height={16}
                     />
-                    <span className="text-white text-xl ">
-                      {team.first_blood_count}
+                    <span className="text-white text-xs">
+                      {scoreboardData[0].first_blood_count}
                     </span>
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* Second Place (Left) */}
+            {scoreboardData.length > 1 && (
+              <div className="flex flex-col items-center md:mt-10">
+                <div className="relative">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 relative">
+                    {/* Background laurel wreath image */}
+                    <div className="absolute inset-0 mt-10 z-10 flex items-center justify-center">
+                      <Image
+                        src="/Sliver.png"
+                        alt="orange laurel wreath"
+                        width={144}
+                        height={144}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+
+                    {/* Profile image */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-[80%] h-[80%] rounded-full overflow-hidden">
+                        {scoreboardData[1].team_icon ? (
+                          <Image
+                            src={scoreboardData[1].team_icon}
+                            alt={scoreboardData[1].team_name}
+                            width={115}
+                            height={115}
+                            className="w-full h-full object-cover"
+                            unoptimized={true}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-[#06373F]">
+                            <SiHackaday className="text-[#FFA500] text-2xl" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-2 font-bold text-white">
+                  {scoreboardData[1].team_name}
+                </p>
+
+                {/* Three score indicators */}
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-1">
+                    <Image
+                      src="/byte.png"
+                      alt="points"
+                      width={16}
+                      height={16}
+                    />
+                    <span className="text-white text-xs">
+                      {scoreboardData[1].points}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Image
+                      src="/icon-challnge.png"
+                      alt="challenges"
+                      width={16}
+                      height={16}
+                    />
+                    <span className="text-white text-xs">
+                      {scoreboardData[1].challenges_solved}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Image
+                      src="/blood.png"
+                      alt="first blood"
+                      width={16}
+                      height={16}
+                    />
+                    <span className="text-white text-xs">
+                      {scoreboardData[1].first_blood_count}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {scoreboardData.length > 0 && (
+              <div className="md:flex flex-col items-center hidden   md:mb-28">
+                <div className="relative">
+                  <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 relative">
+                    {/* Background laurel wreath image */}
+                    <div className="absolute inset-0 z-10 mt-10 flex items-center justify-center">
+                      <Image
+                        src="/gold.png"
+                        alt="gold laurel wreath"
+                        width={160}
+                        height={160}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+
+                    {/* Profile image */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-[80%] h-[80%] rounded-full overflow-hidden">
+                        {scoreboardData[0].team_icon ? (
+                          <Image
+                            src={scoreboardData[0].team_icon}
+                            alt={scoreboardData[0].team_name}
+                            width={128}
+                            height={128}
+                            className="w-full h-full object-cover"
+                            unoptimized={true}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-[#06373F]">
+                            <SiHackaday className="text-[#FFD700] text-3xl" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-2 font-bold text-white text-lg">
+                  {scoreboardData[0].team_name}
+                </p>
+
+                {/* Three score indicators */}
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-1">
+                    <Image
+                      src="/byte.png"
+                      alt="points"
+                      width={16}
+                      height={16}
+                    />
+                    <span className="text-white text-xs">
+                      {scoreboardData[0].points}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Image
+                      src="/icon-challnge.png"
+                      alt="challenges"
+                      width={16}
+                      height={16}
+                    />
+                    <span className="text-white text-xs">
+                      {scoreboardData[0].challenges_solved}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Image
+                      src="/blood.png"
+                      alt="first blood"
+                      width={16}
+                      height={16}
+                    />
+                    <span className="text-white text-xs">
+                      {scoreboardData[0].first_blood_count}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Third Place (Right) */}
+            {scoreboardData.length > 2 && (
+              <div className="flex flex-col items-center md:mt-10">
+                <div className="relative">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 relative">
+                    {/* Background laurel wreath image */}
+                    <div className="absolute inset-0 z-10 mt-10 flex items-center justify-center">
+                      <Image
+                        src="/Bronze.png"
+                        alt="silver laurel wreath"
+                        width={144}
+                        height={144}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+
+                    {/* Profile image */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-[80%] h-[80%] rounded-full overflow-hidden">
+                        {scoreboardData[2].team_icon ? (
+                          <Image
+                            src={scoreboardData[2].team_icon}
+                            alt={scoreboardData[2].team_name}
+                            width={115}
+                            height={115}
+                            className="w-full h-full object-cover"
+                            unoptimized={true}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-[#06373F]">
+                            <SiHackaday className="text-[#C0C0C0] text-2xl" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-2 font-bold text-white">
+                  {scoreboardData[2].team_name}
+                </p>
+
+                {/* Three score indicators */}
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-1">
+                    <Image
+                      src="/byte.png"
+                      alt="points"
+                      width={16}
+                      height={16}
+                    />
+                    <span className="text-white text-xs">
+                      {scoreboardData[2].points}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Image
+                      src="/icon-challnge.png"
+                      alt="challenges"
+                      width={16}
+                      height={16}
+                    />
+                    <span className="text-white text-xs">
+                      {scoreboardData[2].challenges_solved}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Image
+                      src="/blood.png"
+                      alt="first blood"
+                      width={16}
+                      height={16}
+                    />
+                    <span className="text-white text-xs">
+                      {scoreboardData[2].first_blood_count}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Responsive Table Container */}
+          <div className="w-full overflow-x-auto">
+            <div className="min-w-[700px]">
+              {/* Table Header */}
+              <div
+                dir={isEnglish ? "ltr" : "rtl"}
+                className="grid grid-cols-5 place-items-start px-4 md:px-10 gap-4 mb-9 bg-[#38FFE50D] py-3 rounded-md"
+              >
+                <div className="col-span-2 text-sm md:text-base text-center text-white font-semibold flex flex-wrap justify-center items-center">
+                  <span
+                    className={`${
+                      isEnglish ? "pr-12 md:pr-28" : "pl-12 md:pl-28"
+                    }`}
+                  >
+                    {isEnglish ? "Rank" : "التصنيف"}
+                  </span>
+                  <span className={`${isEnglish ? "ml-2" : "mr-2"}`}>
+                    {isEnglish ? "Team" : "الفريق"}
+                  </span>
+                </div>
+                <div className="col-span-1 text-sm md:text-base text-center text-white font-semibold">
+                  {isEnglish ? "Points" : "النقاط"}
+                </div>
+                <div className="col-span-1 text-sm md:text-base text-center text-white font-semibold">
+                  {isEnglish ? "Challenges" : "التحديات"}
+                </div>
+                <div className="col-span-1 text-sm md:text-base text-center text-white font-semibold">
+                  {isEnglish ? "First Blood" : "البايتس الأولى"}
+                </div>
+              </div>
+
+              {/* Table Rows */}
+              {scoreboardData.map((team, index) => (
+                <div
+                  dir={isEnglish ? "ltr" : "rtl"}
+                  key={index}
+                  className={`rounded-lg mb-3 px-4 md:px-10 py-3 ${
+                    index % 2 === 0 ? "bg-[#06373F]" : "bg-transparent"
+                  }`}
+                >
+                  <div
+                    className={`grid grid-cols-5 ${
+                      isEnglish ? "place-items-start" : "place-items-start"
+                    } gap-4`}
+                  >
+                    <div className="col-span-2 flex justify-center">
+                      <div className="flex gap-4 md:gap-12 items-center">
+                        <div className="w-[35px] flex justify-center">
+                          {index < 3 ? (
+                            <Image
+                              src={
+                                index === 0
+                                  ? "/first.png"
+                                  : index === 1
+                                  ? "/second.png"
+                                  : "/third.png"
+                              }
+                              alt={`rank ${index + 1}`}
+                              width={35}
+                              height={35}
+                            />
+                          ) : (
+                            <span className="text-white text-base md:text-xl font-bold">
+                              {index + 1}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 ml-10 md:ml-16">
+                          {team.team_icon ? (
+                            <Image
+                              src={team.team_icon}
+                              alt="team avatar"
+                              width={40}
+                              height={40}
+                              className="rounded-full object-cover w-8 h-8 md:w-10 md:h-10"
+                              unoptimized={true}
+                            />
+                          ) : (
+                            <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-[#06373F] rounded-full">
+                              <SiHackaday className="text-[#38FFE5] text-base md:text-xl sm:text-2xl" />
+                            </div>
+                          )}
+                          <span className="text-white text-sm md:text-xl font-bold truncate max-w-[120px] md:max-w-[200px]">
+                            {team.team_name}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-span-1 flex justify-center">
+                      <div className="flex flex-row-reverse items-center gap-2">
+                        <Image
+                          src="/byte.png"
+                          alt="points"
+                          width={25}
+                          height={25}
+                          className="w-5 h-5 md:w-6 md:h-6"
+                        />
+                        <span className="text-white text-sm md:text-xl">
+                          {team.points}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="col-span-1 flex justify-center">
+                      <div className="flex flex-row-reverse items-center gap-2">
+                        <Image
+                          src="/icon-challnge.png"
+                          alt="challenges"
+                          width={25}
+                          height={25}
+                          className="w-5 h-5 md:w-6 md:h-6"
+                        />
+                        <span className="text-white text-sm md:text-xl">
+                          {team.challenges_solved}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="col-span-1 flex justify-center">
+                      <div className="flex flex-row-reverse items-center gap-2">
+                        <Image
+                          src="/blood.png"
+                          alt="first blood"
+                          width={25}
+                          height={25}
+                          className="w-5 h-5 md:w-6 md:h-6"
+                        />
+                        <span className="text-white text-sm md:text-xl">
+                          {team.first_blood_count}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </>
       ) : (
         <>

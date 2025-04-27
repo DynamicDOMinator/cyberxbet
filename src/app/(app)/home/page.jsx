@@ -195,7 +195,10 @@ export default function Home() {
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8  lg:px-16 pt-10 px-5">
+      <div
+        dir={isEnglish ? "ltr" : "rtl"}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8  lg:px-16 pt-10 px-5"
+      >
         {latestChallenges.map((challenge) => (
           <div
             key={challenge.uuid}

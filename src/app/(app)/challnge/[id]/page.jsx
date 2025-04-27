@@ -401,8 +401,20 @@ export default function ChallengePage() {
                 <p className="text-lg font-semibold">{challenge?.title}</p>
               </div>
               <div>
-                <p className="font-bold">
-                  {isEnglish ? "By" : "بواسطة"} {challenge?.made_by}
+              <p className="font-bold">
+                  {isEnglish ? "By" : "بواسطة"}{" "}
+                  {challenge?.made_by_url ? (
+                    <a
+                      href={challenge.made_by_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#38FFE5] hover:underline"
+                    >
+                      {challenge?.made_by}
+                    </a>
+                  ) : (
+                    challenge?.made_by
+                  )}
                 </p>
               </div>
             </div>

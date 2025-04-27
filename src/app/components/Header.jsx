@@ -117,7 +117,9 @@ export default function Header() {
 
           {/* Desktop Menu */}
           <div className="hidden lg:flex items-center gap-4">
-            <p className="text-white">{isEnglish ? "Home" : "الرئيسية"}</p>
+            <Link href="/home">
+              <p className="text-white">{isEnglish ? "Home" : "الرئيسية"}</p>
+            </Link>
             <Menu as="div" className="relative">
               <MenuButton className="inline-flex items-center gap-2 py-2 text-white focus:outline-none cursor-pointer">
                 {isEnglish ? "Challenges" : "التحديات"}

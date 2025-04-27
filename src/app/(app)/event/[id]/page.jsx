@@ -449,7 +449,19 @@ export default function ChallengePage() {
               </div>
               <div>
                 <p className="font-bold">
-                  {isEnglish ? "By" : "بواسطة"} {challenge?.made_by}
+                  {isEnglish ? "By" : "بواسطة"}{" "}
+                  {challenge?.made_by_url ? (
+                    <a
+                      href={challenge.made_by_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#38FFE5] hover:underline"
+                    >
+                      {challenge?.made_by}
+                    </a>
+                  ) : (
+                    challenge?.made_by
+                  )}
                 </p>
               </div>
             </div>
@@ -458,9 +470,18 @@ export default function ChallengePage() {
               <p className="text-gray-300 text-[18px]">
                 {challenge?.description}
               </p>
-              <p className="bg-black/50 mt-2 text-white text-sm p-2 rounded-full w-fit">
-                {challenge?.flag_type}
-              </p>
+              {challenge?.keywords && challenge?.keywords.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {challenge.keywords.map((keyword, index) => (
+                    <span
+                      key={index}
+                      className="bg-black/50 text-white text-sm p-2 rounded-full"
+                    >
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
+              )}
               <p className="mt-10">
                 {isEnglish ? "Difficulty Level" : "مستوى الصعوبة"}:
                 {challenge?.difficulty === "سهل" && (

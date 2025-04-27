@@ -689,7 +689,7 @@ export default function AddChallenge() {
             <input
               type="text"
               placeholder={isEnglish ? "Challenge name" : "اسم التحدي"}
-              className="bg-[#131619] text-white px-4 py-2 rounded-md pr-10 rtl:pl-10 w-full focus:outline-none focus:ring-1 focus:ring-[#38FFE5]"
+              className="bg-transparent text-white px-4 py-2 rounded-md pr-10 rtl:pl-10 w-full focus:outline-none focus:ring-1 focus:ring-[#38FFE5]"
               dir={isEnglish ? "ltr" : "rtl"}
             />
             <div
