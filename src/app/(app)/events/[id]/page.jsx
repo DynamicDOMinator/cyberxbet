@@ -15,12 +15,12 @@ import toast, { Toaster } from "react-hot-toast";
 import { useUserProfile } from "@/app/context/UserProfileContext";
 import { SiHackaday } from "react-icons/si";
 import LoadingPage from "@/app/components/LoadingPage";
-
+import { useRouter } from "next/navigation";
 export default function EventPage() {
   const { isEnglish } = useLanguage();
   const { getCurrentDateInUserTimezone, timeZone, convertToUserTimezone } =
     useUserProfile();
-
+  const router = useRouter();
   const [event, setEvent] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [challenges, setChallenges] = useState([]);

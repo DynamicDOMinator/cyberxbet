@@ -408,7 +408,7 @@ export default function ChallengePage() {
                 <p className="text-lg font-semibold">{challenge?.title}</p>
               </div>
               <div>
-              <p className="font-bold">
+                <p className="font-bold">
                   {isEnglish ? "By" : "بواسطة"}{" "}
                   {challenge?.made_by_url ? (
                     <a
@@ -809,17 +809,71 @@ export default function ChallengePage() {
             <div className="fixed inset-0 z-50 flex items-center justify-center">
               <div
                 onClick={() => setflags(false)}
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
               />
               <div className="relative z-10 bg-[#131619] rounded-lg p-6 w-full max-w-[600px] mx-4">
                 <div className="flex flex-col items-center gap-4 mb-6">
-                  <Image
-                    src="/flag.png"
-                    width={50}
-                    height={50}
-                    alt="flag"
-                    priority
-                  />
+                  <svg
+                    width="56"
+                    height="56"
+                    viewBox="0 0 56 56"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <g filter="url(#filter0_i_1002_4126)">
+                      <path
+                        d="M13.416 2.33301C14.3825 2.33301 15.166 3.11652 15.166 4.08301V8.39967L19.1809 7.5967C23.0321 6.82645 27.0243 7.19297 30.6708 8.6516L31.1461 8.84168C34.7887 10.2987 38.798 10.5709 42.6041 9.61931C44.3712 9.17758 46.0827 10.514 46.0827 12.3353V29.525C46.0827 31.0283 45.0595 32.3387 43.601 32.7034L43.1007 32.8285C38.9716 33.8608 34.6225 33.5656 30.6708 31.985C27.0243 30.5262 23.0321 30.1599 19.1809 30.9301L15.166 31.733V50.7497C15.166 51.7161 14.3825 52.4997 13.416 52.4997C12.4495 52.4997 11.666 51.7161 11.666 50.7497V4.08301C11.666 3.11652 12.4495 2.33301 13.416 2.33301Z"
+                        fill="white"
+                        fill-opacity="0.01"
+                      />
+                    </g>
+                    <defs>
+                      <filter
+                        id="filter0_i_1002_4126"
+                        x="0"
+                        y="-3.5"
+                        width="56"
+                        height="59.5"
+                        filterUnits="userSpaceOnUse"
+                        color-interpolation-filters="sRGB"
+                      >
+                        <feFlood
+                          flood-opacity="0"
+                          result="BackgroundImageFix"
+                        />
+                        <feBlend
+                          mode="normal"
+                          in="SourceGraphic"
+                          in2="BackgroundImageFix"
+                          result="shape"
+                        />
+                        <feColorMatrix
+                          in="SourceAlpha"
+                          type="matrix"
+                          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                          result="hardAlpha"
+                        />
+                        <feOffset dy="-3.5" />
+                        <feGaussianBlur stdDeviation="8.75" />
+                        <feComposite
+                          in2="hardAlpha"
+                          operator="arithmetic"
+                          k2="-1"
+                          k3="1"
+                        />
+                        <feColorMatrix
+                          type="matrix"
+                          values="0 0 0 0 0.219608 0 0 0 0 1 0 0 0 0 0.898039 0 0 0 1 0"
+                        />
+                        <feBlend
+                          mode="normal"
+                          in2="shape"
+                          result="effect1_innerShadow_1002_4126"
+                        />
+                      </filter>
+                    </defs>
+                  </svg>
+
                   <h3 className="text-xl font-semibold text-white">
                     {isEnglish ? "Challenge Flags" : "أعلام التحدي"}
                   </h3>
@@ -846,19 +900,12 @@ export default function ChallengePage() {
                               {flag.description}
                             </p>
                             {solvedFlag && (
-                              <svg
-                                className="w-5 h-5 text-green-500"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
+                              <Image
+                                src="/right1.png"
+                                alt="check"
+                                width={20}
+                                height={20}
+                              />
                             )}
                           </div>
                         </div>
@@ -883,7 +930,7 @@ export default function ChallengePage() {
                 <div className="mt-8 flex justify-center">
                   <button
                     onClick={() => setflags(false)}
-                    className="bg-[#38FFE5] cursor-pointer text-black font-semibold px-8 py-2 rounded-lg hover:bg-[#38FFE5]/90 transition-all"
+                    className="bg-transparent border border-[#38FFE5] text-[#38FFE5] w-90 cursor-pointer font-semibold px-8 py-2 rounded-lg hover:text-black hover:bg-[#38FFE5]/90 transition-all"
                   >
                     {isEnglish ? "Go Back" : "الرجوع للخلف"}
                   </button>

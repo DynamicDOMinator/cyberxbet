@@ -8,7 +8,7 @@ import ConfettiAnimation from "@/components/ConfettiAnimation";
 import LoadingPage from "../../../components/LoadingPage";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useUserProfile } from "@/app/context/UserProfileContext";
-
+import { useRouter } from "next/navigation";
 export default function ChallengePage() {
   const [challenge, setChallenge] = useState(null);
   const [flags, setflags] = useState(false);
@@ -32,7 +32,7 @@ export default function ChallengePage() {
   const { id } = useParams();
   const { isEnglish } = useLanguage();
   const { convertToUserTimezone } = useUserProfile();
-
+  const router = useRouter();
   // Handle parsing API date strings correctly (assuming API returns UTC+3)
   const parseApiDate = (dateString) => {
     if (!dateString) return null;
@@ -300,7 +300,12 @@ export default function ChallengePage() {
                             width={32}
                             height={32}
                           />
-                          <p className="text-white font-semibold">
+                          <p
+                            onClick={() =>
+                              router.push(`/profile/${flag.first_blood?.user_name}`)
+                            }
+                            className="text-white font-semibold cursor-pointer"
+                          >
                             {flag.first_blood?.user_name}
                           </p>
                         </div>
@@ -380,7 +385,14 @@ export default function ChallengePage() {
                           width={32}
                           height={32}
                         />
-                        <p className="text-white font-semibold">
+                        <p
+                          onClick={() =>
+                            router.push(
+                              `/profile/${challenge?.flags_data?.[0]?.first_blood?.user_name}`
+                            )
+                          }
+                          className="text-white font-semibold cursor-pointer"
+                        >
                           {challenge?.flags_data?.[0]?.first_blood?.user_name}
                         </p>
                       </div>
@@ -842,7 +854,12 @@ export default function ChallengePage() {
                                 height={32}
                               />
                             </div>
-                            <div className="flex items-center gap-4">
+                            <div
+                              onClick={() =>
+                                router.push(`/profile/${user.user_name}`)
+                              }
+                              className="flex items-center gap-4 cursor-pointer"
+                            >
                               <Image
                                 src={user.profile_image || "/icon1.png"}
                                 alt="profile"
@@ -873,7 +890,7 @@ export default function ChallengePage() {
             <div className="fixed inset-0 z-50 flex items-center justify-center">
               <div
                 onClick={() => setflags(false)}
-                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
               />
               <div className="relative z-10 bg-[#131619] rounded-lg p-6 w-full max-w-[600px] mx-4">
                 <div className="flex flex-col items-center gap-4 mb-6">
@@ -910,19 +927,12 @@ export default function ChallengePage() {
                               {flag.description}
                             </p>
                             {solvedFlag && (
-                              <svg
-                                className="w-5 h-5 text-green-500"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth="2"
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
+                              <Image
+                                src="/right1.png"
+                                alt="check"
+                                width={20}
+                                height={20}
+                              />
                             )}
                           </div>
                         </div>
