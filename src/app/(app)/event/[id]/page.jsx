@@ -584,7 +584,9 @@ export default function ChallengePage() {
                       onClick={() => {
                         setflags(true);
                       }}
-                      className="text-[#38FFE5] text-right pt-1 cursor-pointer"
+                      className={`text-[#38FFE5] ${
+                        isEnglish ? "text-left" : "text-right"
+                      } pt-1 cursor-pointer`}
                     >
                       {isEnglish ? "See More" : "see more"}
                     </button>
