@@ -1430,7 +1430,12 @@ export default function EventPage() {
                               className="w-6 h-6 sm:w-8 sm:h-8 md:w-[30px] md:h-[30px] rounded-full object-cover"
                               unoptimized={true}
                             />
-                            <p className="text-sm sm:text-base">
+                            <p
+                              onClick={() =>
+                                router.push(`/profile/${member.username}`)
+                              }
+                              className="text-sm sm:text-base cursor-pointer"
+                            >
                               {member.username}
                             </p>
                             {member.role === "leader" && (
@@ -1552,7 +1557,14 @@ export default function EventPage() {
                                         unoptimized={true}
                                       />
                                       <div className="flex flex-col">
-                                        <span className="text-white text-sm md:text-lg font-bold">
+                                        <span
+                                          onClick={() =>
+                                            router.push(
+                                              `/profile/${member.username}`
+                                            )
+                                          }
+                                          className="text-white text-sm md:text-lg font-bold cursor-pointer"
+                                        >
                                           {member.username}
                                         </span>
                                         {member.role === "leader" && (
@@ -1671,7 +1683,14 @@ export default function EventPage() {
                                         unoptimized={true}
                                       />
                                       <div className="flex flex-col">
-                                        <span className="text-white text-sm font-bold">
+                                        <span
+                                          onClick={() =>
+                                            router.push(
+                                              `/profile/${member.username}`
+                                            )
+                                          }
+                                          className="text-white text-sm font-bold cursor-pointer"
+                                        >
                                           {member.username}
                                         </span>
                                         {member.role === "leader" && (

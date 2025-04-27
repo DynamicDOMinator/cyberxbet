@@ -7,7 +7,7 @@ import Image from "next/image";
 import ConfettiAnimation from "@/components/ConfettiAnimation";
 import LoadingPage from "../../../components/LoadingPage";
 import { useLanguage } from "@/app/context/LanguageContext";
-
+import { useRouter } from "next/navigation";
 export default function ChallengePage() {
   const [challenge, setChallenge] = useState(null);
   const [flags, setflags] = useState(false);
@@ -61,7 +61,7 @@ export default function ChallengePage() {
       setLoadingPage(false);
     }
   };
-
+  const router = useRouter();
   useEffect(() => {
     fetchInitialData();
   }, [id]);
@@ -333,7 +333,14 @@ export default function ChallengePage() {
                           width={32}
                           height={32}
                         />
-                        <p className="text-white font-semibold">
+                        <p
+                          onClick={() =>
+                            router.push(
+                              `/profile/${challenge?.flags_data?.[0]?.first_blood?.user_name}`
+                            )
+                          }
+                          className="text-white cursor-pointer font-semibold"
+                        >
                           {challenge?.flags_data?.[0]?.first_blood?.user_name}
                         </p>
                       </div>
@@ -743,7 +750,12 @@ export default function ChallengePage() {
                                     width={32}
                                     height={32}
                                   />
-                                  <p className="text-xl font-semibold">
+                                  <p
+                                    onClick={() =>
+                                      router.push(`/profile/${user.user_name}`)
+                                    }
+                                    className="text-xl font-semibold cursor-pointer"
+                                  >
                                     {user.user_name}
                                   </p>
                                 </div>

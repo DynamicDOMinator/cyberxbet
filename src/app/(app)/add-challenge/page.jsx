@@ -1040,7 +1040,7 @@ export default function AddChallenge() {
             <div className="col-span-3 text-center py-10">
               <div className="flex flex-col items-center justify-center">
                 <Image
-                  src="/notfound.png"
+                  src="/notfound2.png"
                   alt={
                     isEnglish
                       ? "No challenges found"
