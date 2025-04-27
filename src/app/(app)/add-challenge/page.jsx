@@ -57,6 +57,8 @@ export default function AddChallenge() {
   const [docsLoading, setDocsLoading] = useState(false);
   const fileInputRef = useRef(null);
   const solutionFileInputRef = useRef(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   // Reset error notification after a delay
   React.useEffect(() => {
@@ -85,6 +87,20 @@ export default function AddChallenge() {
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Fetch categories
   useEffect(() => {
@@ -707,6 +723,15 @@ export default function AddChallenge() {
     </div>
   );
 
+  // Handle category selection
+  const handleCategorySelect = (categoryUuid) => {
+    setChallengeData((prev) => ({
+      ...prev,
+      category: categoryUuid,
+    }));
+    setIsDropdownOpen(false);
+  };
+
   return (
     <div className="w-full max-w-[2000px] mt-28 mx-auto">
       {/* Statistics Section */}
@@ -817,7 +842,7 @@ export default function AddChallenge() {
       </div>
 
       {/* Challenges List Section */}
-      <div className=" px-4 py-6 rounded-lg mb-8">
+      <div className=" px-4 py-6 bg-[#131619] rounded-lg mb-8">
         <div
           dir={isEnglish ? "ltr" : "rtl"}
           className="flex flex-col items-start mb-6 gap-4"
@@ -872,9 +897,7 @@ export default function AddChallenge() {
               >
                 {isEnglish ? "Rejected" : "المرفوضة"}
               </button>
-            </div>
 
-            <div className="flex items-center gap-3">
               <button
                 onClick={fetchTerms}
                 disabled={docsLoading}
@@ -929,6 +952,8 @@ export default function AddChallenge() {
                 </span>
               </button>
             </div>
+
+            <div className="flex items-center gap-3"></div>
           </div>
           <div className="relative w-full border-b-2 border-[#06373F] md:w-auto md:min-w-[300px] mt-7">
             <input
@@ -963,7 +988,8 @@ export default function AddChallenge() {
 
         <div
           dir={isEnglish ? "ltr" : "rtl"}
-          className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-10"
+          className="flex items-center overflow-x-scroll gap-5 pt-10"
+          style={{ width: "100%" }}
         >
           {challengesLoading ? (
             // Loading skeleton
@@ -972,7 +998,7 @@ export default function AddChallenge() {
               .map((_, index) => (
                 <div
                   key={index}
-                  className="bg-[#131619] rounded-lg overflow-hidden flex flex-col h-full animate-pulse"
+                  className="bg-[#131619] flex-shrink-0 w-1/3 mb-5 rounded-lg overflow-hidden flex flex-col h-full animate-pulse"
                 >
                   <div className="p-4 flex flex-col h-full">
                     <div className="flex gap-2 items-center mb-4">
@@ -995,7 +1021,7 @@ export default function AddChallenge() {
               return (
                 <div
                   key={challenge.id}
-                  className="bg-[#FFFFFF0D] rounded-lg overflow-hidden flex flex-col h-full"
+                  className="bg-[#FFFFFF0D] flex-shrink-0 w-1/3 mb-5 rounded-lg overflow-hidden flex flex-col h-full"
                   dir={isEnglish ? "ltr" : "rtl"}
                 >
                   <div className="p-4 flex flex-col h-full">
@@ -1037,7 +1063,7 @@ export default function AddChallenge() {
               );
             })
           ) : (
-            <div className="col-span-3 text-center py-10">
+            <div className="w-full text-center py-10">
               <div className="flex flex-col items-center justify-center">
                 <Image
                   src="/notfound2.png"
@@ -1217,41 +1243,33 @@ export default function AddChallenge() {
                   {isEnglish ? "Classification" : "التصنيف"}
                 </label>
               </div>
-              <div className="relative">
-                <select
-                  name="category"
-                  value={challengeData.category}
-                  onChange={handleInputChange}
-                  className={`${inputStyle} appearance-none pr-10`}
+              <div className="relative" ref={dropdownRef}>
+                <div
                   dir={isEnglish ? "ltr" : "rtl"}
-                  disabled={categoriesLoading}
+                  onClick={() =>
+                    !categoriesLoading && setIsDropdownOpen(!isDropdownOpen)
+                  }
+                  className={`${inputStyle} cursor-pointer flex justify-between items-center`}
                 >
-                  <option value="" disabled>
-                    {isEnglish ? "Select classification" : "اختر التصنيف"}
-                  </option>
-                  {categories && categories.length > 0 ? (
-                    categories.map((category) => (
-                      <option key={category.uuid} value={category.uuid}>
-                        {category.name}
-                      </option>
-                    ))
-                  ) : (
-                    <>
-                      <option value="" disabled>
-                        {categoriesLoading
-                          ? isEnglish
-                            ? "Loading categories..."
-                            : "جاري تحميل التصنيفات..."
-                          : isEnglish
-                          ? "No categories available"
-                          : "لا توجد تصنيفات متاحة"}
-                      </option>
-                    </>
-                  )}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                  <span
+                    className={
+                      categoriesLoading ? "text-gray-500" : "text-white"
+                    }
+                  >
+                    {categoriesLoading
+                      ? isEnglish
+                        ? "Loading categories..."
+                        : "جاري تحميل التصنيفات..."
+                      : !challengeData.category
+                      ? isEnglish
+                        ? "Select classification"
+                        : "اختر التصنيف"
+                      : categories.find(
+                          (cat) => cat.uuid === challengeData.category
+                        )?.name || ""}
+                  </span>
                   <svg
-                    className="h-4 w-4"
+                    className="h-4 w-4 text-gray-400"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -1262,6 +1280,28 @@ export default function AddChallenge() {
                     <path d="M19 9l-7 7-7-7"></path>
                   </svg>
                 </div>
+
+                {isDropdownOpen && !categoriesLoading && (
+                  <div className="absolute z-10 w-full mt-1 bg-[#0B0D0F] border border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
+                    {categories && categories.length > 0 ? (
+                      categories.map((category) => (
+                        <div
+                          key={category.uuid}
+                          onClick={() => handleCategorySelect(category.uuid)}
+                          className="px-4 py-2 cursor-pointer text-white hover:bg-[#38FFE5] hover:text-black transition-colors"
+                        >
+                          {category.name}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="px-4 py-2 text-gray-400">
+                        {isEnglish
+                          ? "No categories available"
+                          : "لا توجد تصنيفات متاحة"}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
