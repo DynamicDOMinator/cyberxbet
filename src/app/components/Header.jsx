@@ -210,7 +210,7 @@ export default function Header() {
                 <MenuItem>
                   <button
                     dir={isEnglish ? "ltr" : "rtl"}
-                    onClick={() => router.push("/profile")}
+                    onClick={() => router.push(`/profile/${userName}`)}
                     className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10 cursor-pointer"
                   >
                     <RiUserLine className="size-4 fill-[#38FFE5]" />
@@ -401,7 +401,7 @@ export default function Header() {
                     <div className="mt-2 rounded-xl p-2 space-y-2">
                       <button
                         onClick={() => {
-                          router.push("/profile");
+                          router.push(`/profile/${userName}`);
                           setIsMobileMenuOpen(false);
                         }}
                         dir={isEnglish ? "ltr" : "rtl"}
@@ -409,7 +409,7 @@ export default function Header() {
                       >
                         <RiUserLine className="size-4 fill-[#38FFE5]" />
                         <span className="text-white">
-                          <Link href="/profile">
+                          <Link href={`/profile/${userName}`}>
                             {isEnglish ? "Account" : "الحساب"}
                           </Link>
                         </span>

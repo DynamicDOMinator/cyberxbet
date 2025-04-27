@@ -44,22 +44,8 @@ export default function Profile() {
     very_hard: 0,
   });
   const [bytesByMonth, setBytesByMonth] = useState(null);
-  const [categories, setCategories] = useState({
-    Web: { percentage: 0 },
-    Cryptography: { percentage: 0 },
-    Forensics: { percentage: 0 },
-    "Reverse Engineering": { percentage: 0 },
-    Pwn: { percentage: 0 },
-    Misc: { percentage: 0 },
-  });
-  const [allUsersMedian, setAllUsersMedian] = useState({
-    Web: { median_percentage: 0 },
-    Cryptography: { median_percentage: 0 },
-    Forensics: { median_percentage: 0 },
-    "Reverse Engineering": { median_percentage: 0 },
-    Pwn: { median_percentage: 0 },
-    Misc: { median_percentage: 0 },
-  });
+  const [categories, setCategories] = useState([]);
+  const [allUsersMedian, setAllUsersMedian] = useState([]);
   const [lab3Data, setLab3Data] = useState({
     total_challenges: 0,
     solved_challenges: 0,
@@ -690,199 +676,39 @@ export default function Profile() {
         </div>
 
         <div className="space-y-5">
-          {/* Reverse Engineering Skill */}
-          <div className="flex items-center flex-row-reverse">
-            <div className="w-full">
-              <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out"
-                  style={{
-                    width: skillsVisible
-                      ? youSelected
-                        ? `${
-                            categories["Reverse Engineering"]?.percentage || 0
-                          }%`
-                        : `${
-                            allUsersMedian["Reverse Engineering"]
-                              ?.median_percentage || 0
-                          }%`
-                      : "0%",
-                  }}
-                ></div>
+          {categories.map((category, index) => (
+            <div
+              className="flex items-center flex-row-reverse"
+              key={category.name}
+            >
+              <div className="w-full">
+                <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out"
+                    style={{
+                      width: skillsVisible
+                        ? youSelected
+                          ? `${category.percentage || 0}%`
+                          : `${
+                              allUsersMedian.find(
+                                (m) => m.name === category.name
+                              )?.median_percentage || 0
+                            }%`
+                        : "0%",
+                      transitionDelay: `${index * 150}ms`,
+                    }}
+                  ></div>
+                </div>
+              </div>
+              <div
+                className={`min-w-[170px] ${
+                  isEnglish ? "text-left" : "text-right"
+                }`}
+              >
+                <span className="font-medium text-white">{category.name}</span>
               </div>
             </div>
-            <div
-              className={`min-w-[170px] ${
-                isEnglish ? "text-left" : "text-right"
-              }`}
-            >
-              <span className="font-medium text-white">
-                {isEnglish ? "Reverse Engineering" : "الهندسة العكسية"}
-              </span>
-            </div>
-          </div>
-
-          {/* Web Skill */}
-          <div className="flex items-center flex-row-reverse">
-            <div className="w-full">
-              <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-150"
-                  style={{
-                    width: skillsVisible
-                      ? youSelected
-                        ? `${categories["Web"]?.percentage || 0}%`
-                        : `${allUsersMedian["Web"]?.median_percentage || 0}%`
-                      : "0%",
-                  }}
-                ></div>
-              </div>
-            </div>
-            <div
-              className={`min-w-[170px] ${
-                isEnglish ? "text-left" : "text-right"
-              }`}
-            >
-              <span className="font-medium text-white">
-                {isEnglish ? "Web" : "الويب"}
-              </span>
-            </div>
-          </div>
-
-          {/* Pwn Skill */}
-          <div className="flex items-center flex-row-reverse">
-            <div className="w-full">
-              <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-300"
-                  style={{
-                    width: skillsVisible
-                      ? youSelected
-                        ? `${categories["Pwn"]?.percentage || 0}%`
-                        : `${allUsersMedian["Pwn"]?.median_percentage || 0}%`
-                      : "0%",
-                  }}
-                ></div>
-              </div>
-            </div>
-            <div
-              className={`min-w-[170px] ${
-                isEnglish ? "text-left" : "text-right"
-              }`}
-            >
-              <span className="font-medium text-white">
-                {isEnglish ? "Pwn" : "فن الاختراق"}
-              </span>
-            </div>
-          </div>
-
-          {/* Misc Skill */}
-          <div className="flex items-center flex-row-reverse">
-            <div className="w-full">
-              <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-450"
-                  style={{
-                    width: skillsVisible
-                      ? youSelected
-                        ? `${categories["Misc"]?.percentage || 0}%`
-                        : `${allUsersMedian["Misc"]?.median_percentage || 0}%`
-                      : "0%",
-                  }}
-                ></div>
-              </div>
-            </div>
-            <div
-              className={`min-w-[170px] ${
-                isEnglish ? "text-left" : "text-right"
-              }`}
-            >
-              <span className="font-medium text-white">
-                {isEnglish ? "Misc" : "متنوع"}
-              </span>
-            </div>
-          </div>
-
-          {/* CyberXbytes Learning Skill (static) */}
-          <div className="flex items-center flex-row-reverse">
-            <div className="w-full">
-              <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-600 ${
-                    skillsVisible ? "w-[85%]" : "w-0"
-                  }`}
-                ></div>
-              </div>
-            </div>
-            <div
-              className={`min-w-[170px] ${
-                isEnglish ? "text-left" : "text-right"
-              }`}
-            >
-              <span className="font-medium text-white">
-                {isEnglish ? "CyberXbytes Learning" : "تعلم CyberXbytes"}
-              </span>
-            </div>
-          </div>
-
-          {/* Forensics Skill */}
-          <div className="flex items-center flex-row-reverse">
-            <div className="w-full">
-              <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-750"
-                  style={{
-                    width: skillsVisible
-                      ? youSelected
-                        ? `${categories["Forensics"]?.percentage || 0}%`
-                        : `${
-                            allUsersMedian["Forensics"]?.median_percentage || 0
-                          }%`
-                      : "0%",
-                  }}
-                ></div>
-              </div>
-            </div>
-            <div
-              className={`min-w-[170px] ${
-                isEnglish ? "text-left" : "text-right"
-              }`}
-            >
-              <span className="font-medium text-white">
-                {isEnglish ? "Forensics" : "التحليل الجنائي"}
-              </span>
-            </div>
-          </div>
-
-          {/* Cryptography Skill */}
-          <div className="flex items-center flex-row-reverse">
-            <div className="w-full">
-              <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out delay-900"
-                  style={{
-                    width: skillsVisible
-                      ? youSelected
-                        ? `${categories["Cryptography"]?.percentage || 0}%`
-                        : `${
-                            allUsersMedian["Cryptography"]?.median_percentage ||
-                            0
-                          }%`
-                      : "0%",
-                  }}
-                ></div>
-              </div>
-            </div>
-            <div
-              className={`min-w-[170px] ${
-                isEnglish ? "text-left" : "text-right"
-              }`}
-            >
-              <span className="font-medium text-white">
-                {isEnglish ? "Cryptography" : "التشفير"}
-              </span>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
       <div className="my-10">
