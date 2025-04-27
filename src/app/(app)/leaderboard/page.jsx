@@ -7,13 +7,14 @@ import LoadingPage from "@/app/components/LoadingPage";
 import { FiSearch } from "react-icons/fi";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 export default function Leaderboard() {
   const { isEnglish } = useLanguage();
   const [isLoaded, setIsLoaded] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
-
+  const router = useRouter();
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
@@ -149,7 +150,12 @@ export default function Leaderboard() {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 ml-16">
+                    <div
+                      onClick={() =>
+                        router.push(`/profile/${user.username}`)
+                      }
+                      className="flex items-center cursor-pointer gap-2 ml-16"
+                    >
                       <Image
                         src={user.profileImage}
                         alt="user avatar"

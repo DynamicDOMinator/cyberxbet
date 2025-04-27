@@ -26,6 +26,10 @@ export default function AddChallenge() {
     pending: 0,
   });
   const [statisticsLoading, setStatisticsLoading] = useState(true);
+  const [challenges, setChallenges] = useState([]);
+  const [challengesLoading, setChallengesLoading] = useState(true);
+  const [challengeFilter, setChallengeFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [challengeData, setChallengeData] = useState({
     title: "",
@@ -48,6 +52,9 @@ export default function AddChallenge() {
   const [showErrorNotification, setShowErrorNotification] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [flags, setFlags] = useState([{ id: 1, value: "" }]);
+  const [termsUrl, setTermsUrl] = useState("");
+  const [privacyUrl, setPrivacyUrl] = useState("");
+  const [docsLoading, setDocsLoading] = useState(false);
   const fileInputRef = useRef(null);
   const solutionFileInputRef = useRef(null);
 
@@ -133,6 +140,84 @@ export default function AddChallenge() {
 
     fetchStatistics();
   }, []);
+
+  // Fetch user challenges
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      setChallengesLoading(true);
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = Cookies.get("token");
+        const response = await axios.get(`${apiUrl}/user-challenges`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.data && response.data.status === "success") {
+          setChallenges(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching challenges:", error);
+      } finally {
+        setChallengesLoading(false);
+      }
+    };
+
+    fetchChallenges();
+  }, []);
+
+  // Fetch terms document
+  const fetchTerms = async () => {
+    setDocsLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
+      const response = await axios.get(`${apiUrl}/user-challenges/terms`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data && response.data.status === "success") {
+        window.open(response.data.data.terms_url, "_blank");
+      }
+    } catch (error) {
+      console.error("Error fetching terms document:", error);
+      setErrorMessage(
+        isEnglish ? "Failed to fetch terms document" : "فشل في جلب مستند الشروط"
+      );
+    } finally {
+      setDocsLoading(false);
+    }
+  };
+
+  // Fetch privacy document
+  const fetchPrivacy = async () => {
+    setDocsLoading(true);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
+      const response = await axios.get(`${apiUrl}/user-challenges/privacy`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data && response.data.status === "success") {
+        window.open(response.data.data.privacy_url, "_blank");
+      }
+    } catch (error) {
+      console.error("Error fetching privacy document:", error);
+      setErrorMessage(
+        isEnglish
+          ? "Failed to fetch privacy document"
+          : "فشل في جلب مستند الخصوصية"
+      );
+    } finally {
+      setDocsLoading(false);
+    }
+  };
 
   // Handle form input changes
   const handleInputChange = (e) => {
@@ -439,6 +524,75 @@ export default function AddChallenge() {
     }
   };
 
+  // Handle challenge filter change
+  const handleFilterChange = (filter) => {
+    setChallengeFilter(filter);
+  };
+
+  // Handle search input change
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  // Filter challenges based on status and search term
+  const filteredChallenges = challenges.filter((challenge) => {
+    const matchesFilter =
+      challengeFilter === "all" || challenge.status === challengeFilter;
+    const matchesSearch = challenge.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  // Map difficulty to display text and color
+  const getDifficultyInfo = (difficulty) => {
+    switch (difficulty) {
+      case "very_hard":
+        return {
+          text: isEnglish ? "Very Hard" : "صعب جدا",
+          color: "text-[#FF1100]",
+        };
+      case "hard":
+        return { text: isEnglish ? "Hard" : "صعب", color: "text-[#FF1100]" };
+      case "medium":
+        return {
+          text: isEnglish ? "Medium" : "متوسط",
+          color: "text-[#9DFF00]",
+        };
+      case "easy":
+        return { text: isEnglish ? "Easy" : "سهل", color: "text-[#00D0FF]" };
+      default:
+        return {
+          text: isEnglish ? "Medium" : "متوسط",
+          color: "text-[#9DFF00]",
+        };
+    }
+  };
+
+  // Map status to display text and color
+  const getStatusInfo = (status) => {
+    switch (status) {
+      case "approved":
+        return {
+          text: isEnglish ? "Approved" : "مقبول",
+          color: "text-[#00CC81]",
+        };
+      case "declined":
+        return {
+          text: isEnglish ? "Rejected" : "مرفوض",
+          color: "text-[#FF1100]",
+        };
+      case "under_review":
+        return {
+          text: isEnglish ? "Under review" : "قيد المراجعة",
+          color: "text-[#B70665]",
+        };
+      case "pending":
+      default:
+        return { text: isEnglish ? "Pending" : "معلق", color: "text-gray-400" };
+    }
+  };
+
   // Form field label style
   const labelStyle = `text-[#BCC9DB] font-medium `;
 
@@ -663,32 +817,125 @@ export default function AddChallenge() {
       </div>
 
       {/* Challenges List Section */}
-      <div className="bg-[#0B0D0F] px-4 py-6 rounded-lg mb-8">
+      <div className=" px-4 py-6 rounded-lg mb-8">
         <div
           dir={isEnglish ? "ltr" : "rtl"}
-          className="flex flex-col   items-start mb-6 gap-4"
+          className="flex flex-col items-start mb-6 gap-4"
         >
-          <div className="flex items-center gap-5 pb-2">
-            <button className="text-white border-b-2 border-[#38FFE5]  py-1 whitespace-nowrap">
-              {isEnglish ? "All" : "الكل"}
-            </button>
-            <button className="text-white px-2 py-1 whitespace-nowrap">
-              {isEnglish ? "Pending" : "المعلقة"}
-            </button>
-            <button className="text-white px-2 py-1 whitespace-nowrap">
-              {isEnglish ? "Under Review" : "تحت المراجعة"}
-            </button>
-            <button className="text-white px-2 py-1 whitespace-nowrap">
-              {isEnglish ? "Approved" : "المقبولة"}
-            </button>
-            <button className="text-white px-2 py-1 whitespace-nowrap">
-              {isEnglish ? "Rejected" : "المرفوضة"}
-            </button>
+          <div className="flex flex-wrap items-center gap-5 pb-2 justify-between w-full">
+            <div className="flex flex-wrap items-center gap-5">
+              <button
+                onClick={() => handleFilterChange("all")}
+                className={`text-white ${
+                  challengeFilter === "all" ? "border-b-2 border-[#38FFE5]" : ""
+                } py-1 whitespace-nowrap`}
+              >
+                {isEnglish ? "All" : "الكل"}
+              </button>
+              <button
+                onClick={() => handleFilterChange("pending")}
+                className={`text-white ${
+                  challengeFilter === "pending"
+                    ? "border-b-2 border-[#38FFE5]"
+                    : ""
+                } px-2 py-1 whitespace-nowrap`}
+              >
+                {isEnglish ? "Pending" : "المعلقة"}
+              </button>
+              <button
+                onClick={() => handleFilterChange("under_review")}
+                className={`text-white ${
+                  challengeFilter === "under_review"
+                    ? "border-b-2 border-[#38FFE5]"
+                    : ""
+                } px-2 py-1 whitespace-nowrap`}
+              >
+                {isEnglish ? "Under Review" : "تحت المراجعة"}
+              </button>
+              <button
+                onClick={() => handleFilterChange("approved")}
+                className={`text-white ${
+                  challengeFilter === "approved"
+                    ? "border-b-2 border-[#38FFE5]"
+                    : ""
+                } px-2 py-1 whitespace-nowrap`}
+              >
+                {isEnglish ? "Approved" : "المقبولة"}
+              </button>
+              <button
+                onClick={() => handleFilterChange("declined")}
+                className={`text-white ${
+                  challengeFilter === "declined"
+                    ? "border-b-2 border-[#38FFE5]"
+                    : ""
+                } px-2 py-1 whitespace-nowrap`}
+              >
+                {isEnglish ? "Rejected" : "المرفوضة"}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={fetchTerms}
+                disabled={docsLoading}
+                className="flex items-center cursor-pointer gap-1 bg-[#131619] hover:bg-[#1c2025] text-white px-3 py-2 rounded-md transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"
+                  />
+                </svg>
+                <span className="hidden sm:inline">
+                  {isEnglish ? "Terms & Conditions" : "الشروط والأحكام"}
+                </span>
+                <span className="inline sm:hidden">
+                  {isEnglish ? "Terms" : "الشروط"}
+                </span>
+              </button>
+
+              <button
+                onClick={fetchPrivacy}
+                disabled={docsLoading}
+                className="flex items-center cursor-pointer gap-1 bg-[#131619] hover:bg-[#1c2025] text-white px-3 py-2 rounded-md transition-colors"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={1.5}
+                  stroke="currentColor"
+                  className="w-5 h-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"
+                  />
+                </svg>
+                <span className="hidden sm:inline">
+                  {isEnglish ? "Privacy Policy" : "سياسة الخصوصية"}
+                </span>
+                <span className="inline sm:hidden">
+                  {isEnglish ? "Privacy" : "الخصوصية"}
+                </span>
+              </button>
+            </div>
           </div>
           <div className="relative w-full border-b-2 border-[#06373F] md:w-auto md:min-w-[300px] mt-7">
             <input
               type="text"
               placeholder={isEnglish ? "Challenge name" : "اسم التحدي"}
+              value={searchTerm}
+              onChange={handleSearchChange}
               className="bg-transparent text-white px-4 py-2 rounded-md pr-10 rtl:pl-10 w-full focus:outline-none focus:ring-1 focus:ring-[#38FFE5]"
               dir={isEnglish ? "ltr" : "rtl"}
             />
@@ -714,120 +961,103 @@ export default function AddChallenge() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-10">
-          {/* Challenge Card 1 */}
-          <div className="bg-[#131619] rounded-lg overflow-hidden flex flex-col h-full">
-            <div className="p-4 flex flex-col h-full">
-              <div
-                dir={isEnglish ? "ltr" : "rtl"}
-                className="flex gap-2 items-center mb-4"
-              >
-                <Image
-                  src="/uploaded.png"
-                  alt="Total Challenges"
-                  width={32}
-                  height={32}
-                />
-                <p className="font-bold text-white">R$4c3rT</p>
-              </div>
-              <p className="text-gray-300 text-sm flex-grow">
-                Sometimes RSA certificates are breakable
-              </p>
-              <div
-                dir={isEnglish ? "ltr" : "rtl"}
-                className="flex justify-between items-center mt-4"
-              >
-                <div className="flex items-center">
-                  <span className=" text-gray-400">
-                    {isEnglish ? "Difficulty level" : "مستوى الصعوبة"}:{" "}
-                  </span>
-                  <span className=" text-yellow-500 ml-1 rtl:mr-1">
-                    {isEnglish ? "Medium" : "متوسط"}
-                  </span>
+        <div
+          dir={isEnglish ? "ltr" : "rtl"}
+          className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-10"
+        >
+          {challengesLoading ? (
+            // Loading skeleton
+            Array(3)
+              .fill()
+              .map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-[#131619] rounded-lg overflow-hidden flex flex-col h-full animate-pulse"
+                >
+                  <div className="p-4 flex flex-col h-full">
+                    <div className="flex gap-2 items-center mb-4">
+                      <div className="bg-gray-700 w-8 h-8 rounded"></div>
+                      <div className="bg-gray-700 w-24 h-6 rounded"></div>
+                    </div>
+                    <div className="bg-gray-700 w-full h-12 rounded flex-grow mb-4"></div>
+                    <div className="flex justify-between items-center mt-4">
+                      <div className="bg-gray-700 w-24 h-5 rounded"></div>
+                      <div className="bg-gray-700 w-20 h-5 rounded"></div>
+                    </div>
+                  </div>
                 </div>
-                <span className="text-pink-500 ">
-                  {isEnglish ? "Under review" : "قيد المراجعة"}
-                </span>
-              </div>
-            </div>
-          </div>
+              ))
+          ) : filteredChallenges.length > 0 ? (
+            filteredChallenges.map((challenge) => {
+              const difficultyInfo = getDifficultyInfo(challenge.difficulty);
+              const statusInfo = getStatusInfo(challenge.status);
 
-          {/* Challenge Card 2 */}
-          <div className="bg-[#131619] rounded-lg overflow-hidden flex flex-col h-full">
-            <div className="p-4 flex flex-col h-full">
-              <div
-                dir={isEnglish ? "ltr" : "rtl"}
-                className="flex gap-2 items-center mb-4"
-              >
-                <Image
-                  src="/uploaded.png"
-                  alt="Total Challenges"
-                  width={32}
-                  height={32}
-                />
-                <p className="font-bold text-white">scray</p>
-              </div>
-              <p className="text-gray-300 text-sm flex-grow">
-                participants will encounter an audio file containing a hidden
-                flag. They must carefully analyze the file to uncover the hidden
-                message. Use your skills to explore this challenge!
-              </p>
-              <div
-                dir={isEnglish ? "ltr" : "rtl"}
-                className="flex justify-between items-center mt-4"
-              >
-                <div className="flex items-center">
-                  <span className="  text-gray-400">
-                    {isEnglish ? "Difficulty level" : "مستوى الصعوبة"}:{" "}
-                  </span>
-                  <span className="  text-blue-400 ml-1 rtl:mr-1">
-                    {isEnglish ? "Easy" : "سهل"}
-                  </span>
+              return (
+                <div
+                  key={challenge.id}
+                  className="bg-[#FFFFFF0D] rounded-lg overflow-hidden flex flex-col h-full"
+                  dir={isEnglish ? "ltr" : "rtl"}
+                >
+                  <div className="p-4 flex flex-col h-full">
+                    <div
+                      dir={isEnglish ? "ltr" : "rtl"}
+                      className="flex gap-2 items-center mb-4"
+                    >
+                      <Image
+                        src={challenge.category?.icon_url || "/uploaded.png"}
+                        alt={challenge.category?.name || "Challenge"}
+                        width={32}
+                        height={32}
+                      />
+                      <p className="font-bold text-white">{challenge.name}</p>
+                    </div>
+                    <p className="text-gray-300 text-sm flex-grow">
+                      {challenge.description}
+                    </p>
+                    <div
+                      dir={isEnglish ? "ltr" : "rtl"}
+                      className="flex justify-between items-center mt-4"
+                    >
+                      <div className="flex items-center">
+                        <span className="text-gray-400">
+                          {isEnglish ? "Difficulty level" : "مستوى الصعوبة"}:{" "}
+                        </span>
+                        <span
+                          className={`${difficultyInfo.color} ml-1 rtl:mr-1`}
+                        >
+                          {difficultyInfo.text}
+                        </span>
+                      </div>
+                      <span className={`${statusInfo.color}`}>
+                        {statusInfo.text}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <span className="text-red-500  ">
-                  {isEnglish ? "Rejected" : "مرفوض"}
-                </span>
+              );
+            })
+          ) : (
+            <div className="col-span-3 text-center py-10">
+              <div className="flex flex-col items-center justify-center">
+                <Image
+                  src="/notfound.png"
+                  alt={
+                    isEnglish
+                      ? "No challenges found"
+                      : "لم يتم العثور على تحديات"
+                  }
+                  width={120}
+                  height={120}
+                  className="mb-4"
+                />
+                <p className="text-gray-400 text-lg">
+                  {isEnglish
+                    ? "No challenges found"
+                    : "لم يتم العثور على تحديات"}
+                </p>
               </div>
             </div>
-          </div>
-
-          {/* Challenge Card 3 */}
-          <div className="bg-[#131619] rounded-lg overflow-hidden flex flex-col h-full">
-            <div className="p-4 flex flex-col h-full">
-              <div
-                dir={isEnglish ? "ltr" : "rtl"}
-                className="flex gap-2 items-center mb-4"
-              >
-                <Image
-                  src="/uploaded.png"
-                  alt="Total Challenges"
-                  width={32}
-                  height={32}
-                />
-                <p className="font-bold text-white">Quest</p>
-              </div>
-              <p className="text-gray-300 text-sm flex-grow">
-                Test your skills in this dynamic web application challenge.
-                Analyze, adapt, and conquer!
-              </p>
-              <div
-                dir={isEnglish ? "ltr" : "rtl"}
-                className="flex justify-between items-center mt-4"
-              >
-                <div className="flex items-center">
-                  <span className="  text-gray-400">
-                    {isEnglish ? "Difficulty level" : "مستوى الصعوبة"}:{" "}
-                  </span>
-                  <span className="  text-red-500 ml-1 rtl:mr-1">
-                    {isEnglish ? "Very Hard" : "صعب جدا"}
-                  </span>
-                </div>
-                <span className="text-green-500  ">
-                  {isEnglish ? "Approved" : "مقبول"}
-                </span>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -1267,7 +1497,6 @@ export default function AddChallenge() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                 
                 </>
               ) : (
                 <>{isEnglish ? "Create" : "إنشاء"}</>
