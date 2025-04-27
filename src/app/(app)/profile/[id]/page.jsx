@@ -19,6 +19,17 @@ import axios from "axios";
 
 const inter = Inter({ subsets: ["latin"] });
 
+// Function to format date strings
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  const options = {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  };
+  return date.toLocaleDateString("en-US", options);
+};
+
 export default function Profile() {
   const { isEnglish } = useLanguage();
   const [activeTab, setActiveTab] = useState(0);
@@ -59,10 +70,44 @@ export default function Profile() {
     total_bytes: 0,
     total_firstblood_bytes: 0,
   });
+  const [userEvents, setUserEvents] = useState([]);
   const skillsSectionRef = useRef(null);
-
+  const [activity, setActivity] = useState([]);
   const params = useParams();
   const router = useRouter();
+
+  // Function to format time-ago from a timestamp
+  const formatTimeAgo = (timestamp) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    if (diffInSeconds < 60) {
+      return isEnglish
+        ? `${diffInSeconds} seconds ago`
+        : `منذ ${diffInSeconds} ثانية`;
+    }
+
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    if (diffInMinutes < 60) {
+      return isEnglish
+        ? `${diffInMinutes} minutes ago`
+        : `منذ ${diffInMinutes} دقيقة`;
+    }
+
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) {
+      return isEnglish ? `${diffInHours} hours ago` : `منذ ${diffInHours} ساعة`;
+    }
+
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 30) {
+      return isEnglish ? `${diffInDays} days ago` : `منذ ${diffInDays} يوم`;
+    }
+
+    const diffInMonths = Math.floor(diffInDays / 30);
+    return isEnglish ? `${diffInMonths} months ago` : `منذ ${diffInMonths} شهر`;
+  };
 
   const fetchSocialMediaLinks = async () => {
     try {
@@ -138,9 +183,44 @@ export default function Profile() {
     }
   };
 
+  const fetchUserEvents = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
+      const response = await axios.get(`${apiUrl}/user-events`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUserEvents(response.data.events);
+    } catch (error) {
+      console.error("Error fetching user events:", error);
+    }
+  };
+
+  const fetchUserActivities = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
+      const response = await axios.get(
+        `${apiUrl}/user/activities/${params.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setActivity(response.data.activities || []);
+    } catch (error) {
+      console.error("Error fetching user activities:", error);
+    }
+  };
+
   useEffect(() => {
     setIsLoading(true);
     fetchSocialMediaLinks();
+    fetchUserEvents();
+    fetchUserActivities();
   }, [params.id]);
 
   useEffect(() => {
@@ -415,31 +495,220 @@ export default function Profile() {
                 </div>
               </TabPanel>
               <TabPanel className="w-full">
-                <div className="py-10">
-                  <Image
-                    className="mx-auto"
-                    src="/notfound.png"
-                    alt="activity"
-                    width={200}
-                    height={200}
-                  />
-                  <p className="text-center pt-5">
-                    {isEnglish ? "No events yet" : "لاتوجد فعاليات حتي الآن"}
-                  </p>
-                </div>
+                {userEvents.length > 0 ? (
+                  <div
+                    dir={isEnglish ? "ltr" : "rtl"}
+                    className="grid mt-20   grid-cols-1 md:grid-cols-2 lg:grid-cols-3 md:mt-16 gap-4 md:gap-6"
+                  >
+                    {userEvents.map((event) => (
+                      <div
+                        onClick={() => router.push(`/events/${event.uuid}`)}
+                        key={event.uuid}
+                        className="bg-white/1 cursor-pointer h-[320px] relative rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
+                      >
+                        <div className="relative h-1/2 w-full">
+                          <Image
+                            className="object-cover"
+                            src={event.image}
+                            alt={event.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            priority
+                          />
+                        </div>
+                        <div className="p-4">
+                          <h3 className="text-lg md:text-xl my-5 text-center font-semibold mb-4">
+                            {event.title}
+                          </h3>
+                          <hr className="text-[#38FFE5]/20" />
+                          <div
+                            className={`flex items-center py-4 ${
+                              isEnglish ? "justify-center" : "justify-center"
+                            }`}
+                          >
+                            <span
+                              className={`${
+                                isEnglish ? "mr-2" : "ml-2"
+                              } text-teal-400`}
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="24"
+                                height="24"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <rect
+                                  x="3"
+                                  y="4"
+                                  width="18"
+                                  height="18"
+                                  rx="2"
+                                  ry="2"
+                                ></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                              </svg>
+                            </span>
+                            <span
+                              className={`text-sm md:text-base text-gray-400 ${
+                                isEnglish ? "text-left" : "text-right"
+                              }`}
+                            >
+                              {formatDate(event.start_date)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="py-10">
+                    <Image
+                      className="mx-auto"
+                      src="/notfound.png"
+                      alt="activity"
+                      width={150}
+                      height={150}
+                    />
+                    <p className="text-center pt-5">
+                      {isEnglish ? "No events yet" : "لاتوجد فعاليات حتي الآن"}
+                    </p>
+                  </div>
+                )}
               </TabPanel>
               <TabPanel className="w-full">
-                <div className="py-10">
-                  <Image
-                    className="mx-auto"
-                    src="/notfound.png"
-                    alt="activity"
-                    width={200}
-                    height={200}
-                  />
-                  <p className="text-center pt-4">
-                    {isEnglish ? "No activities yet" : "لاتوجد أنشطة حتي الآن"}
-                  </p>
+                <div
+                  className={`px-4 lg:px-10 py-6 lg:py-10 ${
+                    activity.length > 0 ? "bg-[#06373F26]" : "bg-transparent"
+                  } rounded-lg`}
+                >
+                  <div className="overflow-x-auto">
+                    <div className="min-w-[768px] w-full">
+                      {/* Body rows */}
+                      {activity.length > 0 ? (
+                        activity.map((item, index) => (
+                          <div
+                            key={index}
+                            className={`${
+                              index % 2 === 0 ? "bg-[#06373F] rounded-lg" : ""
+                            } mb-2`}
+                          >
+                            <table
+                              dir={isEnglish ? "ltr" : "rtl"}
+                              className="w-full"
+                            >
+                              <tbody dir={isEnglish ? "ltr" : "rtl"}>
+                                <tr
+                                  className={`flex items-center justify-between ${
+                                    isEnglish
+                                      ? "flex-row-reverse"
+                                      : "flex-row-reverse"
+                                  }`}
+                                >
+                                  <td
+                                    dir={isEnglish ? "ltr" : "rtl"}
+                                    className={`py-2 lg:py-3 text-white/70 w-[25%] text-sm lg:text-base ${
+                                      isEnglish
+                                        ? "pl-3 lg:pl-5"
+                                        : "pr-3 lg:pr-5"
+                                    }`}
+                                  >
+                                    {formatTimeAgo(item.solved_at)}
+                                  </td>
+                                  <td className="py-2 lg:py-3 w-[25%]">
+                                    <div
+                                      dir={isEnglish ? "ltr" : "rtl"}
+                                      className={`flex items-center gap-1 lg:gap-2 ${
+                                        isEnglish ? "pl-0" : "pr-0"
+                                      }`}
+                                    >
+                                      <span className="text-white text-sm lg:text-base">
+                                        {item.is_first_blood
+                                          ? item.first_blood_bytes
+                                          : item.total_bytes}
+                                      </span>
+                                      <Image
+                                        src={
+                                          item.is_first_blood
+                                            ? "/blood.png"
+                                            : "/byte.png"
+                                        }
+                                        alt={
+                                          item.is_first_blood
+                                            ? "first blood"
+                                            : "points"
+                                        }
+                                        width={20}
+                                        height={24}
+                                        className="lg:w-[25px] lg:h-[30px]"
+                                      />
+                                    </div>
+                                  </td>
+                                  <td className="py-2 lg:py-3 w-[50%]">
+                                    <div
+                                      dir={isEnglish ? "ltr" : "rtl"}
+                                      className={`flex items-center gap-2 lg:gap-3 ${
+                                        isEnglish
+                                          ? "pl-2 lg:pl-3"
+                                          : "pr-2 lg:pr-3"
+                                      }`}
+                                    >
+                                      <span className="text-sm lg:text-base">
+                                        {index + 1}
+                                      </span>
+                                      <Image
+                                        src={
+                                          userData.user_profile_image ||
+                                          "/user.png"
+                                        }
+                                        alt="user"
+                                        width={24}
+                                        height={24}
+                                        className="rounded-full lg:w-[32px] lg:h-[32px]"
+                                      />
+                                      <span className="text-white text-sm lg:text-base">
+                                        {userData.username || params.id}
+                                      </span>
+                                      <span className="text-white text-sm lg:text-base">
+                                        {isEnglish
+                                          ? item.is_first_blood
+                                            ? `got first bytes in ${item.challenge_title}`
+                                            : `got bytes in ${item.challenge_title}`
+                                          : item.is_first_blood
+                                          ? `حصلت على البايتس الأولى في ${item.challenge_title}`
+                                          : `حصلت على بايتس في ${item.challenge_title}`}
+                                      </span>
+                                    </div>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="w-full flex flex-col items-center justify-center py-16">
+                          <Image
+                            className="mx-auto"
+                            src="/notfound.png"
+                            alt="activity"
+                            width={150}
+                            height={150}
+                          />
+                          <p className="text-center pt-5 text-lg">
+                            {isEnglish
+                              ? "No activities yet"
+                              : "لاتوجد أنشطة حتي الآن"}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </TabPanel>
             </TabPanels>
