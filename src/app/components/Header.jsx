@@ -23,6 +23,9 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useUserProfile } from "../context/UserProfileContext";
+import { rtdb } from "../../lib/firebase";
+import { ref, onValue, set, onDisconnect } from "firebase/database";
+
 const gradientAnimation = `
   @keyframes gradient {
     0% { background-position: 200% 0; }
@@ -39,7 +42,7 @@ const gradientAnimation = `
 export default function Header() {
   const { isEnglish, setIsEnglish } = useLanguage();
   const { labs } = useLabs();
-  const [random, setRandom] = useState(0);
+  const [onlinePlayers, setOnlinePlayers] = useState(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mobileChallengesOpen, setMobileChallengesOpen] = useState(false);
   const [mobileAddChallengeOpen, setMobileAddChallengeOpen] = useState(false);
@@ -54,8 +57,44 @@ export default function Header() {
     setUserName(userProfile?.userName);
   }, [userProfile]);
 
+  // Handle online status
   useEffect(() => {
-    setRandom(Math.floor(Math.random() * 1000));
+    if (userName) {
+      const userStatusRef = ref(rtdb, "status/" + userName);
+      const connectedRef = ref(rtdb, ".info/connected");
+
+      onValue(connectedRef, (snap) => {
+        if (snap.val() === false) {
+          return;
+        }
+
+        // Set user status to online
+        set(userStatusRef, {
+          online: true,
+          lastSeen: new Date().toISOString(),
+        });
+
+        // Set user status to offline when they disconnect
+        onDisconnect(userStatusRef).set({
+          online: false,
+          lastSeen: new Date().toISOString(),
+        });
+      });
+    }
+  }, [userName]);
+
+  // Listen for online players count
+  useEffect(() => {
+    const onlinePlayersRef = ref(rtdb, "status");
+    onValue(onlinePlayersRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const onlineCount = Object.values(data).filter(
+          (user) => user.online
+        ).length;
+        setOnlinePlayers(onlineCount);
+      }
+    });
   }, []);
 
   const logout = async () => {
@@ -178,7 +217,7 @@ export default function Header() {
                   boxShadow: "0 0 5px #38FFE5",
                 }}
               ></span>
-              <span>{random}</span>{" "}
+              <span>{onlinePlayers}</span>{" "}
               {isEnglish ? "Players Online" : "عدد اللاعبين"}
             </p>
             <Menu as="div" className="relative">
@@ -364,11 +403,11 @@ export default function Header() {
                   <span
                     className="w-2 h-2 rounded-full bg-[#38FFE5]"
                     style={{
-                      animation: "pulse 1.5s ease-in-out infinite",
+                      animation: "pulse 3s ease-in-out infinite",
                       boxShadow: "0 0 5px #38FFE5",
                     }}
                   ></span>
-                  <span>{random}</span>{" "}
+                  <span>{onlinePlayers}</span>{" "}
                   {isEnglish ? "Players Online" : "عدد اللاعبين"}
                 </p>
 

@@ -1,0 +1,26 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Rules for inline numbers collection
+    match /inlineNumbers/{documentId} {
+      // Allow read access to all authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow write access only to authenticated users
+      allow create: if request.auth != null 
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.numbers is list
+        && request.resource.data.timestamp is string;
+        
+      // Allow update only to the owner of the document
+      allow update: if request.auth != null 
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
+        
+      // Allow delete only to the owner of the document
+      allow delete: if request.auth != null 
+        && resource.data.userId == request.auth.uid;
+    }
+  }
+} 

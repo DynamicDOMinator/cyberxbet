@@ -18,6 +18,7 @@
     "chart.js": "^4.4.8",
     "compression-webpack-plugin": "^11.1.0",
     "critters": "^0.0.23",
+    "firebase": "^11.6.1",
     "framer-motion": "^12.5.0",
     "js-cookie": "^3.0.5",
     "next": "15.2.0",
