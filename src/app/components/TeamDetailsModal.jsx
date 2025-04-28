@@ -66,7 +66,7 @@ export default function TeamDetailsModal({
         ) : teamDetails ? (
           <>
             <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center mx-auto  gap-4">
                 {teamDetails.icon_url ? (
                   <Image
                     src={teamDetails.icon_url}
@@ -209,34 +209,7 @@ export default function TeamDetailsModal({
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                          <Image
-                            src="/byte.png"
-                            alt="bytes"
-                            width={20}
-                            height={20}
-                          />
-                          <span className="text-white">
-                            {member.total_bytes}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Image
-                            src="/blood.png"
-                            alt="first blood"
-                            width={20}
-                            height={20}
-                          />
-                          <span className="text-white">
-                            {
-                              member.challenge_completions.filter(
-                                (c) => c.is_first_blood
-                              ).length
-                            }
-                          </span>
-                        </div>
-                      </div>
+                   
                     </div>
                   </div>
                 ))}

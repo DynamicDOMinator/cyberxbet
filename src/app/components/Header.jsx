@@ -98,6 +98,15 @@ export default function Header() {
   }, []);
 
   const logout = async () => {
+    // Remove user from online status in Firebase
+    if (userName) {
+      const userStatusRef = ref(rtdb, "status/" + userName);
+      await set(userStatusRef, {
+        online: false,
+        lastSeen: new Date().toISOString(),
+      });
+    }
+
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     const token = Cookies.get("token");
     const response = await axios.post(`${apiUrl}/auth/logout`, { token });
