@@ -16,6 +16,8 @@ import { useUserProfile } from "@/app/context/UserProfileContext";
 
 import LoadingPage from "@/app/components/LoadingPage";
 import { useRouter } from "next/navigation";
+import TeamDetailsModal from "@/app/components/TeamDetailsModal";
+
 export default function EventPage() {
   const { isEnglish } = useLanguage();
   const { getCurrentDateInUserTimezone, timeZone, convertToUserTimezone } =
@@ -61,6 +63,7 @@ export default function EventPage() {
   const [isEventScoreBoard, setIsEventScoreBoard] = useState(false);
   const [scoreboardData, setScoreboardData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedTeamUuid, setSelectedTeamUuid] = useState(null);
 
   useEffect(() => {
     // Update the current date/time based on user's timezone
@@ -1844,7 +1847,7 @@ export default function EventPage() {
             {/* First Place (Middle) */}
 
             {scoreboardData.length > 0 && (
-              <div className="flex flex-col items-center lg:hidden   md:mb-28">
+              <div className="flex flex-col items-center md:hidden   md:mb-28">
                 <div className="relative">
                   <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 relative">
                     {/* Background laurel wreath image */}
@@ -2274,7 +2277,10 @@ export default function EventPage() {
                               />
                             </div>
                           )}
-                          <span className="text-white text-sm md:text-xl font-bold truncate max-w-[120px] md:max-w-[200px]">
+                          <span
+                            className="text-white text-sm md:text-xl font-bold truncate max-w-[120px] md:max-w-[200px] cursor-pointer hover:text-[#38FFE5] transition-colors"
+                            onClick={() => setSelectedTeamUuid(team.team_uuid)}
+                          >
                             {team.team_name}
                           </span>
                         </div>
@@ -2473,6 +2479,15 @@ export default function EventPage() {
           </div>
         </div>
       )}
+
+      <TeamDetailsModal
+        isOpen={!!selectedTeamUuid}
+        onClose={() => setSelectedTeamUuid(null)}
+        teamUuid={selectedTeamUuid}
+        teamData={scoreboardData.find(
+          (team) => team.team_uuid === selectedTeamUuid
+        )}
+      />
     </div>
   );
 }

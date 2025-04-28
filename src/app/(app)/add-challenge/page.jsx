@@ -1,15 +1,9 @@
 "use client";
 import React, { useState, useRef, useCallback, useEffect } from "react";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import {
-  FaUpload,
-  FaTrash,
-  FaFileAlt,
-  FaCheck,
-  FaInfoCircle,
-} from "react-icons/fa";
+import { FaTrash, FaFileAlt } from "react-icons/fa";
 import { BsFillFileEarmarkCheckFill } from "react-icons/bs";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -52,8 +46,7 @@ export default function AddChallenge() {
   const [showErrorNotification, setShowErrorNotification] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [flags, setFlags] = useState([{ id: 1, value: "" }]);
-  const [termsUrl, setTermsUrl] = useState("");
-  const [privacyUrl, setPrivacyUrl] = useState("");
+
   const [docsLoading, setDocsLoading] = useState(false);
   const fileInputRef = useRef(null);
   const solutionFileInputRef = useRef(null);
@@ -1002,7 +995,7 @@ export default function AddChallenge() {
               .map((_, index) => (
                 <div
                   key={index}
-                  className="bg-[#131619] flex-shrink-0 w-1/3 mb-5 rounded-lg overflow-hidden flex flex-col h-full animate-pulse"
+                  className="bg-[#131619] flex-shrink-0 w-full md:w-1/3 mb-5 rounded-lg overflow-hidden flex flex-col h-full animate-pulse"
                 >
                   <div className="p-4 flex flex-col h-full">
                     <div className="flex gap-2 items-center mb-4">
@@ -1025,7 +1018,7 @@ export default function AddChallenge() {
               return (
                 <div
                   key={challenge.id}
-                  className="bg-[#FFFFFF0D] flex-shrink-0 w-1/3 mb-5 rounded-lg overflow-hidden flex flex-col h-full"
+                  className="bg-[#FFFFFF0D] flex-shrink-0 w-full md:w-1/3 mb-5 rounded-lg overflow-hidden flex flex-col h-full"
                   dir={isEnglish ? "ltr" : "rtl"}
                 >
                   <div className="p-4 flex flex-col h-full">
