@@ -8,6 +8,8 @@ import ConfettiAnimation from "@/components/ConfettiAnimation";
 import LoadingPage from "../../../components/LoadingPage";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useRouter } from "next/navigation";
+import { useUserProfile } from "@/app/context/UserProfileContext";
+
 export default function ChallengePage() {
   const [challenge, setChallenge] = useState(null);
   const [flags, setflags] = useState(false);
@@ -28,6 +30,8 @@ export default function ChallengePage() {
   const [isAvailable, setIsAvailable] = useState(true);
   const { id } = useParams();
   const { isEnglish } = useLanguage();
+  const { convertToUserTimezone } = useUserProfile();
+
   const fetchInitialData = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -530,7 +534,6 @@ export default function ChallengePage() {
                       </p>
                       {challenge?.flag_type === "multiple_all" && (
                         <button
-                         
                           onClick={() => {
                             setflags(true);
                           }}
@@ -688,16 +691,9 @@ export default function ChallengePage() {
                       {activitiesData?.length > 0 ? (
                         activitiesData.map((user, index) => {
                           // Get the most recent solved_at time
-                          const latestSolvedAt =
-                            user.solved_flags?.length > 0
-                              ? new Date(
-                                  Math.max(
-                                    ...user.solved_flags.map(
-                                      (flag) => new Date(flag.solved_at)
-                                    )
-                                  )
-                                )
-                              : null;
+                          const latestSolvedAt = user.solved_at
+                            ? convertToUserTimezone(new Date(user.solved_at))
+                            : null;
 
                           // Format the time difference
                           const formatTimeAgo = (date) => {

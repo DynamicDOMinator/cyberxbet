@@ -1504,305 +1504,205 @@ export default function EventPage() {
                   {teams?.members?.flatMap(
                     (member) => member.challenge_completions || []
                   ).length > 0 ? (
-                    <>
-                      {/* Header row - Desktop */}
-                      <div
-                        dir={isEnglish ? "ltr" : "rtl"}
-                        className="hidden md:grid grid-cols-5 place-items-start px-4 md:px-10 gap-4 mb-6 md:mb-9 bg-[#38FFE50D] py-3 rounded-md"
-                      >
-                        <div className="col-span-2 text-center text-white font-semibold flex justify-center items-center">
-                          <span
-                            className={`${
-                              isEnglish ? "pr-20 md:pr-28" : "pl-20 md:pl-28"
-                            }`}
-                          >
-                            {isEnglish ? "Member" : "العضو"}
-                          </span>
-                        </div>
-                        <div className="col-span-1 text-center text-white font-semibold">
-                          {isEnglish ? "Challenge" : "التحدي"}
-                        </div>
-                        <div className="col-span-1 text-center text-white font-semibold">
-                          {isEnglish ? "Bytes" : "البايتس"}
-                        </div>
-                        <div className="col-span-1 text-center text-white font-semibold">
-                          {isEnglish ? "Completed At" : "تاريخ الإكمال"}
-                        </div>
-                      </div>
+                    <div className="px-4 lg:px-10 py-6 lg:py-10 bg-[#06373F26] rounded-lg">
+                      <div className="overflow-x-auto">
+                        <div className="min-w-[768px] w-full">
+                          {/* Header wrapper div */}
+                          <div className="rounded-lg bg-[#38FFE50D] mb-6 lg:mb-10">
+                            <table
+                              className={`w-full ${
+                                isEnglish ? "pl-5" : "pr-5"
+                              }`}
+                            >
+                              <thead>
+                                <tr
+                                  className={`text-white ${
+                                    isEnglish ? "flex-row-reverse" : "flex-row"
+                                  } flex items-center justify-between`}
+                                >
+                                  <th
+                                    className={`py-3 lg:py-4 w-[25%] text-sm lg:text-base ${
+                                      isEnglish
+                                        ? "text-left pl-3 lg:pl-5"
+                                        : "text-right pr-3 lg:pr-5"
+                                    }`}
+                                  >
+                                    {isEnglish ? "Time" : "التوقيت"}
+                                  </th>
+                                  <th
+                                    className={`py-3 lg:py-4 w-[25%] text-sm lg:text-base ${
+                                      isEnglish ? "text-left" : "text-right"
+                                    }`}
+                                  >
+                                    {isEnglish ? "Bytes" : "البايتس"}
+                                  </th>
+                                  <th
+                                    className={`py-3 lg:py-4 w-[50%] text-sm lg:text-base ${
+                                      isEnglish
+                                        ? "text-left pl-3 lg:pl-5"
+                                        : "text-right pr-3 lg:pr-5"
+                                    }`}
+                                  >
+                                    {isEnglish ? "Challenge" : "التحدي"}
+                                  </th>
+                                </tr>
+                              </thead>
+                            </table>
+                          </div>
 
-                      {/* Mobile header - only shown on small screens */}
-                      <div
-                        dir={isEnglish ? "ltr" : "rtl"}
-                        className="md:hidden text-center text-lg font-bold mb-4 bg-[#38FFE50D] py-3 rounded-md"
-                      >
-                        {isEnglish ? "Team Activities" : "أنشطة الفريق"}
-                      </div>
-
-                      <div className="overflow-x-auto md:overflow-visible">
-                        {teams?.members?.flatMap((member, memberIndex) =>
-                          member.challenge_completions?.map(
-                            (challenge, challengeIndex) => (
-                              <div
-                                dir={isEnglish ? "ltr" : "rtl"}
-                                key={`${member.uuid}-${challenge.challenge_uuid}`}
-                                className={`rounded-lg mb-3 px-4 md:px-10 py-3 ${
-                                  (memberIndex + challengeIndex) % 2 === 0
-                                    ? "bg-[#06373F]"
-                                    : "bg-transparent"
-                                }`}
-                              >
-                                {/* Desktop view */}
-                                <div className="hidden md:grid grid-cols-5 place-items-start gap-4">
-                                  <div className="col-span-2 flex justify-center">
-                                    <div className="flex items-center gap-2 md:gap-4 ml-4 md:ml-16">
-                                      <Image
-                                        src={
-                                          member.profile_image || "/icon1.png"
-                                        }
-                                        alt="member avatar"
-                                        width={40}
-                                        height={40}
-                                        className="rounded-full object-cover w-8 h-8 md:w-10 md:h-10"
-                                        unoptimized={true}
-                                      />
-                                      <div className="flex flex-col">
-                                        <span
-                                          onClick={() =>
-                                            router.push(
-                                              `/profile/${member.username}`
-                                            )
-                                          }
-                                          className="text-white text-sm md:text-lg font-bold cursor-pointer"
-                                        >
-                                          {member.username}
-                                        </span>
-                                        {member.role === "leader" && (
-                                          <span className="text-[#38FFE4] text-xs">
-                                            {isEnglish ? "Leader" : "قائد"}
-                                          </span>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  <div className="col-span-1 flex justify-center">
-                                    <div
-                                      dir={isEnglish ? "ltr" : "rtl"}
-                                      className={`flex ${
-                                        isEnglish
-                                          ? "flex-row"
-                                          : "flex-row-reverse"
-                                      } items-center gap-2`}
-                                    >
-                                      <span className="text-white text-sm md:text-lg">
-                                        {challenge.challenge_name}
-                                      </span>
-                                      {challenge.is_first_blood && (
-                                        <Image
-                                          src="/blood.png"
-                                          alt="first blood"
-                                          width={20}
-                                          height={20}
-                                          className="w-4 h-4 md:w-5 md:h-5"
-                                          title={
+                          {/* Body rows */}
+                          {teams?.members?.flatMap((member) =>
+                            member.challenge_completions?.map(
+                              (challenge, index) => (
+                                <div
+                                  key={`${member.uuid}-${challenge.challenge_uuid}-${index}`}
+                                  className={`${
+                                    index % 2 === 0
+                                      ? "bg-[#06373F] rounded-lg"
+                                      : ""
+                                  } mb-2`}
+                                >
+                                  <table className="w-full">
+                                    <tbody>
+                                      <tr
+                                        className={`flex items-center justify-between ${
+                                          isEnglish
+                                            ? "flex-row-reverse"
+                                            : "flex-row"
+                                        }`}
+                                      >
+                                        <td
+                                          dir={isEnglish ? "ltr" : "rtl"}
+                                          className={`py-2 lg:py-3 text-white/70 w-[25%] text-sm lg:text-base ${
                                             isEnglish
-                                              ? "First Blood"
-                                              : "البايتس الأولى"
-                                          }
-                                        />
-                                      )}
-                                    </div>
-                                  </div>
-
-                                  <div className="col-span-1 flex justify-center">
-                                    <div className="flex flex-row-reverse items-center gap-2">
-                                      <Image
-                                        src="/byte.png"
-                                        alt="bytes"
-                                        width={25}
-                                        height={25}
-                                        className="w-5 h-5 md:w-6 md:h-6"
-                                      />
-                                      <span className="text-white text-sm md:text-xl">
-                                        {challenge.bytes}
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  <div className="col-span-1  flex justify-center">
-                                    <span className="text-white text-sm md:text-lg">
-                                      {(() => {
-                                        // Convert the completed_at date to the user's timezone
-                                        const completedDate =
-                                          convertToUserTimezone(
-                                            new Date(challenge.completed_at)
-                                          );
-                                        const now =
-                                          getCurrentDateInUserTimezone();
-                                        const diffInMillis =
-                                          now - completedDate;
-
-                                        // Convert to minutes
-                                        const diffInMinutes = Math.floor(
-                                          diffInMillis / (1000 * 60)
-                                        );
-
-                                        if (diffInMinutes < 60) {
-                                          return isEnglish
-                                            ? `${diffInMinutes} min ago`
-                                            : `منذ ${diffInMinutes} دقيقة`;
-                                        } else if (diffInMinutes < 1440) {
-                                          // Less than 24 hours
-                                          const hours = Math.floor(
-                                            diffInMinutes / 60
-                                          );
-                                          return isEnglish
-                                            ? `${hours} hour${
-                                                hours > 1 ? "s" : ""
-                                              } ago`
-                                            : `منذ ${hours} ساعة`;
-                                        } else {
-                                          // More than 24 hours, show date
-                                          const days = Math.floor(
-                                            diffInMinutes / 1440
-                                          );
-                                          return isEnglish
-                                            ? `${days} day${
-                                                days > 1 ? "s" : ""
-                                              } ago`
-                                            : `منذ ${days} يوم`;
-                                        }
-                                      })()}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Mobile view */}
-                                <div className="md:hidden flex flex-col">
-                                  <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                      <Image
-                                        src={
-                                          member.profile_image || "/icon1.png"
-                                        }
-                                        alt="member avatar"
-                                        width={30}
-                                        height={30}
-                                        className="rounded-full object-cover w-7 h-7"
-                                        unoptimized={true}
-                                      />
-                                      <div className="flex flex-col">
-                                        <span
-                                          onClick={() =>
-                                            router.push(
-                                              `/profile/${member.username}`
-                                            )
-                                          }
-                                          className="text-white text-sm font-bold cursor-pointer"
+                                              ? "pl-3 lg:pl-5"
+                                              : "pr-3 lg:pr-5"
+                                          }`}
                                         >
-                                          {member.username}
-                                        </span>
-                                        {member.role === "leader" && (
-                                          <span className="text-[#38FFE4] text-xs">
-                                            {isEnglish ? "Leader" : "قائد"}
-                                          </span>
-                                        )}
-                                      </div>
-                                    </div>
-                                    <span className="text-white text-xs">
-                                      {(() => {
-                                        // Convert the completed_at date to the user's timezone
-                                        const completedDate =
-                                          convertToUserTimezone(
-                                            new Date(challenge.completed_at)
-                                          );
-                                        const now =
-                                          getCurrentDateInUserTimezone();
-                                        const diffInMillis =
-                                          now - completedDate;
+                                          {(() => {
+                                            const completedDate =
+                                              convertToUserTimezone(
+                                                new Date(challenge.completed_at)
+                                              );
+                                            const now =
+                                              getCurrentDateInUserTimezone();
+                                            const diffInMillis =
+                                              now - completedDate;
+                                            const diffInMinutes = Math.floor(
+                                              diffInMillis / (1000 * 60)
+                                            );
 
-                                        // Convert to minutes
-                                        const diffInMinutes = Math.floor(
-                                          diffInMillis / (1000 * 60)
-                                        );
-
-                                        if (diffInMinutes < 60) {
-                                          return isEnglish
-                                            ? `${diffInMinutes} min ago`
-                                            : `منذ ${diffInMinutes} دقيقة`;
-                                        } else if (diffInMinutes < 1440) {
-                                          // Less than 24 hours
-                                          const hours = Math.floor(
-                                            diffInMinutes / 60
-                                          );
-                                          return isEnglish
-                                            ? `${hours} hour${
-                                                hours > 1 ? "s" : ""
-                                              } ago`
-                                            : `منذ ${hours} ساعة`;
-                                        } else {
-                                          // More than 24 hours, show date
-                                          const days = Math.floor(
-                                            diffInMinutes / 1440
-                                          );
-                                          return isEnglish
-                                            ? `${days} day${
-                                                days > 1 ? "s" : ""
-                                              } ago`
-                                            : `منذ ${days} يوم`;
-                                        }
-                                      })()}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center justify-between mt-1">
-                                    <div
-                                      dir={isEnglish ? "ltr" : "rtl"}
-                                      className={`flex ${
-                                        isEnglish
-                                          ? "flex-row"
-                                          : "flex-row-reverse"
-                                      } items-center gap-1`}
-                                    >
-                                      <span className="text-white text-xs">
-                                        {challenge.challenge_name}
-                                      </span>
-                                      {challenge.is_first_blood && (
-                                        <Image
-                                          src="/blood.png"
-                                          alt="first blood"
-                                          width={16}
-                                          height={16}
-                                          className="w-4 h-4"
-                                          title={
-                                            isEnglish
-                                              ? "First Blood"
-                                              : "البايتس الأولى"
-                                          }
-                                        />
-                                      )}
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-white text-sm">
-                                        {challenge.bytes}
-                                      </span>
-                                      <Image
-                                        src="/byte.png"
-                                        alt="bytes"
-                                        width={18}
-                                        height={18}
-                                        className="w-4 h-4"
-                                      />
-                                    </div>
-                                  </div>
+                                            if (diffInMinutes < 60) {
+                                              return isEnglish
+                                                ? `${diffInMinutes} minutes ago`
+                                                : `منذ ${diffInMinutes} دقيقة`;
+                                            } else if (diffInMinutes < 1440) {
+                                              const hours = Math.floor(
+                                                diffInMinutes / 60
+                                              );
+                                              return isEnglish
+                                                ? `${hours} hour${
+                                                    hours > 1 ? "s" : ""
+                                                  } ago`
+                                                : `منذ ${hours} ساعة`;
+                                            } else {
+                                              const days = Math.floor(
+                                                diffInMinutes / 1440
+                                              );
+                                              return isEnglish
+                                                ? `${days} day${
+                                                    days > 1 ? "s" : ""
+                                                  } ago`
+                                                : `منذ ${days} يوم`;
+                                            }
+                                          })()}
+                                        </td>
+                                        <td className="py-2 lg:py-3 w-[25%]">
+                                          <div
+                                            dir={isEnglish ? "ltr" : "rtl"}
+                                            className={`flex items-center gap-1 lg:gap-2 ${
+                                              isEnglish ? "pl-0" : "pr-0"
+                                            }`}
+                                          >
+                                            <span className="text-white text-sm lg:text-base">
+                                              {challenge.bytes}
+                                            </span>
+                                            <Image
+                                              src={
+                                                challenge.is_first_blood
+                                                  ? "/blood.png"
+                                                  : "/byte.png"
+                                              }
+                                              alt={
+                                                challenge.is_first_blood
+                                                  ? "first blood"
+                                                  : "points"
+                                              }
+                                              width={20}
+                                              height={24}
+                                              className="lg:w-[25px] lg:h-[30px]"
+                                              title={
+                                                isEnglish
+                                                  ? challenge.is_first_blood
+                                                    ? "First Blood"
+                                                    : "Bytes"
+                                                  : challenge.is_first_blood
+                                                  ? "البايتس الأولى"
+                                                  : "بايتس"
+                                              }
+                                            />
+                                          </div>
+                                        </td>
+                                        <td className="py-2 lg:py-3 w-[50%]">
+                                          <div
+                                            onClick={() =>
+                                              router.push(
+                                                `/profile/${member.username}`
+                                              )
+                                            }
+                                            dir={isEnglish ? "ltr" : "rtl"}
+                                            className={`flex cursor-pointer items-center gap-2 lg:gap-3 ${
+                                              isEnglish
+                                                ? "pl-2 lg:pl-3"
+                                                : "pr-2 lg:pr-3"
+                                            }`}
+                                          >
+                                            <Image
+                                              src={
+                                                member.profile_image ||
+                                                "/icon1.png"
+                                              }
+                                              alt="user"
+                                              width={24}
+                                              height={24}
+                                              className="rounded-full lg:w-[32px] lg:h-[32px]"
+                                              unoptimized={true}
+                                            />
+                                            <span className="text-white text-sm lg:text-base">
+                                              {member.username}
+                                            </span>
+                                            <span className="text-white text-sm lg:text-base">
+                                              {isEnglish
+                                                ? challenge.is_first_blood
+                                                  ? `got first blood in ${challenge.challenge_name}`
+                                                  : `earned bytes in ${challenge.challenge_name}`
+                                                : challenge.is_first_blood
+                                                ? `حصل على البايتس الأول في ${challenge.challenge_name}`
+                                                : `حصل على بايتس في ${challenge.challenge_name}`}
+                                            </span>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
                                 </div>
-                              </div>
+                              )
                             )
-                          )
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </>
+                    </div>
                   ) : (
-                    // Only show a simple message when there are no activities
                     <div className="flex flex-col items-center justify-center py-8">
                       <Image
                         src="/notfound.png"
