@@ -8,14 +8,15 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import Link from "next/link";
 import { useUserProfile } from "@/app/context/UserProfileContext";
-
+import { useRouter } from "next/navigation";
 export default function Home() {
   const { isEnglish } = useLanguage();
-  const { userName } = useUserProfile();
+  const { userName, convertToUserTimezone } = useUserProfile();
   const [isLoaded, setIsLoaded] = useState(false);
   const [latestChallenges, setLatestChallenges] = useState([]);
   const [userData, setUserData] = useState(null);
-
+  const [activities, setActivities] = useState([]);
+  const router = useRouter();
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -50,6 +51,20 @@ export default function Home() {
           if (userResponse.data && userResponse.data.user) {
             setUserData(userResponse.data.user);
           }
+        }
+
+        // Fetch activities
+        const activitiesResponse = await axios.get(
+          `${apiUrl}/user/recentPlatformActivities`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (activitiesResponse.data && activitiesResponse.data.activities) {
+          setActivities(activitiesResponse.data.activities);
         }
 
         // Only set isLoaded to true after all data has been processed
@@ -305,79 +320,110 @@ export default function Home() {
               </div>
 
               {/* Body rows */}
-              {[...Array(8)].map((_, index) => (
-                <div
-                  key={index}
-                  className={`${
-                    index % 2 === 0 ? "bg-[#06373F] rounded-lg" : ""
-                  } mb-2`}
-                >
-                  <table className="w-full">
-                    <tbody>
-                      <tr
-                        className={`flex items-center justify-between ${
-                          isEnglish ? "flex-row-reverse" : "flex-row"
-                        }`}
-                      >
-                        <td
-                          dir={isEnglish ? "ltr" : "rtl"}
-                          className={`py-2 lg:py-3 text-white/70 w-[25%] text-sm lg:text-base ${
-                            isEnglish ? "pl-3 lg:pl-5" : "pr-3 lg:pr-5"
+              {activities.map((activity, index) => {
+                const solvedDate = convertToUserTimezone(activity.solved_at);
+                const now = new Date();
+                const diffTime = Math.abs(now - solvedDate);
+                const diffMinutes = Math.floor(diffTime / (1000 * 60));
+                const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                let timeAgo = "";
+                if (diffDays > 0) {
+                  timeAgo = isEnglish
+                    ? `${diffDays} days ago`
+                    : `منذ ${diffDays} يوم`;
+                } else if (diffHours > 0) {
+                  timeAgo = isEnglish
+                    ? `${diffHours} hours ago`
+                    : `منذ ${diffHours} ساعة`;
+                } else {
+                  timeAgo = isEnglish
+                    ? `${diffMinutes} minutes ago`
+                    : `منذ ${diffMinutes} دقيقة`;
+                }
+
+                return (
+                  <div
+                    key={index}
+                    className={`${
+                      index % 2 === 0 ? "bg-[#06373F] rounded-lg" : ""
+                    } mb-2`}
+                  >
+                    <table className="w-full">
+                      <tbody>
+                        <tr
+                          className={`flex items-center justify-between ${
+                            isEnglish ? "flex-row-reverse" : "flex-row"
                           }`}
                         >
-                          {isEnglish ? "52 minutes ago" : "منذ 52 دقيقة"}
-                        </td>
-                        <td className="py-2 lg:py-3 w-[25%]">
-                          <div
+                          <td
                             dir={isEnglish ? "ltr" : "rtl"}
-                            className={`flex items-center gap-1 lg:gap-2 ${
-                              isEnglish ? "pl-0" : "pr-0"
+                            className={`py-2 lg:py-3 text-white/70 w-[25%] text-sm lg:text-base ${
+                              isEnglish ? "pl-3 lg:pl-5" : "pr-3 lg:pr-5"
                             }`}
                           >
-                            <span className="text-white text-sm lg:text-base">
-                              1000
-                            </span>
-                            <Image
-                              src="/byte.png"
-                              alt="points"
-                              width={20}
-                              height={24}
-                              className="lg:w-[25px] lg:h-[30px]"
-                            />
-                          </div>
-                        </td>
-                        <td className="py-2 lg:py-3 w-[50%]">
-                          <div
-                            dir={isEnglish ? "ltr" : "rtl"}
-                            className={`flex items-center gap-2 lg:gap-3 ${
-                              isEnglish ? "pl-2 lg:pl-3" : "pr-2 lg:pr-3"
-                            }`}
-                          >
-                            <span className="text-sm lg:text-base">
-                              {index + 1}
-                            </span>
-                            <Image
-                              src="/user.png"
-                              alt="user"
-                              width={24}
-                              height={24}
-                              className="rounded-full lg:w-[32px] lg:h-[32px]"
-                            />
-                            <span className="text-white text-sm lg:text-base">
-                              MahmoudFatouh
-                            </span>
-                            <span className="text-white text-sm lg:text-base">
-                              {isEnglish
-                                ? "earned bytes in Txen"
-                                : "حصل على بايتس في Txen"}
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              ))}
+                            {timeAgo}
+                          </td>
+                          <td className="py-2 lg:py-3 w-[25%]">
+                            <div
+                              dir={isEnglish ? "ltr" : "rtl"}
+                              className={`flex items-center gap-1 lg:gap-2 ${
+                                isEnglish ? "pl-0" : "pr-0"
+                              }`}
+                            >
+                              <span className="text-white text-sm lg:text-base">
+                                {activity.total_bytes}
+                              </span>
+                              <Image
+                                src="/byte.png"
+                                alt="points"
+                                width={20}
+                                height={24}
+                                className="lg:w-[25px] lg:h-[30px]"
+                              />
+                            </div>
+                          </td>
+                          <td className="py-2 lg:py-3 w-[50%]">
+                            <div
+                              dir={isEnglish ? "ltr" : "rtl"}
+                              className={`flex items-center gap-2 lg:gap-3 ${
+                                isEnglish ? "pl-2 lg:pl-3" : "pr-2 lg:pr-3"
+                              }`}
+                            >
+                              <span className="text-sm lg:text-base">
+                                {index + 1}
+                              </span>
+                              <Image
+                                src={
+                                  activity.user_profile_image || "/icon1.png"
+                                }
+                                alt="user"
+                                width={24}
+                                height={24}
+                                className="rounded-full lg:w-[32px] lg:h-[32px]"
+                              />
+                              <span
+                                onClick={() => {
+                                  router.push(`/profile/${activity.user_name}`);
+                                }}
+                                className="text-white cursor-pointer text-sm lg:text-base"
+                              >
+                                {activity.user_name}
+                              </span>
+                              <span className="text-white text-sm lg:text-base">
+                                {isEnglish
+                                  ? `earned bytes from ${activity.challenge_title}`
+                                  : `حصل علي بايتس من ${activity.challenge_title}`}
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>
