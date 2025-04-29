@@ -850,7 +850,7 @@ export default function ProfileSettings() {
       twitter: /^(https?:\/\/)?(www\.)?twitter\.com\/[a-zA-Z0-9_]+\/?$/,
       tiktok: /^(https?:\/\/)?(www\.)?tiktok\.com\/@[a-zA-Z0-9_\.]+\/?$/,
       youtube:
-        /^(https?:\/\/)?(www\.)?(youtube\.com\/([c\/]\/)?|youtu\.be\/)[a-zA-Z0-9_\-]+$/,
+        /^(https?:\/\/)?(www\.)?(youtube\.com\/(c\/|channel\/|@)?|youtu\.be\/)[a-zA-Z0-9_\-]+$/,
     };
 
     if (platformPatterns[platform] && !platformPatterns[platform].test(url)) {
@@ -1091,32 +1091,41 @@ export default function ProfileSettings() {
           </div>
           <div className="flex flex-wrap items-center gap-3 sm:gap-5 mt-8 sm:mt-16">
             {socialAccounts.tiktok.linked && (
-              <div
-                className="bg-transparent shadow-inner shadow-[#FE2C55] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+              <a
+                href={socialAccounts.tiktok.value}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-transparent shadow-inner shadow-[#FE2C55] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0 hover:scale-105 transition-transform duration-300"
                 style={{ boxShadow: "0px -1.5px 20px 0px #FE2C55 inset" }}
               >
                 <span className={`text-white font-medium ${inter.className}`}>
                   TikTok
                 </span>
                 <FaTiktok className={`text-white`} />
-              </div>
+              </a>
             )}
 
             {socialAccounts.linkedin.linked && (
-              <div
-                className="bg-transparent shadow-inner shadow-[#0A66C2] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+              <a
+                href={socialAccounts.linkedin.value}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-transparent shadow-inner shadow-[#0A66C2] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0 hover:scale-105 transition-transform duration-300"
                 style={{ boxShadow: "0px -1.5px 20px 0px #0A66C2 inset" }}
               >
                 <span className={`text-white font-medium ${inter.className}`}>
                   LinkedIn
                 </span>
                 <FaLinkedin className={`text-white text-lg`} />
-              </div>
+              </a>
             )}
 
             {socialAccounts.instagram.linked && (
-              <div
-                className="bg-white/10 rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+              <a
+                href={socialAccounts.instagram.value}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-white/10 rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0 hover:scale-105 transition-transform duration-300"
                 style={{
                   boxShadow:
                     "0px 5px 15px 0px #BA339F inset, 2px -1px 30px 0px #E0AF47 inset",
@@ -1126,43 +1135,52 @@ export default function ProfileSettings() {
                   Instagram
                 </span>
                 <FaInstagram className={`text-white text-lg`} />
-              </div>
+              </a>
             )}
 
             {socialAccounts.youtube.linked && (
-              <div
-                className="bg-transparent shadow-inner shadow-[#FF0000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+              <a
+                href={socialAccounts.youtube.value}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-transparent shadow-inner shadow-[#FF0000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0 hover:scale-105 transition-transform duration-300"
                 style={{ boxShadow: "0px -1.5px 20px 0px #FF0000 inset" }}
               >
                 <span className={`text-white font-medium ${inter.className}`}>
                   Youtube
                 </span>
                 <FaYoutube className={`text-white text-lg`} />
-              </div>
+              </a>
             )}
 
             {socialAccounts.discord.linked && (
-              <div
-                className="bg-transparent shadow-inner shadow-[#5865F2] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+              <a
+                href={socialAccounts.discord.value}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-transparent shadow-inner shadow-[#5865F2] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0 hover:scale-105 transition-transform duration-300"
                 style={{ boxShadow: "0px -1.5px 20px 0px #5865F2 inset" }}
               >
                 <span className={`text-white font-medium ${inter.className}`}>
                   Discord
                 </span>
                 <FaDiscord className={`text-[#5865F2] text-lg`} />
-              </div>
+              </a>
             )}
 
             {socialAccounts.twitter.linked && (
-              <div
-                className="bg-transparent shadow-inner shadow-[#000000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
+              <a
+                href={socialAccounts.twitter.value}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-transparent shadow-inner shadow-[#000000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0 hover:scale-105 transition-transform duration-300"
                 style={{ boxShadow: "0px -1.5px 20px 0px #000000 inset" }}
               >
                 <span className={`text-white font-medium ${inter.className}`}>
                   Twitter X
                 </span>
                 <BsTwitterX className={`text-white text-lg`} />
-              </div>
+              </a>
             )}
           </div>
           {/* Personal Information Section */}

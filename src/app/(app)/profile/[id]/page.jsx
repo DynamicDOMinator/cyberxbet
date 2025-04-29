@@ -146,6 +146,18 @@ export default function Profile() {
       );
       setBytesByMonth(response.data.bytes_by_month || null);
 
+      // Set social media links
+      if (response.data.user.social_media) {
+        setSocialAccounts({
+          discord: { linked: !!response.data.user.social_media.discord },
+          instagram: { linked: !!response.data.user.social_media.instagram },
+          linkedin: { linked: !!response.data.user.social_media.linkedIn },
+          tiktok: { linked: !!response.data.user.social_media.tiktok },
+          youtube: { linked: !!response.data.user.social_media.youtube },
+          twitter: { linked: !!response.data.user.social_media.twitter },
+        });
+      }
+
       // Set categories if available in the response
       if (response.data.categories) {
         setCategories(response.data.categories);
@@ -328,7 +340,10 @@ export default function Profile() {
 
       <div className="flex flex-wrap items-center gap-3 sm:gap-5 mt-8 sm:mt-16">
         {socialAccounts.tiktok.linked && (
-          <div
+          <a
+            href={userData.social_media?.tiktok}
+            target="_blank"
+            rel="noopener noreferrer"
             className="bg-transparent shadow-inner shadow-[#FE2C55] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
             style={{ boxShadow: "0px -1.5px 20px 0px #FE2C55 inset" }}
           >
@@ -336,11 +351,14 @@ export default function Profile() {
               TikTok
             </span>
             <FaTiktok className={`text-white`} />
-          </div>
+          </a>
         )}
 
         {socialAccounts.linkedin.linked && (
-          <div
+          <a
+            href={userData.social_media?.linkedIn}
+            target="_blank"
+            rel="noopener noreferrer"
             className="bg-transparent shadow-inner shadow-[#0A66C2] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
             style={{ boxShadow: "0px -1.5px 20px 0px #0A66C2 inset" }}
           >
@@ -348,11 +366,14 @@ export default function Profile() {
               LinkedIn
             </span>
             <FaLinkedin className={`text-white text-lg`} />
-          </div>
+          </a>
         )}
 
         {socialAccounts.instagram.linked && (
-          <div
+          <a
+            href={userData.social_media?.instagram}
+            target="_blank"
+            rel="noopener noreferrer"
             className="bg-white/10 rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
             style={{
               boxShadow:
@@ -363,11 +384,14 @@ export default function Profile() {
               Instagram
             </span>
             <FaInstagram className={`text-white text-lg`} />
-          </div>
+          </a>
         )}
 
         {socialAccounts.youtube.linked && (
-          <div
+          <a
+            href={userData.social_media?.youtube}
+            target="_blank"
+            rel="noopener noreferrer"
             className="bg-transparent shadow-inner shadow-[#FF0000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
             style={{ boxShadow: "0px -1.5px 20px 0px #FF0000 inset" }}
           >
@@ -375,11 +399,14 @@ export default function Profile() {
               Youtube
             </span>
             <FaYoutube className={`text-white text-lg`} />
-          </div>
+          </a>
         )}
 
         {socialAccounts.discord.linked && (
-          <div
+          <a
+            href={userData.social_media?.discord}
+            target="_blank"
+            rel="noopener noreferrer"
             className="bg-transparent shadow-inner shadow-[#5865F2] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
             style={{ boxShadow: "0px -1.5px 20px 0px #5865F2 inset" }}
           >
@@ -387,11 +414,14 @@ export default function Profile() {
               Discord
             </span>
             <FaDiscord className={`text-[#5865F2] text-lg`} />
-          </div>
+          </a>
         )}
 
         {socialAccounts.twitter.linked && (
-          <div
+          <a
+            href={userData.social_media?.twitter}
+            target="_blank"
+            rel="noopener noreferrer"
             className="bg-transparent shadow-inner shadow-[#000000] rounded-full w-[120px] flex items-center justify-center gap-2 py-1 px-2 mb-2 sm:mb-0"
             style={{ boxShadow: "0px -1.5px 20px 0px #000000 inset" }}
           >
@@ -399,7 +429,7 @@ export default function Profile() {
               Twitter X
             </span>
             <BsTwitterX className={`text-white text-lg`} />
-          </div>
+          </a>
         )}
       </div>
 
@@ -479,7 +509,7 @@ export default function Profile() {
                   dir={isEnglish ? "ltr" : "rtl"}
                   className="flex lg:flex-row flex-col  lg:gap-14 gap-8 items-center  pt-8"
                 >
-                   <div className="lg:basis-1/3 w-full">
+                  <div className="lg:basis-1/3 w-full">
                     <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 backdrop-blur-xl rounded-lg p-3 sm:p-4">
                       <Image
                         src="/ranking.png"
@@ -549,8 +579,6 @@ export default function Profile() {
                           }% للحصول على  لقب ${userData?.next_title || ""}`}
                     </p>
                   </div>
-
-                 
                 </div>
               </TabPanel>
               <TabPanel className="w-full">
@@ -740,7 +768,7 @@ export default function Profile() {
                                             ? `got first bytes in ${item.challenge_title}`
                                             : `got bytes in ${item.challenge_title}`
                                           : item.is_first_blood
-                                          ? `حصلت على البايتس الأولى في ${item.challenge_title}`
+                                          ? `حصلت على البايتس الأولي في ${item.challenge_title}`
                                           : `حصلت على بايتس في ${item.challenge_title}`}
                                       </span>
                                     </div>
