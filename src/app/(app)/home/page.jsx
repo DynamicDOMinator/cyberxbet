@@ -376,8 +376,16 @@ export default function Home() {
                                 {activity.total_bytes}
                               </span>
                               <Image
-                                src="/byte.png"
-                                alt="points"
+                                src={
+                                  activity.is_first_blood
+                                    ? "/blood.png"
+                                    : "/byte.png"
+                                }
+                                alt={
+                                  activity.is_first_blood
+                                    ? "first blood"
+                                    : "points"
+                                }
                                 width={20}
                                 height={24}
                                 className="lg:w-[25px] lg:h-[30px]"
