@@ -366,7 +366,9 @@ export default function Events() {
 
           {mainEvent && (
             <div
-              className="bg-cover bg-no-repeat bg-center relative rounded-lg mt-6 md:mt-8 lg:mt-12 min-h-[400px] md:h-[450px] lg:h-[500px] w-full overflow-hidden"
+              className={`bg-cover bg-no-repeat bg-center relative rounded-lg mt-6 md:mt-8 lg:mt-12 min-h-[400px] md:h-[450px] lg:h-[500px] w-full overflow-hidden ${
+                mainEvent.is_registered ? "cursor-pointer" : ""
+              }`}
               style={{
                 backgroundImage: `url(${mainEvent.image})`,
               }}
@@ -537,6 +539,7 @@ export default function Events() {
             minMembers={mainEvent?.team_minimum_members || 1}
             maxMembers={mainEvent?.team_maximum_members || 1}
             onSuccess={handleTeamRegistrationSuccess}
+            eventUuid={mainEvent?.uuid}
           />
 
           <div

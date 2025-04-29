@@ -32,6 +32,21 @@ export default function ChallengePage() {
   const { isEnglish } = useLanguage();
   const { convertToUserTimezone } = useUserProfile();
 
+  const calculateTimeDifference = (createdAt, solvedAt) => {
+    if (!createdAt || !solvedAt) return null;
+
+    const createdDate = new Date(createdAt);
+    const solvedDate = new Date(solvedAt);
+
+    const diffInSeconds = Math.floor((solvedDate - createdDate) / 1000);
+
+    const hours = Math.floor(diffInSeconds / 3600);
+    const minutes = Math.floor((diffInSeconds % 3600) / 60);
+    const seconds = diffInSeconds % 60;
+
+    return `${hours}س ${minutes}د ${seconds}ث`;
+  };
+
   const fetchInitialData = async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -245,7 +260,7 @@ export default function ChallengePage() {
                     <div>
                       <p>
                         {isEnglish ? "First Bytes" : "البايتس الأول"}{" "}
-                        <span>{flag.name}</span>
+                        <span> {isEnglish ? flag?.name : flag?.ar_name}</span>
                       </p>
                       {flag.first_blood != null ? (
                         <div className="flex mt-2 items-center gap-1">
@@ -753,9 +768,15 @@ export default function ChallengePage() {
                                     onClick={() =>
                                       router.push(`/profile/${user.user_name}`)
                                     }
-                                    className="text-xl font-semibold cursor-pointer"
+                                    className="text-xl flex items-center gap-2 font-semibold cursor-pointer"
                                   >
                                     {user.user_name}
+                                    <span className="text-sm text-red-500">
+                                      {calculateTimeDifference(
+                                        challenge?.created_at,
+                                        user.solved_at
+                                      )}
+                                    </span>
                                   </p>
                                 </div>
                               </div>

@@ -3,9 +3,9 @@ import { HiOutlineUsers } from "react-icons/hi2";
 import Image from "next/image";
 import { useState } from "react";
 import axios from "axios";
-import { useParams } from "next/navigation";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
+
 export default function TeamRegistrationModal({
   isOpen,
   onClose,
@@ -13,30 +13,26 @@ export default function TeamRegistrationModal({
   minMembers,
   maxMembers,
   onSuccess,
+  eventUuid,
 }) {
   const { isEnglish } = useLanguage();
   const [currentStep, setCurrentStep] = useState("initial");
   const [createTeam, setCreateTeam] = useState("");
   const [joinTeam, setJoinTeam] = useState("");
   const [teamPassword, setTeamPassword] = useState("");
-  const { id } = useParams();
-
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const token = Cookies.get("token");
 
   const handleCreateTeam = async () => {
     try {
       const response = await axios.post(
-        `${apiUrl}/${id}/teams`,
+        `${apiUrl}/${eventUuid}/teams`,
         {
           name: createTeam,
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-          },
-          params: {
-            eventUuid: id,
           },
         }
       );
@@ -292,8 +288,14 @@ export default function TeamRegistrationModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 px-4">
-      <div className="bg-[#131619] rounded-lg p-6 w-full max-w-xl">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 bg-black/70 backdrop-blur-[2px] flex items-center justify-center z-50 px-4"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="bg-[#131619] rounded-lg p-6 w-full max-w-xl"
+      >
         <div dir={isEnglish ? "ltr" : "rtl"}>{renderStep()}</div>
       </div>
     </div>

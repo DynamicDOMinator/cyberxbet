@@ -8,11 +8,6 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import Link from "next/link";
 import { useUserProfile } from "@/app/context/UserProfileContext";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, Autoplay } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
 
 export default function Home() {
   const { isEnglish } = useLanguage();
@@ -83,7 +78,7 @@ export default function Home() {
   return isLoaded ? (
     <div className="max-w-[2000px] mx-auto pb-10 mt-20">
       {/* ads section  */}
-      <div className="lg:pt-28 pt-12 lg:px-16 px-5">
+      <div className="lg:pt-28 pt-12 lg:px-16 px-5  ">
         <h1
           className={`${
             isEnglish ? "text-left" : "text-right"
@@ -92,279 +87,20 @@ export default function Home() {
           {isEnglish ? "Advertisements" : "الاعلانات"}
         </h1>
 
-        {/* First Image Slider */}
-        <div className="bg-white/3 backdrop-blur-xl mt-8 rounded-lg p-4 lg:h-[400px] w-full relative">
-          <Swiper
-            modules={[Navigation, Pagination, Autoplay]}
-            spaceBetween={30}
-            slidesPerView={1}
-            navigation={{
-              nextEl: ".swiper-button-next-1",
-              prevEl: ".swiper-button-prev-1",
-            }}
-            pagination={{
-              clickable: true,
-              el: ".swiper-pagination-1",
-              renderBullet: function (index, className) {
-                return `<span class="${className} bg-[#38FFE5]"></span>`;
-              },
-            }}
-            autoplay={{ delay: 3000 }}
-            className="h-full"
-          >
-            <SwiperSlide>
-              <div className="flex items-center justify-center h-full">
-                <Image
-                  src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070"
-                  alt="Advertisement 1"
-                  width={800}
-                  height={400}
-                  className="rounded-lg object-cover w-full h-full"
-                />
-              </div>
-            </SwiperSlide>
-            <SwiperSlide>
-              <div className="flex items-center justify-center h-full">
-                <Image
-                  src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070"
-                  alt="Advertisement 2"
-                  width={800}
-                  height={400}
-                  className="rounded-lg object-cover w-full h-full"
-                />
-              </div>
-            </SwiperSlide>
-            <SwiperSlide>
-              <div className="flex items-center justify-center h-full">
-                <Image
-                  src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070"
-                  alt="Advertisement 3"
-                  width={800}
-                  height={400}
-                  className="rounded-lg object-cover w-full h-full"
-                />
-              </div>
-            </SwiperSlide>
-          </Swiper>
-          <div className="swiper-pagination-1"></div>
-          <div className="swiper-button-next-1"></div>
-          <div className="swiper-button-prev-1"></div>
-        </div>
-
-        {/* Cards Slider */}
-        <div className="bg-white/3 backdrop-blur-xl mt-12 rounded-lg p-4 w-full relative">
-          <Swiper
-            modules={[Navigation, Pagination]}
-            spaceBetween={20}
-            slidesPerView={1}
-            breakpoints={{
-              640: {
-                slidesPerView: 1,
-              },
-              1024: {
-                slidesPerView: 1,
-              },
-            }}
-            navigation={{
-              nextEl: ".swiper-button-next-2",
-              prevEl: ".swiper-button-prev-2",
-            }}
-            pagination={{
-              clickable: true,
-              el: ".swiper-pagination-2",
-              renderBullet: function (index, className) {
-                return `<span class="${className} bg-[#38FFE5]"></span>`;
-              },
-            }}
-            className="h-full"
-          >
-            <SwiperSlide>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-white/3 backdrop-blur-xl rounded-lg overflow-hidden h-[300px] group hover:scale-105 transition-transform duration-300">
-                  <Image
-                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070"
-                    alt="Cyber Security"
-                    width={400}
-                    height={300}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white text-xl font-bold">
-                        Cyber Security
-                      </h3>
-                      <p className="text-white/80 text-sm mt-1">
-                        Advanced security protocols
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white/3 backdrop-blur-xl rounded-lg overflow-hidden h-[300px] group hover:scale-105 transition-transform duration-300">
-                  <Image
-                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070"
-                    alt="Network Defense"
-                    width={400}
-                    height={300}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white text-xl font-bold">
-                        Network Defense
-                      </h3>
-                      <p className="text-white/80 text-sm mt-1">
-                        Protect your network
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white/3 backdrop-blur-xl rounded-lg overflow-hidden h-[300px] group hover:scale-105 transition-transform duration-300">
-                  <Image
-                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070"
-                    alt="Ethical Hacking"
-                    width={400}
-                    height={300}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white text-xl font-bold">
-                        Ethical Hacking
-                      </h3>
-                      <p className="text-white/80 text-sm mt-1">
-                        Learn penetration testing
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </SwiperSlide>
-            <SwiperSlide>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-white/3 backdrop-blur-xl rounded-lg overflow-hidden h-[300px] group hover:scale-105 transition-transform duration-300">
-                  <Image
-                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070"
-                    alt="Data Protection"
-                    width={400}
-                    height={300}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white text-xl font-bold">
-                        Data Protection
-                      </h3>
-                      <p className="text-white/80 text-sm mt-1">
-                        Secure your information
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white/3 backdrop-blur-xl rounded-lg overflow-hidden h-[300px] group hover:scale-105 transition-transform duration-300">
-                  <Image
-                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070"
-                    alt="Malware Analysis"
-                    width={400}
-                    height={300}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white text-xl font-bold">
-                        Malware Analysis
-                      </h3>
-                      <p className="text-white/80 text-sm mt-1">
-                        Identify threats
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white/3 backdrop-blur-xl rounded-lg overflow-hidden h-[300px] group hover:scale-105 transition-transform duration-300">
-                  <Image
-                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070"
-                    alt="Incident Response"
-                    width={400}
-                    height={300}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white text-xl font-bold">
-                        Incident Response
-                      </h3>
-                      <p className="text-white/80 text-sm mt-1">
-                        Handle breaches
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </SwiperSlide>
-            <SwiperSlide>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="bg-white/3 backdrop-blur-xl rounded-lg overflow-hidden h-[300px] group hover:scale-105 transition-transform duration-300">
-                  <Image
-                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070"
-                    alt="Security Audit"
-                    width={400}
-                    height={300}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white text-xl font-bold">
-                        Security Audit
-                      </h3>
-                      <p className="text-white/80 text-sm mt-1">
-                        System assessment
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white/3 backdrop-blur-xl rounded-lg overflow-hidden h-[300px] group hover:scale-105 transition-transform duration-300">
-                  <Image
-                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070"
-                    alt="Risk Management"
-                    width={400}
-                    height={300}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white text-xl font-bold">
-                        Risk Management
-                      </h3>
-                      <p className="text-white/80 text-sm mt-1">
-                        Mitigate risks
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white/3 backdrop-blur-xl rounded-lg overflow-hidden h-[300px] group hover:scale-105 transition-transform duration-300">
-                  <Image
-                    src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070"
-                    alt="Cloud Security"
-                    width={400}
-                    height={300}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <h3 className="text-white text-xl font-bold">
-                        Cloud Security
-                      </h3>
-                      <p className="text-white/80 text-sm mt-1">
-                        Cloud protection
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </SwiperSlide>
-          </Swiper>
-          <div className="swiper-pagination-2"></div>
-          <div className="swiper-button-next-2"></div>
-          <div className="swiper-button-prev-2"></div>
+        <div className="bg-white/3 backdrop-blur-xl mt-8 rounded-lg p-4 lg:h-[400px] w-full ">
+          <div className="flex flex-col  items-center justify-center lg:h-[400px] h-[200px] gap-4">
+            <Image
+              src="/ads.png"
+              alt="Advertisement 1"
+              width={120}
+              height={120}
+            />
+            <p className="text-center text-gray-500">
+              {isEnglish
+                ? "No advertisements available at the moment"
+                : "لا توجد إعلانات في الوقت الحالي"}
+            </p>
+          </div>
         </div>
       </div>
 

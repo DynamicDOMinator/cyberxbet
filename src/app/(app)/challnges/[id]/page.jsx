@@ -139,14 +139,19 @@ const ChallengesPage = () => {
                   isEnglish ? "items-start" : "items-end"
                 }`}
               >
-                <div className="text-xl text-teal-400">
-                  {categoryData?.name || (isEnglish ? "Category" : "الفئة")}
+                <div className="text-xl font-bold">
+                  {categoryData?.name }
                 </div>
-                <span className="text-gray-400">
+                <p dir={isEnglish ? "ltr" : "rtl"} className="">
                   {isEnglish
                     ? `${challenges.length} Challenges`
                     : `${challenges.length} تحدي`}
-                </span>
+                </p>
+              </div>
+              <div className="pt-4">
+                <p>
+                  {challenges[0]?.description }
+                </p>
               </div>
             </div>
           </div>
@@ -158,24 +163,29 @@ const ChallengesPage = () => {
                 <div className="absolute inset-0">
                   <svg className="w-full h-full" viewBox="0 0 100 100">
                     {/* Background gray circle */}
-                    <circle 
-                      cx="50" 
-                      cy="50" 
-                      r="40" 
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
                       fill="transparent"
-                      stroke="#06373F" 
+                      stroke="#06373F"
                       strokeWidth="6"
                     />
                     {/* Progress circle overlay */}
-                    <circle 
-                      cx="50" 
-                      cy="50" 
-                      r="40" 
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
                       fill="transparent"
                       stroke="#38FFE5"
                       strokeWidth="6"
                       strokeDasharray={`${2 * Math.PI * 40}`}
-                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - sectionData?.stats?.solved_percentage / 100)}`}
+                      strokeDashoffset={`${
+                        2 *
+                        Math.PI *
+                        40 *
+                        (1 - sectionData?.stats?.solved_percentage / 100)
+                      }`}
                       transform="rotate(-90 50 50)"
                     />
                   </svg>
@@ -262,7 +272,7 @@ const ChallengesPage = () => {
                 <span>{isEnglish ? "First Blood:" : "الاختراقات :"}</span>
                 <div className="flex items-center gap-2">
                   <p className="font-bold text-sm">
-                    {challenge.firstBloodBytes}
+                    {challenge.solved_count}
                   </p>
 
                   <Image
