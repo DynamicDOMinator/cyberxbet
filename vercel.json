@@ -1,10 +1,13 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/next"
+  "buildCommand": "next build",
+  "devCommand": "next dev",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "functions": {
+    "api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 10
     }
-  ],
-  "rewrites": [{ "source": "/api/socket/(.*)", "destination": "/api/socket" }]
+  }
 }

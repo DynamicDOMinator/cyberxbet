@@ -3,17 +3,22 @@ import { io } from "socket.io-client";
 import Cookies from "js-cookie";
 import axios from "axios";
 
-// Check if we're running on Vercel
-const isVercel =
-  process.env.NEXT_PUBLIC_VERCEL_ENV ||
-  window?.location?.hostname?.includes("vercel.app");
+// Safely check if we're running on Vercel (avoid window reference during SSR)
+const isVercel = () => {
+  if (typeof window === "undefined") return false;
+
+  return (
+    !!process.env.NEXT_PUBLIC_VERCEL_ENV ||
+    window.location.hostname.includes("vercel.app")
+  );
+};
 
 // For non-Vercel environments, use the normal Socket.IO connection
 export const createSocket = (userName = null) => {
   // Get username from parameter or try to get from cookie
   const user = userName || Cookies.get("userName");
 
-  if (isVercel) {
+  if (isVercel()) {
     // Vercel deployment - use REST API instead of WebSockets
     return createVirtualSocket(user);
   } else {
