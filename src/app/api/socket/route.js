@@ -10,6 +10,7 @@ let onlineCount = 0;
 
 // GET handler for polling
 export async function GET(req) {
+  console.log("GET /api/socket - returning online count:", onlineCount);
   return NextResponse.json({
     online: onlineCount,
     message: "Socket.IO serverless endpoint active",
@@ -22,7 +23,9 @@ export async function POST(req) {
     const data = await req.json();
     const { action, userName } = data;
 
-    console.log(`Socket API: ${action} request for user ${userName}`);
+    console.log(
+      `Socket API: ${action} request for user ${userName || "anonymous"}`
+    );
 
     if (action === "connect" && userName) {
       // Only add user if not already in the list
@@ -41,12 +44,14 @@ export async function POST(req) {
     return NextResponse.json({ count: onlineCount });
   } catch (error) {
     console.error("Socket API error:", error.message);
+    // Still return a valid response with a default count
     return NextResponse.json(
       {
+        count: onlineCount || 0,
         error: "Failed to process request",
         message: error.message,
       },
-      { status: 500 }
-    );
+      { status: 200 }
+    ); // Return 200 even on error to prevent client failures
   }
 }
