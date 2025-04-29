@@ -46,8 +46,10 @@ export default function Profile() {
     twitter: { linked: false },
   });
 
-  const [userData, setUserData] = useState("");
+  const [userData, setUserData] = useState({});
   const [challangesStats, setChallangesStats] = useState("");
+  const [streak, setStreak] = useState(0);
+  const [totalApprovedChallenges, setTotalApprovedChallenges] = useState(0);
   const [solvedByDifficulty, setSolvedByDifficulty] = useState({
     easy: 0,
     medium: 0,
@@ -216,11 +218,33 @@ export default function Profile() {
     }
   };
 
+  const fetchUserStreak = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
+      const response = await axios.get(`${apiUrl}/user-challenges/streak`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data.status === "success") {
+        setStreak(response.data.data.current_streak);
+        setTotalApprovedChallenges(
+          response.data.data.total_approved_challenges
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching user streak:", error);
+    }
+  };
+
   useEffect(() => {
     setIsLoading(true);
     fetchSocialMediaLinks();
     fetchUserEvents();
     fetchUserActivities();
+    fetchUserStreak();
   }, [params.id]);
 
   useEffect(() => {
@@ -280,7 +304,22 @@ export default function Profile() {
         </div>
 
         <div>
-          <h1 className="text-2xl sm:text-4xl font-semibold">ahmed</h1>
+          <h1 className="text-2xl sm:text-4xl font-semibold flex items-center gap-2">
+            {userData.user_name}
+            {streak > 0 && (
+              <span className="flex items-center gap-1">
+                {[...Array(streak)].map((_, index) => (
+                  <Image
+                    key={index}
+                    src={`/fire ${index + 1}.png`}
+                    alt="verified"
+                    width={32}
+                    height={32}
+                  />
+                ))}
+              </span>
+            )}
+          </h1>
           <p className="text-xl sm:text-3xl font-semibold">
             {isEnglish ? "Beginner" : userData.title}
           </p>
@@ -421,7 +460,45 @@ export default function Profile() {
                 dir={isEnglish ? "ltr" : "ltr"}
                 className="w-full pb-10"
               >
-                <div className="flex lg:flex-row flex-col lg:gap-14 gap-8 items-center justify-between pt-8">
+                <div
+                  dir={isEnglish ? "ltr" : "rtl"}
+                  className="flex items-center gap-4 bg-white/3 py-10 px-4 rounded-lg"
+                >
+                  <Image src="/fire 6.png" alt="byte" width={52} height={52} />
+                  <div>
+                    <h2 className="text-[#FFFFFF]">
+                      {isEnglish ? "Total Contribution" : "مجموع المساهمة"}
+                    </h2>
+                    <p className="text-[#FFFFFF] flex items-center gap-2 text-[24px] font-semibold">
+                      {isEnglish ? "Challenges" : "التحديات"}
+                      <span>{totalApprovedChallenges}</span>
+                    </p>
+                  </div>
+                </div>
+                <div
+                  dir={isEnglish ? "ltr" : "rtl"}
+                  className="flex lg:flex-row flex-col  lg:gap-14 gap-8 items-center  pt-8"
+                >
+                   <div className="lg:basis-1/3 w-full">
+                    <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 backdrop-blur-xl rounded-lg p-3 sm:p-4">
+                      <Image
+                        src="/ranking.png"
+                        alt="progress"
+                        width={36}
+                        height={36}
+                      />
+                      <p className="text-[#BCC9DB] text-[16px] sm:text-[18px]">
+                        {userData?.rank > 0
+                          ? userData.rank
+                          : isEnglish
+                          ? "No Ranking"
+                          : "لا يوجد تصنيف"}
+                      </p>
+                      <p className="text-white text-[16px] sm:text-[18px]">
+                        {isEnglish ? "Your Ranking" : "تصنيفك"}
+                      </p>
+                    </div>
+                  </div>
                   <div className="lg:basis-2/3 w-full bg-white/3 backdrop-blur-xl rounded-lg py-6 sm:py-10 px-3 sm:px-4 lg:px-10">
                     <div
                       dir={isEnglish ? "ltr" : "rtl"}
@@ -456,6 +533,7 @@ export default function Profile() {
                         );
                       })}
                     </div>
+
                     <p
                       dir={isEnglish ? "ltr" : "rtl"}
                       className={`text-[#BCC9DB] ${
@@ -472,26 +550,7 @@ export default function Profile() {
                     </p>
                   </div>
 
-                  <div className="lg:basis-1/3 w-full">
-                    <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 backdrop-blur-xl rounded-lg p-3 sm:p-4">
-                      <Image
-                        src="/ranking.png"
-                        alt="progress"
-                        width={36}
-                        height={36}
-                      />
-                      <p className="text-[#BCC9DB] text-[16px] sm:text-[18px]">
-                        {userData?.rank > 0
-                          ? userData.rank
-                          : isEnglish
-                          ? "No Ranking"
-                          : "لا يوجد تصنيف"}
-                      </p>
-                      <p className="text-white text-[16px] sm:text-[18px]">
-                        {isEnglish ? "Your Ranking" : "تصنيفك"}
-                      </p>
-                    </div>
-                  </div>
+                 
                 </div>
               </TabPanel>
               <TabPanel className="w-full">
