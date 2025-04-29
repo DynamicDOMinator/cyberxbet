@@ -23,8 +23,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useUserProfile } from "../context/UserProfileContext";
-import { rtdb } from "../../lib/firebase";
-import { ref, onValue, set, onDisconnect } from "firebase/database";
+import { createSocket } from "@/lib/socket-client";
 
 const gradientAnimation = `
   @keyframes gradient {
@@ -57,63 +56,81 @@ export default function Header() {
     setUserName(userProfile?.userName);
   }, [userProfile]);
 
-  // Handle online status
+  // Initialize Socket client with error handling
   useEffect(() => {
-    if (userName) {
-      const userStatusRef = ref(rtdb, "status/" + userName);
-      const connectedRef = ref(rtdb, ".info/connected");
+    let socketInstance;
+   
 
-      onValue(connectedRef, (snap) => {
-        if (snap.val() === false) {
-          return;
-        }
+    try {
+      // Only create socket connection when we have a username
+      if (userName) {
+        
+        socketInstance = createSocket(userName);
 
-        // Set user status to online
-        set(userStatusRef, {
-          online: true,
-          lastSeen: new Date().toISOString(),
+        socketInstance.on("connect", () => {
+        
+          // Send username to server if not done via auth
+          socketInstance.emit("userConnected", { userName });
         });
 
-        // Set user status to offline when they disconnect
-        onDisconnect(userStatusRef).set({
-          online: false,
-          lastSeen: new Date().toISOString(),
+        socketInstance.on("connect_error", (error) => {
+          console.error("Socket connection error:", error.message);
+          // Fallback to a default value if connection fails
+          setOnlinePlayers(42);
         });
-      });
-    }
-  }, [userName]);
 
-  // Listen for online players count
-  useEffect(() => {
-    const onlinePlayersRef = ref(rtdb, "status");
-    onValue(onlinePlayersRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const onlineCount = Object.values(data).filter(
-          (user) => user.online
-        ).length;
-        setOnlinePlayers(onlineCount);
+        socketInstance.on("onlinePlayers", (count) => {
+         
+          setOnlinePlayers(count);
+        });
+
+        // Also listen for onlineCount event (for backward compatibility)
+        socketInstance.on("onlineCount", (count) => {
+        
+          setOnlinePlayers(count);
+        });
       }
-    });
-  }, []);
+    } catch (error) {
+   
+      // Fallback to a default value
+      setOnlinePlayers(42);
+    }
+
+    return () => {
+      if (socketInstance) {
+        try {
+          console.log("Disconnecting socket...");
+          socketInstance.disconnect();
+        } catch (error) {
+          console.error("Error disconnecting socket:", error.message);
+        }
+      }
+    };
+  }, [userName]); // Add userName as a dependency
 
   const logout = async () => {
-    // Remove user from online status in Firebase
-    if (userName) {
-      const userStatusRef = ref(rtdb, "status/" + userName);
-      await set(userStatusRef, {
-        online: false,
-        lastSeen: new Date().toISOString(),
-      });
+    try {
+      // No need to update user status here as it's handled by Socket.IO disconnect
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
+
+      try {
+        if (apiUrl) {
+          await axios.post(`${apiUrl}/auth/logout`, { token });
+        }
+      } catch (apiError) {
+        console.log("API logout error:", apiError);
+        // Continue with logout even if API call fails
+      }
+
+      Cookies.remove("token");
+      router.push("/");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // Fallback: Remove cookie and redirect anyway
+      Cookies.remove("token");
+      router.push("/");
     }
-
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-    const token = Cookies.get("token");
-    const response = await axios.post(`${apiUrl}/auth/logout`, { token });
-
-    Cookies.remove("token");
-
-    router.push("/");
   };
 
   return (
@@ -366,42 +383,6 @@ export default function Header() {
                   {isEnglish ? "Leaderboard" : "المتصدرين"}
                 </button>
               </Link>
-              {/* Add Challenge Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() =>
-                    setMobileAddChallengeOpen(!mobileAddChallengeOpen)
-                  }
-                  className="flex items-center justify-between w-full text-white"
-                >
-                  <span>{isEnglish ? "Add Challenge" : "أضف تحدي"}</span>
-                  <ChevronDownIcon
-                    className={`w-5 h-5 transition-transform ${
-                      mobileAddChallengeOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                {mobileAddChallengeOpen && (
-                  <div className="mt-2 bg-[#0B0D0F33] rounded-lg p-2 space-y-2">
-                    <button
-                      className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
-                        isEnglish ? "text-left" : "text-right"
-                      }`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Option 1
-                    </button>
-                    <button
-                      className={`block w-full text-white py-2 px-4 hover:bg-white/10 rounded ${
-                        isEnglish ? "text-left" : "text-right"
-                      }`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Option 2
-                    </button>
-                  </div>
-                )}
-              </div>
 
               {/* User Section */}
               <div className="border-t border-[#38FFE5]/20 pt-4 mt-4">
@@ -453,25 +434,24 @@ export default function Header() {
                           setIsMobileMenuOpen(false);
                         }}
                         dir={isEnglish ? "ltr" : "rtl"}
-                        className="group flex w-full  items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
+                        className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
                       >
                         <RiUserLine className="size-4 fill-[#38FFE5]" />
                         <span className="text-white">
-                          <Link href={`/profile/${userName}`}>
-                            {isEnglish ? "Account" : "الحساب"}
-                          </Link>
+                          {isEnglish ? "Account" : "الحساب"}
                         </span>
                       </button>
                       <button
-                        onClick={() => setIsMobileMenuOpen(false)}
+                        onClick={() => {
+                          router.push("/profile-settings");
+                          setIsMobileMenuOpen(false);
+                        }}
                         dir={isEnglish ? "ltr" : "rtl"}
                         className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10"
                       >
                         <CiSettings className="size-4 fill-[#38FFE5]" />
                         <span className="text-white">
-                          <Link href="/profile-settings">
-                            {isEnglish ? "Settings" : "الإعدادات"}
-                          </Link>
+                          {isEnglish ? "Settings" : "الإعدادات"}
                         </span>
                       </button>
                       <div className="my-1 h-px bg-[#38FFE5]/20" />
