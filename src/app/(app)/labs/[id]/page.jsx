@@ -112,7 +112,7 @@ export default function TrainingChallenges() {
         {latestChallenges.map((challenge) => (
           <div
             key={challenge.uuid}
-            className="bg-white/3 backdrop-blur-xl rounded-lg p-4 flex flex-col justify-between min-h-[300px]"
+        className="bg-white/3 backdrop-blur-xl rounded-[16px] p-4 flex flex-col justify-between min-h-[242px]"
           >
             <div>
               <div className="flex items-center gap-4">
@@ -128,7 +128,7 @@ export default function TrainingChallenges() {
                   {challenge.title}
                 </h3>
               </div>
-              <p className="text-white text-left text-[18px] pt-5">
+              <p dir={isEnglish ? "ltr" : "rtl"} className="text-white  text-[18px] pt-3">
                 {challenge.description}
               </p>
             </div>

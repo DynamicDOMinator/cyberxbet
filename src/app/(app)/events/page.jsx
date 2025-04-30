@@ -550,7 +550,7 @@ export default function Events() {
               <div
                 onClick={() => router.push(`/events/${event.uuid}`)}
                 key={event.uuid}
-                className="bg-white/1 cursor-pointer h-[320px] relative rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-white/1 cursor-pointer min-h-[320px] relative rounded-lg  shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <div className="relative h-1/2 w-full">
                   <Image
