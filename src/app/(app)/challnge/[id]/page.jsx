@@ -248,7 +248,7 @@ export default function ChallengePage() {
                   dir={isEnglish ? "ltr" : "rtl"}
                   className="grid grid-cols-1 px-10 md:grid-cols-2 lg:grid-cols-3 gap-6"
                 >
-                  <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-lg gap-4">
+                  <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-2xl gap-4">
                     <div>
                       <Image
                         src="/blood.png"
@@ -284,7 +284,7 @@ export default function ChallengePage() {
                     </div>
                   </div>
 
-                  <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-lg gap-4">
+                  <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-2xl gap-4">
                     <div>
                       <Image
                         src="/byte.png"
@@ -304,7 +304,7 @@ export default function ChallengePage() {
                     </div>
                   </div>
 
-                  <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-lg gap-4">
+                  <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-2xl gap-4">
                     <div>
                       <Image
                         src="/icon20.png"
@@ -330,7 +330,7 @@ export default function ChallengePage() {
                 dir={isEnglish ? "ltr" : "rtl"}
                 className="grid grid-cols-1 px-10 md:grid-cols-2 lg:grid-cols-3 gap-6"
               >
-                <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-lg gap-4">
+                <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-2xl gap-4">
                   <div>
                     <Image
                       src="/blood.png"
@@ -371,7 +371,7 @@ export default function ChallengePage() {
                   </div>
                 </div>
 
-                <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-lg gap-4">
+                <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-2xl gap-4">
                   <div>
                     <Image
                       src="/byte.png"
@@ -389,7 +389,7 @@ export default function ChallengePage() {
                   </div>
                 </div>
 
-                <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-lg gap-4">
+                <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-2xl gap-4">
                   <div>
                     <Image
                       src="/icon20.png"
