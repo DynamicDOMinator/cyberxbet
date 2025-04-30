@@ -979,6 +979,7 @@ export default function EventPage() {
         eventTitle={event.title}
         minMembers={event.team_minimum_members}
         maxMembers={event.team_maximum_members}
+        eventUuid={id}
         onSuccess={async () => {
           try {
             // Reset check flag to force a fresh team data fetch

@@ -111,7 +111,7 @@ export default function Leaderboard() {
 
           {/* Table Headers */}
           <div className="leaderboard-table px-4 sm:px-10 py-3 bg-[#38FFE50D] rounded-md mb-4 sm:mb-9">
-            <div className="col-span-5 md:col-span-1 text-white font-semibold flex items-center gap-10">
+            <div className="col-span-5 md:col-span-1 text-white font-semibold flex items-center gap-[96px]">
               <div className="w-8 md:w-10 flex justify-center">
                 {isEnglish ? "Rank" : "التصنيف"}
               </div>
@@ -138,7 +138,7 @@ export default function Leaderboard() {
                 index % 2 === 0 ? "bg-[#06373F]" : "bg-transparent"
               }`}
             >
-              <div className="col-span-5 md:col-span-1 flex items-center">
+              <div className="col-span-5 md:col-span-1 flex items-center  gap-[37px]">
                 <div className="w-8 md:w-10 flex justify-center">
                   {user.rank <= 3 ? (
                     <Image
