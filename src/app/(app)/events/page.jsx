@@ -478,7 +478,7 @@ export default function Events() {
                       </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row items-center justify-center mx-auto gap-3 sm:gap-4 md:gap-20 pt-3 sm:pt-4 md:pt-6 lg:pt-8">
+                    <div className="flex flex-col sm:flex-row items-center justify-center mx-auto gap-3 sm:gap-4 md:gap-30 pt-3 sm:pt-4 md:pt-6 lg:pt-8">
                       <div className="w-full sm:w-auto">
                         <p className="text-sm sm:text-base md:text-[18px] justify-center flex items-center gap-2">
                           أعضاء

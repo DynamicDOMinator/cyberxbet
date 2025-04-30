@@ -909,9 +909,9 @@ export default function EventPage() {
                 </p>
               </div>
               <div>
-                <div className="flex flex-col sm:flex-row items-center justify-between sm:justify-end gap-4 sm:gap-8 md:gap-12 lg:gap-20 pt-4 sm:pt-6 md:pt-8 lg:pt-10">
+                <div className="flex flex-col sm:flex-row items-center justify-between sm:justify-end gap-4 sm:gap-8 md:gap-12 lg:gap-44 lg:pr-10 pt-4 sm:pt-6 md:pt-8 lg:pt-10">
                   <div>
-                    <p className="text-sm sm:text-base md:text-[18px] justify-center flex items-center gap-2">
+                    <p className="text-sm sm:text-base md:text-[18px] justify-center flex items-center  gap-2">
                       أعضاء
                       <span>
                         {event.team_maximum_members}-
