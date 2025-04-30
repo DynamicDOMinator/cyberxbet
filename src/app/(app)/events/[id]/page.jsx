@@ -787,13 +787,13 @@ export default function EventPage() {
         </h1>
       </div>
       <div
-        className={`bg-cover bg-no-repeat bg-center relative rounded-lg mt-6 md:mt-8 lg:mt-12 h-[350px] sm:h-[400px] md:h-[450px] lg:h-[500px] w-full`}
+        className={`bg-cover bg-no-repeat bg-center relative  rounded-xl mt-6 md:mt-8 lg:mt-12 h-[350px] sm:h-[400px] md:h-[450px] lg:h-[500px] w-full`}
         style={{
-          backgroundImage: `url(${event.image})`,
+          backgroundImage: `url(${event.background_image})`,
         }}
       >
         {eventIsActive && (
-          <div className="absolute flex flex-col items-center justify-center w-full h-full bg-[#040405CC]">
+          <div className="absolute flex flex-co rounded-xl  items-center justify-center w-full h-full bg-[#040405CC]">
             <div>
               <p className="text-xl sm:text-[33px] font-bold flex items-center gap-4">
                 تقام حالياً
