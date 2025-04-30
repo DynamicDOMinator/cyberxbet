@@ -6,6 +6,7 @@ import axios from "axios";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { BiLoaderAlt } from "react-icons/bi";
+import { BsCheckCircleFill, BsXCircleFill } from "react-icons/bs";
 import CountrySelect from "@/app/components/CountrySelect";
 import countryList from "react-select-country-list";
 import { useAuth } from "@/app/context/AuthContext";
@@ -41,6 +42,14 @@ export default function Signup() {
   const otpInputRefs = useRef([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const countries = useMemo(() => countryList().getData(), []);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordValidation, setPasswordValidation] = useState({
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    symbol: false,
+  });
 
   useEffect(() => {
     setIsLoaded(true);
@@ -361,6 +370,48 @@ export default function Signup() {
     signup();
   };
 
+  // Add password strength validation function
+  const validatePasswordStrength = (password) => {
+    let strength = 0;
+    const validation = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /\d/.test(password),
+      symbol: /[^\w\s]/.test(password),
+    };
+
+    if (validation.length) strength += 1;
+    if (validation.uppercase) strength += 1;
+    if (validation.lowercase) strength += 1;
+    if (validation.number) strength += 1;
+    if (validation.symbol) strength += 1;
+
+    setPasswordValidation(validation);
+    setPasswordStrength(strength);
+  };
+
+  // Update password validation when password changes
+  useEffect(() => {
+    validatePasswordStrength(password);
+  }, [password]);
+
+  // Password strength meter color
+  const getPasswordStrengthColor = () => {
+    if (passwordStrength === 0) return "bg-gray-300";
+    if (passwordStrength < 3) return "bg-red-500";
+    if (passwordStrength < 5) return "bg-yellow-500";
+    return "bg-green-500";
+  };
+
+  // Password strength text
+  const getPasswordStrengthText = () => {
+    if (passwordStrength === 0) return isEnglish ? "None" : "لا شيء";
+    if (passwordStrength < 3) return isEnglish ? "Weak" : "ضعيف";
+    if (passwordStrength < 5) return isEnglish ? "Medium" : "متوسط";
+    return isEnglish ? "Strong" : "قوي";
+  };
+
   return isLoaded ? (
     <div className="bg-[#0B0D0F] relative pb-20 min-h-screen">
       <div className="flex items-center flex-col lg:flex-row-reverse justify-between">
@@ -588,13 +639,126 @@ export default function Signup() {
                     )}
                   </button>
                 </div>
+
+                {/* Password strength meter */}
+                {password.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-grow h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${getPasswordStrengthColor()} transition-all duration-300`}
+                          style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                        ></div>
+                      </div>
+                      <span
+                        className={`text-xs ${getPasswordStrengthColor().replace(
+                          "bg-",
+                          "text-"
+                        )}`}
+                      >
+                        {getPasswordStrengthText()}
+                      </span>
+                    </div>
+
+                    {/* Password validation checklist with animations */}
+                    <div
+                      className={`grid grid-cols-1 md:grid-cols-2 gap-1 transition-all duration-300 text-xs sm:text-sm ${
+                        isEnglish ? "text-left" : "text-right"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        {passwordValidation.length ? (
+                          <BsCheckCircleFill className="text-green-500 transition-all duration-300" />
+                        ) : (
+                          <BsXCircleFill className="text-red-500 transition-all duration-300" />
+                        )}
+                        <span
+                          className={
+                            passwordValidation.length
+                              ? "text-green-500"
+                              : "text-white"
+                          }
+                        >
+                          {isEnglish
+                            ? "At least 8 characters"
+                            : "٨ أحرف على الأقل"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {passwordValidation.uppercase ? (
+                          <BsCheckCircleFill className="text-green-500 transition-all duration-300" />
+                        ) : (
+                          <BsXCircleFill className="text-red-500 transition-all duration-300" />
+                        )}
+                        <span
+                          className={
+                            passwordValidation.uppercase
+                              ? "text-green-500"
+                              : "text-white"
+                          }
+                        >
+                          {isEnglish ? "Uppercase letter" : "حرف كبير"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {passwordValidation.lowercase ? (
+                          <BsCheckCircleFill className="text-green-500 transition-all duration-300" />
+                        ) : (
+                          <BsXCircleFill className="text-red-500 transition-all duration-300" />
+                        )}
+                        <span
+                          className={
+                            passwordValidation.lowercase
+                              ? "text-green-500"
+                              : "text-white"
+                          }
+                        >
+                          {isEnglish ? "Lowercase letter" : "حرف صغير"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {passwordValidation.number ? (
+                          <BsCheckCircleFill className="text-green-500 transition-all duration-300" />
+                        ) : (
+                          <BsXCircleFill className="text-red-500 transition-all duration-300" />
+                        )}
+                        <span
+                          className={
+                            passwordValidation.number
+                              ? "text-green-500"
+                              : "text-white"
+                          }
+                        >
+                          {isEnglish ? "Number" : "رقم"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {passwordValidation.symbol ? (
+                          <BsCheckCircleFill className="text-green-500 transition-all duration-300" />
+                        ) : (
+                          <BsXCircleFill className="text-red-500 transition-all duration-300" />
+                        )}
+                        <span
+                          className={
+                            passwordValidation.symbol
+                              ? "text-green-500"
+                              : "text-white"
+                          }
+                        >
+                          {isEnglish ? "Symbol" : "رمز"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {validationErrors.password && (
                   <span className="text-red-500 text-xs sm:text-sm mt-1">
                     {validationErrors.password}
                   </span>
                 )}
-                {!isEnglish && (
-                  <div className="text-white text-xs sm:text-sm mt-2  p-2 rounded-md">
+                {!password && !isEnglish && (
+                  <div className="text-white text-xs sm:text-sm mt-2 p-2 rounded-md">
                     يجب أن تحتوي كلمة المرور على الأقل على{" "}
                     <span className="text-red-500">8 أحرف</span> وتتضمن
                     <span className="text-red-500"> أحرفا كبيرة </span>,{" "}
