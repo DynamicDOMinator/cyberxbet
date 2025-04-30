@@ -59,16 +59,13 @@ export default function Header() {
   // Initialize Socket client with error handling
   useEffect(() => {
     let socketInstance;
-   
 
     try {
       // Only create socket connection when we have a username
       if (userName) {
-        
         socketInstance = createSocket(userName);
 
         socketInstance.on("connect", () => {
-        
           // Send username to server if not done via auth
           socketInstance.emit("userConnected", { userName });
         });
@@ -80,18 +77,15 @@ export default function Header() {
         });
 
         socketInstance.on("onlinePlayers", (count) => {
-         
           setOnlinePlayers(count);
         });
 
         // Also listen for onlineCount event (for backward compatibility)
         socketInstance.on("onlineCount", (count) => {
-        
           setOnlinePlayers(count);
         });
       }
     } catch (error) {
-   
       // Fallback to a default value
       setOnlinePlayers(42);
     }
@@ -322,15 +316,16 @@ export default function Header() {
         {isMobileMenuOpen && (
           <div className="lg:hidden absolute bg-black top-full right-0 left-0 z-50">
             <div className="flex flex-col p-4 space-y-4">
-              <button
-                className={`text-white ${
-                  isEnglish ? "text-left" : "text-right"
-                }`}
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                {isEnglish ? "Home" : "الرئيسية"}
-              </button>
-
+              <Link href="/home">
+                <button
+                  className={`text-white ${
+                    isEnglish ? "text-left" : "text-right"
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {isEnglish ? "Home" : "الرئيسية"}
+                </button>
+              </Link>
               {/* Challenges Dropdown */}
               <div className="relative">
                 <button
@@ -394,8 +389,6 @@ export default function Header() {
                   {isEnglish ? "Add Challenge" : "أضف تحدي"}
                 </button>
               </Link>
-
-              
 
               {/* User Section */}
               <div className="border-t border-[#38FFE5]/20 pt-4 mt-4">
