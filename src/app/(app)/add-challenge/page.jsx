@@ -726,7 +726,7 @@ export default function AddChallenge() {
   };
 
   return (
-    <div className="w-full max-w-[1200px] mt-28 mx-auto">
+    <div className="w-full max-w-[2000px] mt-28 mx-auto px-10">
       {/* Statistics Section */}
       <div className="bg-[#0B0D0F] px-4 py-6 rounded-lg mb-8">
         <h2
