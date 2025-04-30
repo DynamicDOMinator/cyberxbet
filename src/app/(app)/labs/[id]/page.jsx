@@ -186,7 +186,7 @@ export default function TrainingChallenges() {
                 <h3 className="text-[24px] font-bold text-center">
                   {category.title}
                 </h3>
-                <p className="text-[#BCC9DB] text-[24px]  text-center">
+                <p className="text-[#BCC9DB] text-[20px]  text-center">
                   {isEnglish
                     ? `${category.challenges_count} Challenges`
                     : `${category.challenges_count} تحدي`}
