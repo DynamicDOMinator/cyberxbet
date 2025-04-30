@@ -896,7 +896,8 @@ export default function ProfileSettings() {
       discord:
         /^(https?:\/\/)?(www\.)?(discord\.gg|discord\.com\/invite)\/[a-zA-Z0-9]+$/,
       instagram: /^(https?:\/\/)?(www\.)?instagram\.com\/[a-zA-Z0-9_\.]+\/?$/,
-      twitter: /^(https?:\/\/)?(www\.)?twitter\.com\/[a-zA-Z0-9_]+\/?$/,
+      twitter:
+        /^(https?:\/\/)?(www\.)?(twitter\.com|x\.com)\/[a-zA-Z0-9_]+(\?[\w\d=&]+)?$/,
       tiktok: /^(https?:\/\/)?(www\.)?tiktok\.com\/@[a-zA-Z0-9_\.]+\/?$/,
       youtube:
         /^(https?:\/\/)?(www\.)?(youtube\.com\/(c\/|channel\/|@)?|youtu\.be\/)[a-zA-Z0-9_\-]+$/,
