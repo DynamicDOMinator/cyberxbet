@@ -17,6 +17,7 @@ import CountrySelect from "@/app/components/CountrySelect";
 import countryList from "react-select-country-list";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
+import Select from "react-select";
 const inter = Inter({ subsets: ["latin"] });
 
 export default function ProfileSettings() {
@@ -84,7 +85,6 @@ export default function ProfileSettings() {
 
   const [hasChanges, setHasChanges] = useState(false);
 
- 
   const [originalUserName, setOriginalUserName] = useState("");
 
   const [savingProfile, setSavingProfile] = useState(false);
@@ -106,15 +106,17 @@ export default function ProfileSettings() {
     try {
       return Intl.supportedValuesOf("timeZone")
         .map((zone) => {
-          const date = new Date();
           const formatter = new Intl.DateTimeFormat("en-US", {
             timeZone: zone,
             timeZoneName: "longOffset",
           });
-          const offset = formatter.format(date).split(" ").pop();
+          const parts = formatter.formatToParts(new Date());
+          const timeZonePart = parts.find(
+            (part) => part.type === "timeZoneName"
+          );
           return {
             value: zone,
-            label: `${zone.replace(/_/g, " ")} (${offset})`,
+            label: `${zone} (${timeZonePart?.value || ""})`,
           };
         })
         .sort((a, b) => a.label.localeCompare(b.label));
@@ -125,6 +127,46 @@ export default function ProfileSettings() {
   }, []);
 
   const countrySelectStyles = {
+    control: (styles, { isFocused }) => ({
+      ...styles,
+      backgroundColor: "#0B0D0F",
+      borderColor: isFocused ? "#00D8C8" : "transparent",
+      boxShadow: isFocused
+        ? "0px 0px 0px 1px #00D8C8, 0px 0px 10px 0px #00D8C8"
+        : "none",
+      padding: "6px",
+      borderRadius: "0.75rem",
+      "&:hover": {
+        borderColor: "#00D8C8",
+      },
+    }),
+    menu: (styles) => ({
+      ...styles,
+      backgroundColor: "#131619",
+    }),
+    option: (styles, { isFocused }) => ({
+      ...styles,
+      backgroundColor: isFocused ? "#2a2e32" : "#131619",
+      color: "white",
+    }),
+    singleValue: (styles) => ({
+      ...styles,
+      color: "white",
+      textAlign: isEnglish ? "left" : "right",
+    }),
+    placeholder: (styles) => ({
+      ...styles,
+      color: "gray",
+      textAlign: isEnglish ? "left" : "right",
+    }),
+    input: (styles) => ({
+      ...styles,
+      color: "white",
+      textAlign: isEnglish ? "left" : "right",
+    }),
+  };
+
+  const timeZoneSelectStyles = {
     control: (styles, { isFocused }) => ({
       ...styles,
       backgroundColor: "#0B0D0F",
@@ -1437,36 +1479,19 @@ export default function ProfileSettings() {
                 <label className="text-right mb-2">
                   {isEnglish ? "Timezone" : "المنطقة الزمنية"}
                 </label>
-                <div className="relative">
-                  <select
-                    value={selectedTimeZone}
-                    onChange={(e) => setSelectedTimeZone(e.target.value)}
-                    className="bg-[#0B0D0F] rounded-xl p-3 w-full appearance-none text-right pr-10 focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300"
-                  >
-                    <option value={timeZone}>{timeZone}</option>
-                    {timeZones.map((zone) => (
-                      <option key={zone.value} value={zone.value}>
-                        {zone.label}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M19 9l-7 7-7-7"
-                      ></path>
-                    </svg>
-                  </div>
-                </div>
+                <Select
+                  options={timeZones}
+                  value={
+                    timeZones.find((zone) => zone.value === selectedTimeZone) ||
+                    null
+                  }
+                  onChange={(option) => setSelectedTimeZone(option.value)}
+                  styles={timeZoneSelectStyles}
+                  placeholder={
+                    isEnglish ? "Select Timezone" : "المنطقة الزمنية"
+                  }
+                  className="timezone-select"
+                />
               </div>
             </div>
 
