@@ -217,7 +217,7 @@ export default function Home() {
         {latestChallenges.map((challenge) => (
           <div
             key={challenge.uuid}
-            className="bg-white/3 backdrop-blur-xl rounded-lg p-4 flex flex-col justify-between min-h-[300px]"
+            className="bg-white/3 backdrop-blur-xl rounded-[16px] p-4 flex flex-col justify-between min-h-[242px]"
           >
             <div>
               <div className="flex items-center gap-4">
@@ -233,14 +233,14 @@ export default function Home() {
                   {challenge.title}
                 </h3>
               </div>
-              <p className="text-white text-left text-[18px] pt-5">
+              <p dir={isEnglish ? "ltr" : "rtl"} className="text-white  text-[18px]  pt-3 pb-[32px]">
                 {challenge.description}
               </p>
             </div>
 
             <div
               dir={isEnglish ? "ltr" : "rtl"}
-              className="flex lg:flex lg:flex-wrap items-center justify-between gap-4 pt-10"
+              className="flex lg:flex lg:flex-wrap items-center justify-between "
             >
               <p>
                 {isEnglish ? (
