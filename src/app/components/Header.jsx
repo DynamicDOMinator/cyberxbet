@@ -384,6 +384,19 @@ export default function Header() {
                 </button>
               </Link>
 
+              <Link href="/add-challenge">
+                <button
+                  className={`text-white ${
+                    isEnglish ? "text-left" : "text-right"
+                  }`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  {isEnglish ? "Add Challenge" : "أضف تحدي"}
+                </button>
+              </Link>
+
+              
+
               {/* User Section */}
               <div className="border-t border-[#38FFE5]/20 pt-4 mt-4">
                 <p

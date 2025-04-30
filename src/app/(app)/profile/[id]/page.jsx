@@ -675,11 +675,11 @@ export default function Profile() {
                     activity.length > 0 ? "bg-[#06373F26]" : "bg-transparent"
                   } rounded-lg`}
                 >
-                  <div className="overflow-x-auto">
-                    <div className="min-w-[768px] w-full">
-                      {/* Body rows */}
-                      {activity.length > 0 ? (
-                        activity.map((item, index) => (
+                  {activity.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <div className="min-w-[768px] w-full">
+                        {/* Body rows */}
+                        {activity.map((item, index) => (
                           <div
                             key={index}
                             className={`${
@@ -752,7 +752,7 @@ export default function Profile() {
                                       <Image
                                         src={
                                           userData.user_profile_image ||
-                                          "/user.png"
+                                          "/icon1.png"
                                         }
                                         alt="user"
                                         width={24}
@@ -777,25 +777,24 @@ export default function Profile() {
                               </tbody>
                             </table>
                           </div>
-                        ))
-                      ) : (
-                        <div className="w-full flex flex-col items-center justify-center py-16">
-                          <Image
-                            className="mx-auto"
-                            src="/notfound.png"
-                            alt="activity"
-                            width={150}
-                            height={150}
-                          />
-                          <p className="text-center pt-5 text-lg">
-                            {isEnglish
-                              ? "No activities yet"
-                              : "لاتوجد أنشطة حتي الآن"}
-                          </p>
-                        </div>
-                      )}
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-16">
+                      <Image
+                        src="/notfound.png"
+                        alt="activity"
+                        width={150}
+                        height={150}
+                      />
+                      <p className="text-center pt-5 text-lg">
+                        {isEnglish
+                          ? "No activities yet"
+                          : "لاتوجد أنشطة حتي الآن"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </TabPanel>
             </TabPanels>
