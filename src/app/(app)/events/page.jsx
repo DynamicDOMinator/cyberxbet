@@ -406,7 +406,7 @@ export default function Events() {
                     </p>
                   </div>
 
-                  <div className="basis-full md:basis-1/2 pt-3 sm:pt-4 md:pt-6 lg:pt-8">
+                  <div className="basis-full md:basis-1/2 pt-3 sm:pt-4 md:pt-6 lg:pt-20">
                     <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row-reverse items-center gap-3 sm:gap-4 lg:gap-6 xl:gap-10 justify-center">
                       <p
                         className={`flex items-center ${
