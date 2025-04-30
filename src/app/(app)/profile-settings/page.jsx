@@ -84,7 +84,7 @@ export default function ProfileSettings() {
 
   const [hasChanges, setHasChanges] = useState(false);
 
-  const [editingUserName, setEditingUserName] = useState(false);
+ 
   const [originalUserName, setOriginalUserName] = useState("");
 
   const [savingProfile, setSavingProfile] = useState(false);
@@ -127,7 +127,7 @@ export default function ProfileSettings() {
   const countrySelectStyles = {
     control: (styles, { isFocused }) => ({
       ...styles,
-      backgroundColor: "black",
+      backgroundColor: "#0B0D0F",
       borderColor: isFocused ? "#00D8C8" : "transparent",
       boxShadow: isFocused
         ? "0px 0px 0px 1px #00D8C8, 0px 0px 10px 0px #00D8C8"
