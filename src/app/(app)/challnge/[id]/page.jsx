@@ -455,7 +455,7 @@ export default function ChallengePage() {
                   challenge.keywords.map((keyword, index) => (
                     <p
                       key={index}
-                      className="bg-black/50 text-white text-sm p-2 rounded-full w-fit"
+                      className="bg-zinc-800 text-white text-sm px-2 py-2 rounded-full w-fit"
                     >
                       {keyword}
                     </p>
