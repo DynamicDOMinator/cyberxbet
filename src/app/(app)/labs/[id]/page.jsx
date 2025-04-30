@@ -87,7 +87,7 @@ export default function TrainingChallenges() {
   };
 
   return (
-    <div className="pt-36 mx-auto px-4 py-8 max-w-[2000px]">
+    <div className="pt-36 mx-auto px-[64px] py-8 max-w-[2000px]">
       {/* Header Section */}
       <h1
         className={`text-3xl font-bold mb-2 ${
@@ -107,7 +107,7 @@ export default function TrainingChallenges() {
 
       <div
         dir={isEnglish ? "ltr" : "rtl"}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-20"
+        className="grid grid-cols-1 lg:grid-cols-3 gap-[56px] mt-20"
       >
         {latestChallenges.map((challenge) => (
           <div
@@ -164,7 +164,7 @@ export default function TrainingChallenges() {
       {/* New Challenges Grid */}
       <div
         dir={isEnglish ? "ltr" : "rtl"}
-        className="grid grid-cols-1 mt-20 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"
+        className="grid grid-cols-1 mt-20 md:grid-cols-2 lg:grid-cols-3 gap-[56px] mb-12"
       >
         {categoryData?.data?.map((category, index) => (
           <Link key={index} href={`/challnges/${category.uuid}`}>
@@ -173,18 +173,18 @@ export default function TrainingChallenges() {
               style={{ boxShadow: "0px -5px 20px 0px #38FFE5 inset" }}
             >
               <div className="flex  flex-col  justify-center gap-4 items-center mb-4">
-                <div className="flex items-center justify-center mb-4">
+                <div className="flex items-center justify-center mb-4 pt-[100px]">
                   <Image
                     src={category.image}
                     alt={category.title}
-                    width={200}
-                    height={200}
+                    width={104}
+                    height={104}
                   />
                 </div>
-                <h3 className="text-xl font-bold text-center">
+                <h3 className="text-[24px] font-bold text-center">
                   {category.title}
                 </h3>
-                <p className="text-white text-center">
+                <p className="text-[#BCC9DB] text-[24px]  text-center">
                   {isEnglish
                     ? `${category.challenges_count} Challenges`
                     : `${category.challenges_count} تحدي`}

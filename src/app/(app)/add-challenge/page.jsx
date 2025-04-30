@@ -741,7 +741,7 @@ export default function AddChallenge() {
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 border-b-2 border-[#06373F] pb-10"
         >
           {/* Total Challenges */}
-          <div className="bg-[#131619] rounded-lg p-4 relative overflow-hidden">
+          <div className="bg-[#FFFFFF0D] rounded-lg p-4 relative overflow-hidden">
             <div className="flex items-center gap-1 ">
               <Image
                 src="/uploaded.png"
@@ -765,7 +765,7 @@ export default function AddChallenge() {
           </div>
 
           {/* Under Review */}
-          <div className="bg-[#131619] rounded-lg p-4 relative overflow-hidden">
+          <div className="bg-[#FFFFFF0D] rounded-lg p-4 relative overflow-hidden">
             <div className="flex items-center gap-1 ">
               <Image
                 src="/wating.png"
@@ -787,7 +787,7 @@ export default function AddChallenge() {
           </div>
 
           {/* Approved Challenges */}
-          <div className="bg-[#131619] rounded-lg p-4 relative overflow-hidden">
+          <div className="bg-[#FFFFFF0D] rounded-lg p-4 relative overflow-hidden">
             <div className="flex items-center gap-1 ">
               <Image
                 src="/reviewing.png"
@@ -809,7 +809,7 @@ export default function AddChallenge() {
           </div>
 
           {/* Rejected Challenges */}
-          <div className="bg-[#131619] rounded-lg p-4 relative overflow-hidden">
+          <div className="bg-[#FFFFFF0D] rounded-lg p-4 relative overflow-hidden">
             <div className="flex items-center gap-1 ">
               <Image
                 src="/rejected.png"
@@ -1069,8 +1069,8 @@ export default function AddChallenge() {
                       ? "No challenges found"
                       : "لم يتم العثور على تحديات"
                   }
-                  width={120}
-                  height={120}
+                  width={194}
+                  height={194}
                   className="mb-4"
                 />
                 <p className="text-gray-400 text-lg">

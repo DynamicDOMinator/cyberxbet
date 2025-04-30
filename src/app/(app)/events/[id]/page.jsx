@@ -793,9 +793,9 @@ export default function EventPage() {
         }}
       >
         {eventIsActive && (
-          <div className="absolute flex flex-col items-center justify-center w-full h-full bg-black/80">
+          <div className="absolute flex flex-col items-center justify-center w-full h-full bg-[#040405CC]">
             <div>
-              <p className="text-xl sm:text-2xl font-bold flex items-center gap-4">
+              <p className="text-xl sm:text-[33px] font-bold flex items-center gap-4">
                 تقام حالياً
                 <span
                   style={{

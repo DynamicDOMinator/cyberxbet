@@ -492,7 +492,7 @@ export default function Profile() {
               >
                 <div
                   dir={isEnglish ? "ltr" : "rtl"}
-                  className="flex items-center gap-4 bg-white/3 py-10 px-4 rounded-lg"
+                  className="flex items-center gap-4 bg-white/3 py-10 my-[80px] px-4 rounded-lg"
                 >
                   <Image src="/fire 6.png" alt="byte" width={52} height={52} />
                   <div>
@@ -507,7 +507,7 @@ export default function Profile() {
                 </div>
                 <div
                   dir={isEnglish ? "ltr" : "rtl"}
-                  className="flex lg:flex-row flex-col  lg:gap-14 gap-8 items-center  pt-8"
+                  className="flex lg:flex-row flex-col  lg:gap-14 gap-8 items-center  "
                 >
                   <div className="lg:basis-1/3 w-full">
                     <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 backdrop-blur-xl rounded-lg p-3 sm:p-4">
@@ -832,13 +832,13 @@ export default function Profile() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-5 sm:gap-10 items-center my-10">
+      <div className="flex flex-col sm:flex-row gap-5 sm:gap-10 items-center my-[80px]">
         {lab3Data.solved_by_difficulty.easy > 0 ||
         lab3Data.solved_by_difficulty.medium > 0 ||
         lab3Data.solved_by_difficulty.hard > 0 ||
         lab3Data.solved_by_difficulty.very_hard > 0 ? (
           <>
-            <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4">
+            <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4 ">
               <div className="flex gap-4 items-center">
                 <div>
                   <Image

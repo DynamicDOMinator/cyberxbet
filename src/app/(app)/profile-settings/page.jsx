@@ -809,13 +809,62 @@ export default function ProfileSettings() {
     fileInputRef.current.click();
   };
 
-  const handleRemoveImage = () => {
+  const handleRemoveImage = async () => {
     // Always revert to default image when removing
     setProfileImage("/icon1.png");
     setSelectedImageFile(null);
+    setError("");
+    setUploading(true);
 
-    // If the image was changed and now we're removing it, this is a change
-    setHasChanges(true);
+    try {
+      // First, fetch the default icon1.png image
+      const iconResponse = await fetch("/icon1.png");
+      if (!iconResponse.ok) {
+        throw new Error("Failed to fetch default icon");
+      }
+      const iconBlob = await iconResponse.blob();
+
+      // Create a File object from the blob
+      const iconFile = new File([iconBlob], "icon1.png", { type: "image/png" });
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
+      const formData = new FormData();
+
+      // Send the default icon as the profile image
+      formData.append("profile_image", iconFile);
+
+      const response = await axios.post(
+        `${apiUrl}/user/change-profile-image`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+            Accept: "application/json",
+          },
+        }
+      );
+
+      setSuccessMessage(
+        isEnglish
+          ? "Profile image reset to default!"
+          : "تم إعادة تعيين صورة الملف الشخصي إلى الافتراضية!"
+      );
+      setTimeout(() => setSuccessMessage(""), 3000);
+      fetchUserProfile();
+    } catch (error) {
+      console.error("Error resetting image:", error);
+      console.error("Error details:", error.response?.data);
+      setError(
+        error.response?.data?.message ||
+          (isEnglish
+            ? "Failed to reset profile image"
+            : "فشل إعادة تعيين صورة الملف الشخصي")
+      );
+    } finally {
+      setUploading(false);
+    }
   };
 
   // Add this function at the component level to handle username focus
@@ -1184,7 +1233,7 @@ export default function ProfileSettings() {
             )}
           </div>
           {/* Personal Information Section */}
-          <div className="bg-[#131619] rounded-xl p-6 mt-8 sm:mt-16">
+          <div className="bg-[#131619] rounded-xl p-[64px] mt-8 sm:mt-16">
             <h2 className="text-2xl font-semibold mb-6 text-right">
               {isEnglish ? "Personal Information" : "المعلومات الشخصية"}
             </h2>
@@ -1234,13 +1283,23 @@ export default function ProfileSettings() {
                     className="hidden"
                   />
                   {!selectedImageFile && (
-                    <button
-                      onClick={handleUploadClick}
-                      disabled={uploading}
-                      className="bg-[#00D8C8] text-black font-bold hover:shadow-[0px_0px_15px_0px_#00D8C8] transition-all duration-300 px-5 py-2 rounded-md text-sm"
-                    >
-                      {isEnglish ? "Choose Image" : " رفع صورة"}
-                    </button>
+                    <div className="flex items-center gap-[16px]">
+                      <button
+                        onClick={handleUploadClick}
+                        disabled={uploading}
+                        className="bg-[#00D8C8] cursor-pointer text-black font-bold hover:shadow-[0px_0px_15px_0px_#00D8C8] transition-all duration-300 px-5 py-2 rounded-md text-sm"
+                      >
+                        {isEnglish ? "Choose Image" : " رفع صورة"}
+                      </button>
+
+                      <button
+                        onClick={handleRemoveImage}
+                        disabled={uploading}
+                        className="bg-transparent cursor-pointer border-2 border-red-500 text-white hover:shadow-[0px_0px_15px_0px_#ff0000] transition-all duration-300 px-5 py-2 rounded-md text-sm"
+                      >
+                        {isEnglish ? "Delete" : " إزالة"}
+                      </button>
+                    </div>
                   )}
                   {selectedImageFile && (
                     <>
@@ -1265,7 +1324,7 @@ export default function ProfileSettings() {
                   <button
                     onClick={handleUploadImage}
                     disabled={uploading}
-                    className="bg-[#00D8C8] text-black font-bold hover:shadow-[0px_0px_15px_0px_#00D8C8] transition-all duration-300 px-5 py-2 rounded-md text-sm mt-2"
+                    className="bg-[#00D8C8] cursor-pointer text-black font-bold hover:shadow-[0px_0px_15px_0px_#00D8C8] transition-all duration-300 px-5 py-2 rounded-md text-sm mt-2"
                   >
                     {uploading
                       ? isEnglish
@@ -1279,7 +1338,7 @@ export default function ProfileSettings() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:gap-x-[238px] lg:gap-y-[56px] md:gap-10 ">
               <div className="flex flex-col">
                 <label className="text-right mb-2">
                   {isEnglish ? "Username" : "اسم المستخدم"}
@@ -1410,7 +1469,7 @@ export default function ProfileSettings() {
               </div>
             </div>
 
-            <div className="flex justify-end mt-8">
+            <div className="flex justify-end mt-[136px]">
               <button
                 type="button"
                 onClick={handleSaveChanges}
@@ -2187,13 +2246,13 @@ export default function ProfileSettings() {
           )}
 
           {/* Password Change Section */}
-          <div className="bg-[#131619] rounded-xl p-6 mt-8">
+          <div className="bg-[#131619] rounded-xl p-[64px] mt-[64px]">
             <h2 className="text-2xl font-semibold mb-6 text-right">
               {isEnglish ? "Change Password" : "تغيير كلمة المرور"}
             </h2>
 
             <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:gap-x-[238px] gap-10 ">
                 {/* Current Password */}
                 <div className="flex flex-col">
                   <label className="text-right mb-2">
@@ -2394,7 +2453,7 @@ export default function ProfileSettings() {
                 </div>
               )}
 
-              <div className="flex justify-end mt-6 mb-10 ">
+              <div className="flex justify-end mt-[135px]  ">
                 <button
                   type="button"
                   onClick={handlePasswordChange}
