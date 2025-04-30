@@ -771,12 +771,14 @@ export default function ChallengePage() {
                                     className="text-xl flex items-center gap-2 font-semibold cursor-pointer"
                                   >
                                     {user.user_name}
-                                    <span className="text-sm text-red-500">
-                                      {calculateTimeDifference(
-                                        challenge?.created_at,
-                                        user.solved_at
-                                      )}
-                                    </span>
+                                    {index === 0 && (
+                                      <span className="text-sm text-red-500">
+                                        {calculateTimeDifference(
+                                          challenge?.created_at,
+                                          user.solved_at
+                                        )}
+                                      </span>
+                                    )}
                                   </p>
                                 </div>
                               </div>
@@ -962,45 +964,45 @@ export default function ChallengePage() {
           {/* ============================================================================== */}
           {/* firt blood animation card  */}
           {isFirstBlood && (
-          <div className="fixed inset-0 z-50  flex items-center justify-center  backdrop-blur-[2px]  ">
-            <div className="bg-[url('/blooda.png')] flex items-center justify-center w-full h-full bg-cover bg-center bg-no-repeat  ">
-              <div className="flex items-center justify-center  bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">
-                <div>
-                  <div className="flex items-center justify-center gap-4 pb-16">
-                    <h3 className="text-white text-xl md:text-2xl font-semibold">
-                      {isEnglish ? "First Blood" : "الدم الأول"}
-                    </h3>
-                    <Image
-                      src="/blood.png"
-                      alt="First Blood"
-                      width={32}
-                      height={32}
-                    />
-                  </div>
-
+            <div className="fixed inset-0 z-50  flex items-center justify-center  backdrop-blur-[2px]  ">
+              <div className="bg-[url('/blooda.png')] flex items-center justify-center w-full h-full bg-cover bg-center bg-no-repeat  ">
+                <div className="flex items-center justify-center  bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">
                   <div>
-                    <p className="text-white text-xl md:text-2xl text-center font-semibold">
-                      {isEnglish
-                        ? "Congratulations! You got the first blood"
-                        : "تهانينا! لقد حزت على العلم الأول"}
-                    </p>
-                    <p
-                      dir="rtl"
-                      className="text-white text-center text-xl md:text-2xl font-semibold"
-                    >
-                      <span className="text-red-500"> {firstblood} </span>
-                      <span dir="rtl" className="text-red-500">
-                        {isEnglish ? "Bytes" : "بايتس"}{" "}
-                      </span>
-                      {isEnglish
-                        ? "will be added to your account"
-                        : "ستضاف إلى حسابك"}
-                    </p>
+                    <div className="flex items-center justify-center gap-4 pb-16">
+                      <h3 className="text-white text-xl md:text-2xl font-semibold">
+                        {isEnglish ? "First Blood" : "الدم الأول"}
+                      </h3>
+                      <Image
+                        src="/blood.png"
+                        alt="First Blood"
+                        width={32}
+                        height={32}
+                      />
+                    </div>
+
+                    <div>
+                      <p className="text-white text-xl md:text-2xl text-center font-semibold">
+                        {isEnglish
+                          ? "Congratulations! You got the first blood"
+                          : "تهانينا! لقد حزت على العلم الأول"}
+                      </p>
+                      <p
+                        dir="rtl"
+                        className="text-white text-center text-xl md:text-2xl font-semibold"
+                      >
+                        <span className="text-red-500"> {firstblood} </span>
+                        <span dir="rtl" className="text-red-500">
+                          {isEnglish ? "Bytes" : "بايتس"}{" "}
+                        </span>
+                        {isEnglish
+                          ? "will be added to your account"
+                          : "ستضاف إلى حسابك"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
           )}
           {/* ================================================================================== */}
           {/* anther aimation for submit flag  */}
