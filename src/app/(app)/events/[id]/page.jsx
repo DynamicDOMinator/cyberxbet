@@ -172,9 +172,13 @@ export default function EventPage() {
 
       if (difference <= 0) {
         setIsEventStarted(false);
-        // getChallenges(); // Only call this once when the timer ends
-        // checkEventStatus();
-        window.location.reload();
+        // Remove the forced reload that causes infinite loop
+        // window.location.reload();
+
+        // Instead, update state properly to reflect event has started
+        setIsEventStarted(false);
+        getChallenges();
+        checkEventStatus();
 
         return;
       }
