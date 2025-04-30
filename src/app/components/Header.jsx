@@ -264,7 +264,7 @@ export default function Header() {
                 anchor="bottom end"
                 className={`w-52 origin-top-right rounded-xl ${
                   isEnglish ? "lg:mr-10" : "lg:ml-10"
-                } lg:mt-5 bg-black/75 p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0`}
+                } lg:mt-5 bg-[#0B0D0F33] p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0`}
               >
                 <MenuItem>
                   <button

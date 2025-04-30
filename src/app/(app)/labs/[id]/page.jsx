@@ -68,6 +68,8 @@ export default function TrainingChallenges() {
         return "text-[#9DFF00]";
       case "صعب":
         return "text-red-500";
+        case "صعب جدا":
+          return "text-red-700";
       default:
         return "text-[#00D0FF]";
     }
