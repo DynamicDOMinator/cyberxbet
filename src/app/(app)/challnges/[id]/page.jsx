@@ -79,7 +79,7 @@ const ChallengesPage = () => {
   }
 
   return (
-    <div className="min-h-screen max-w-[2000px] mx-auto text-white p-6">
+    <div className="min-h-screen max-w-[2000px] mx-auto px-20 text-white p-6">
       {/* Header Section */}
       <div
         className={`flex justify-between items-center mb-8 pt-28 ${
