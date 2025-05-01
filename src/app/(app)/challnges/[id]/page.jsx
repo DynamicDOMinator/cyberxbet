@@ -139,9 +139,7 @@ const ChallengesPage = () => {
                   isEnglish ? "items-start" : "items-end"
                 }`}
               >
-                <div className="text-xl font-bold">
-                  {categoryData?.name }
-                </div>
+                <div className="text-xl font-bold">{categoryData?.name}</div>
                 <p dir={isEnglish ? "ltr" : "rtl"} className="">
                   {isEnglish
                     ? `${challenges.length} Challenges`
@@ -149,9 +147,7 @@ const ChallengesPage = () => {
                 </p>
               </div>
               <div className="pt-4">
-                <p>
-                  {challenges[0]?.description }
-                </p>
+                <p>{challenges[0]?.description}</p>
               </div>
             </div>
           </div>
@@ -233,21 +229,12 @@ const ChallengesPage = () => {
           >
             <div
               className={`flex ${
-                isEnglish ? "flex-row pr-4" : "flex-row-reverse pr-3"
-              } justify-between items-center mb-4`}
+                isEnglish ? "flex-row-reverse " : "flex-row "
+              }  items-center mb-4  gap-4`}
             >
               <div
-                className={`flex flex-col ${
-                  isEnglish ? "items-start" : "items-end"
-                }`}
-              >
-                <span className="text-[#38FFE5] font-bold text-xl">
-                  {challenge.title}
-                </span>
-              </div>
-              <div
                 className={`bg-transparent ${
-                  isEnglish ? "flex-row-reverse" : ""
+                  isEnglish ? "" : ""
                 } rounded-none w-12 h-12 gap-2 flex items-center justify-center`}
               >
                 <Image
@@ -257,6 +244,13 @@ const ChallengesPage = () => {
                   height={48}
                   className="opacity-70"
                 />
+              </div>
+              <div
+                className={`flex flex-col ${
+                  isEnglish ? "items-start" : "items-end"
+                }`}
+              >
+                <span className=" font-bold text-xl">{challenge.title}</span>
               </div>
             </div>
 
@@ -271,9 +265,7 @@ const ChallengesPage = () => {
               <div className="flex items-center mt-4 gap-1 justify-between">
                 <span>{isEnglish ? "First Blood:" : "الاختراقات :"}</span>
                 <div className="flex items-center gap-2">
-                  <p className="font-bold text-sm">
-                    {challenge.solved_count}
-                  </p>
+                  <p className="font-bold text-sm">{challenge.solved_count}</p>
 
                   <Image
                     src="/card-user.png"

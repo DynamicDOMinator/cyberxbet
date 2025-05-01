@@ -8,6 +8,9 @@ import { FiSearch } from "react-icons/fi";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import { createSocket } from "@/lib/socket-client";
+import { useUserProfile } from "@/app/context/UserProfileContext";
+
 export default function Leaderboard() {
   const { isEnglish } = useLanguage();
   const [isLoaded, setIsLoaded] = useState(false);
@@ -15,40 +18,130 @@ export default function Leaderboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const router = useRouter();
-  useEffect(() => {
-    const fetchLeaderboard = async () => {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        const token = Cookies.get("token");
-        const response = await axios.get(`${apiUrl}/leader-board`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+  const { userName } = useUserProfile();
 
-        if (response.data.status === "success") {
-          // Transform the API data to match our component structure
-          const transformedData = response.data.data.map((user, index) => ({
-            rank: index + 1,
-            username: user.user_name,
-            profileImage: "/icon1.png", // fallback to default image
-            flames: user.points,
-            droplets: user.challenges_solved,
-            notes: user.first_blood_count,
-          }));
+  // Function to fetch leaderboard data from API
+  const fetchLeaderboard = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
 
-          setLeaderboardData(transformedData);
+      // Add timeout and retry logic
+      const maxRetries = 2;
+      let retryCount = 0;
+      let success = false;
+      let response;
+
+      while (!success && retryCount <= maxRetries) {
+        try {
+          response = await axios.get(`${apiUrl}/leader-board`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            timeout: 10000, // 10 second timeout
+          });
+          success = true;
+        } catch (error) {
+          retryCount++;
+          console.log(
+            `Leader-board API call failed (attempt ${retryCount}/${maxRetries})`
+          );
+
+          // Only retry on server errors or timeouts
+          if (
+            error.response &&
+            error.response.status < 500 &&
+            error.code !== "ECONNABORTED"
+          ) {
+            throw error; // Don't retry client errors (400s)
+          }
+
+          if (retryCount <= maxRetries) {
+            // Wait before retrying (exponential backoff)
+            await new Promise((resolve) =>
+              setTimeout(resolve, 1000 * Math.pow(2, retryCount - 1))
+            );
+          } else {
+            throw error; // Max retries exceeded
+          }
         }
-      } catch (error) {
-        console.error("Failed to fetch leaderboard data:", error);
-      } finally {
-        setIsLoaded(true);
       }
-    };
 
+      if (response && response.data.status === "success") {
+        // Transform the API data to match our component structure
+        const transformedData = response.data.data.map((user, index) => ({
+          rank: index + 1,
+          username: user.user_name,
+          profileImage: user.profile_image || "/icon1.png", // Use profile image or fallback
+          flames: user.points,
+          droplets: user.challenges_solved,
+          notes: user.first_blood_count,
+        }));
+
+        setLeaderboardData(transformedData);
+      } else {
+        // Fallback to empty data if response format is unexpected
+        console.error("Unexpected API response format:", response?.data);
+        setLeaderboardData([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch leaderboard data:", error);
+      // Use empty data array on error
+      setLeaderboardData([]);
+    } finally {
+      if (!isLoaded) setIsLoaded(true);
+    }
+  };
+
+  // Initial data fetch
+  useEffect(() => {
     fetchLeaderboard();
   }, []);
 
+  // Socket connection for real-time updates
+  useEffect(() => {
+    let socket;
+
+    // Only create socket if we have a username
+    if (userName) {
+      // Create or reuse existing socket
+      socket = createSocket(userName);
+
+      // Listen for events that should trigger leaderboard refresh
+      socket.on("leaderboardUpdate", () => {
+        console.log("Received leaderboard update event, refreshing data");
+        fetchLeaderboard();
+      });
+
+      // These events from challenge page might also affect leaderboard
+      socket.on("newSolve", () => {
+        console.log("Received new solve event, refreshing leaderboard");
+        fetchLeaderboard();
+      });
+
+      socket.on("firstBlood", () => {
+        console.log("Received first blood event, refreshing leaderboard");
+        fetchLeaderboard();
+      });
+
+      // Join leaderboard room to receive updates
+      socket.emit("joinLeaderboardRoom");
+    }
+
+    // Clean up listeners on unmount
+    return () => {
+      if (socket) {
+        socket.off("leaderboardUpdate");
+        socket.off("newSolve");
+        socket.off("firstBlood");
+
+        // Leave leaderboard room
+        socket.emit("leaveLeaderboardRoom");
+      }
+    };
+  }, [userName]);
+
+  // Filter data based on search query
   useEffect(() => {
     const filtered = leaderboardData.filter((user) =>
       user.username.toLowerCase().includes(searchQuery.toLowerCase())

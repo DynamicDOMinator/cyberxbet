@@ -9,6 +9,7 @@ import LoadingPage from "../../../components/LoadingPage";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/app/context/UserProfileContext";
+import { createSocket } from "@/lib/socket-client";
 
 export default function ChallengePage() {
   const [challenge, setChallenge] = useState(null);
@@ -28,6 +29,8 @@ export default function ChallengePage() {
   const [activitiesData, setActivitiesData] = useState("");
   const [isLocked, setIsLocked] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
+  const [socket, setSocket] = useState(null);
+  const [userData, setUserData] = useState(null);
   const { id } = useParams();
   const { isEnglish } = useLanguage();
   const { convertToUserTimezone } = useUserProfile();
@@ -52,35 +55,136 @@ export default function ChallengePage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = Cookies.get("token");
 
-      // Fetch challenge data
-      const challengeResponse = await axios.get(`${apiUrl}/challenges/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setChallenge(challengeResponse.data.data);
-      if (challengeResponse.data.data.available === false) {
-        setIsAvailable(false);
-      }
-      // Fetch solved flags data
-      const solvedResponse = await axios.post(
-        `${apiUrl}/check-if-solved`,
-        {
-          challange_uuid: id,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+      // Create an array of requests to run in parallel
+      const requests = [
+        // Request 1: Challenge data
+        axios
+          .get(`${apiUrl}/challenges/${id}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            timeout: 8000, // 8 second timeout
+          })
+          .catch((error) => {
+            console.error("Error fetching challenge:", error);
+            return { data: { data: { available: false } } };
+          }),
+
+        // Request 2: Solved flags data
+        axios
+          .post(
+            `${apiUrl}/check-if-solved`,
+            {
+              challange_uuid: id,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+              timeout: 8000, // 8 second timeout
+            }
+          )
+          .catch((error) => {
+            console.error("Error checking solved status:", error);
+            return { data: { data: { solved_flags_data: [] } } };
+          }),
+      ];
+
+      // Wait for all requests to complete (even if some fail)
+      const [challengeResult, solvedResult] = await Promise.allSettled(
+        requests
       );
+
+      // Process challenge data
+      if (
+        challengeResult.status === "fulfilled" &&
+        challengeResult.value.data
+      ) {
+        setChallenge(challengeResult.value.data.data);
+        if (challengeResult.value.data.data.available === false) {
+          setIsAvailable(false);
+        }
+      }
+
+      // Process solved flags data if available
+      if (
+        solvedResult.status === "fulfilled" &&
+        solvedResult.value.data?.data?.solved_flags_data
+      ) {
+        setDescription(solvedResult.value.data.data.solved_flags_data);
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Fatal error in fetchInitialData:", error);
+      // Set default state for essential UI elements
+      setIsAvailable(false);
     } finally {
       setLoadingPage(false);
     }
   };
   const router = useRouter();
+
+  // Initialize socket connection
+  useEffect(() => {
+    // Use a consistent ID if possible
+    const socketUserId = userData?.user_name || "challenge_user";
+    const socket = createSocket(socketUserId);
+    setSocket(socket);
+
+    // Join the challenge room
+    socket.emit("joinChallengeRoom", id);
+
+    // Setup socket event listeners
+    socket.on("newSolve", (data) => {
+      // When someone else submits a flag, refresh the leaderboard
+      fetchActivitiesData();
+    });
+
+    socket.on("firstBlood", (data) => {
+      // When someone gets first blood, refresh the leaderboard
+      fetchActivitiesData();
+    });
+
+    // Handle unexpected online counts - if we see more than 5 users when we expect 1-3,
+    // reset the connection tracking by forcing a page refresh once
+    socket.on("onlineCount", (count) => {
+      if (count > 5) {
+        // Store a timestamp to prevent multiple refreshes
+        const lastReset = sessionStorage.getItem("lastSocketReset");
+        const now = Date.now();
+
+        if (!lastReset || now - parseInt(lastReset) > 5 * 60 * 1000) {
+          // Only reset once every 5 minutes
+          console.log("Abnormal user count detected:", count);
+          sessionStorage.setItem("lastSocketReset", now.toString());
+
+          // Try to reset socket state
+          if (socket.reset && typeof socket.reset === "function") {
+            socket.reset();
+          }
+        }
+      }
+    });
+
+    // Setup heartbeat to keep the connection alive
+    const heartbeatInterval = setInterval(() => {
+      if (socket) {
+        socket.emit("heartbeat");
+      }
+    }, 60000); // Send heartbeat every minute
+
+    // Cleanup on unmount
+    return () => {
+      clearInterval(heartbeatInterval);
+      if (socket) {
+        // Leave the challenge room but don't disconnect the socket
+        socket.emit("leaveChallengeRoom", id);
+        socket.off("newSolve");
+        socket.off("firstBlood");
+        socket.off("onlineCount");
+      }
+    };
+  }, [id, userData]);
+
   useEffect(() => {
     fetchInitialData();
   }, [id]);
@@ -123,6 +227,8 @@ export default function ChallengePage() {
       setError("");
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = Cookies.get("token");
+
+      // Add timeout to prevent indefinite waiting
       const response = await axios.post(
         `${apiUrl}/submit-challenge`,
         { solution: flagInput, challange_uuid: id },
@@ -130,6 +236,7 @@ export default function ChallengePage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          timeout: 10000, // 10 second timeout
         }
       );
 
@@ -139,7 +246,12 @@ export default function ChallengePage() {
       }
 
       // Check for solved flags after successful submission
-      await checkSolvedFlags();
+      try {
+        await checkSolvedFlags();
+      } catch (checkError) {
+        console.error("Error checking solved flags:", checkError);
+        // Continue with the process even if checking solved flags fails
+      }
 
       if (
         response.status === 200 &&
@@ -160,22 +272,83 @@ export default function ChallengePage() {
         if (response.data.data.is_first_blood === true) {
           setIsFirstBlood(true);
           setFirstblood(response.data.data.first_blood_points);
+
+          // Notify others via socket for first blood
+          if (socket) {
+            try {
+              socket.emit("flagFirstBlood", {
+                challenge_id: id,
+                user_name: userData?.user_name || "anonymous",
+                profile_image:
+                  userData?.profile_image ||
+                  response.data.data.profile_image ||
+                  "",
+                points: response.data.data.first_blood_points || 0,
+              });
+            } catch (socketError) {
+              console.error("Socket first blood error:", socketError);
+              // Continue even if socket emission fails
+            }
+          }
+
           setTimeout(() => {
             setIsFirstBlood(false);
           }, 5000);
         } else if (response.data.data.is_first_blood === false) {
           setIsSubmitFlag(true);
           setPoints(response.data.data.points);
+
+          // Notify others via socket for regular flag submission
+          if (socket) {
+            try {
+              socket.emit("flagSubmitted", {
+                challenge_id: id,
+                user_name: userData?.user_name || "anonymous",
+                profile_image:
+                  userData?.profile_image ||
+                  response.data.data.profile_image ||
+                  "",
+                points: response.data.data.points || 0,
+              });
+            } catch (socketError) {
+              console.error("Socket flag submitted error:", socketError);
+              // Continue even if socket emission fails
+            }
+          }
+
           setTimeout(() => {
             setIsSubmitFlag(false);
           }, 5000);
         }
       }
+
+      // Refresh the activities data after submission
+      try {
+        fetchActivitiesData();
+      } catch (activitiesError) {
+        console.error("Error refreshing activities:", activitiesError);
+        // Continue even if refreshing activities fails
+      }
     } catch (error) {
-      console.error(error);
-      setError(error.response?.data?.message || "An error occurred");
+      console.error("Flag submission error:", error);
+
+      // Check if the error is a network issue
+      if (error.code === "ECONNABORTED" || !error.response) {
+        setError("Network error. Please try again.");
+      } else if (error.response?.status === 500) {
+        setError("Server error. The team has been notified.");
+      } else {
+        setError(
+          error.response?.data?.message ||
+            "An error occurred. Please try again."
+        );
+      }
     } finally {
       setIsLoading(false);
+      // Clear flag input on success
+      if (!error) {
+        setFlagInput("");
+      }
     }
   };
 
@@ -206,34 +379,81 @@ export default function ChallengePage() {
     solvedFlags();
   }, [id]);
 
-  useEffect(() => {
-    const fetchActivitiesData = async () => {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        const token = Cookies.get("token");
-        const response = await axios.get(
-          `${apiUrl}/challenges/${id}/leaderboard`,
-          {
+  const fetchActivitiesData = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
+
+      // Add retry logic with exponential backoff
+      const maxRetries = 2;
+      let retryCount = 0;
+      let success = false;
+      let response;
+
+      while (!success && retryCount <= maxRetries) {
+        try {
+          response = await axios.get(`${apiUrl}/challenges/${id}/leaderboard`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
-        );
+            timeout: 8000, // 8 second timeout
+          });
 
-        if (response.data.status === "success") {
-          setActivitiesData(response.data.data);
-        } else {
-          console.error("API returned non-success status:", response.data);
+          success = true;
+        } catch (error) {
+          retryCount++;
+          console.log(
+            `Challenge leaderboard API call failed (attempt ${retryCount}/${maxRetries})`
+          );
+
+          // Only retry on server errors (500s) or timeouts
+          if (
+            error.response &&
+            error.response.status < 500 &&
+            error.code !== "ECONNABORTED"
+          ) {
+            throw error; // Don't retry client errors (400s)
+          }
+
+          if (retryCount <= maxRetries) {
+            // Wait before retrying (exponential backoff)
+            await new Promise((resolve) =>
+              setTimeout(resolve, 1000 * Math.pow(2, retryCount - 1))
+            );
+          } else {
+            throw error; // Max retries exceeded
+          }
         }
-      } catch (error) {
-        console.error(
-          "Error fetching activities:",
-          error.response?.data || error.message
-        );
       }
-    };
+
+      if (response && response.data.status === "success") {
+        setActivitiesData(response.data.data);
+      } else {
+        console.error("API returned non-success status:", response?.data);
+        // Set empty array as fallback
+        setActivitiesData([]);
+      }
+    } catch (error) {
+      console.error(
+        "Error fetching activities:",
+        error.response?.data || error.message
+      );
+      // Set empty array on error to prevent UI issues
+      setActivitiesData([]);
+    }
+  };
+
+  // Initial fetch of activities data
+  useEffect(() => {
     fetchActivitiesData();
   }, [id]);
+
+  // Effect for when activities tab is selected
+  useEffect(() => {
+    if (activities) {
+      fetchActivitiesData();
+    }
+  }, [activities]);
 
   return (
     <>

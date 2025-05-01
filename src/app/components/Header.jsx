@@ -23,7 +23,7 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import { useUserProfile } from "../context/UserProfileContext";
-import { createSocket } from "@/lib/socket-client";
+import { createSocket, disconnectSocket } from "@/lib/socket-client";
 
 const gradientAnimation = `
   @keyframes gradient {
@@ -59,6 +59,23 @@ export default function Header() {
   // Initialize Socket client with error handling
   useEffect(() => {
     let socketInstance;
+    let countPollingInterval;
+
+    const fetchOnlineCountFallback = async () => {
+      try {
+        // Fallback to API endpoint if socket fails
+        const response = await axios.get("/api/online-players");
+        if (response.data && typeof response.data.count === "number") {
+          setOnlinePlayers(response.data.count);
+        } else {
+          // If API fails too, set default count
+          setOnlinePlayers(1);
+        }
+      } catch (error) {
+        console.error("Error fetching online count:", error);
+        setOnlinePlayers(1);
+      }
+    };
 
     try {
       // Only create socket connection when we have a username
@@ -72,31 +89,60 @@ export default function Header() {
 
         socketInstance.on("connect_error", (error) => {
           console.error("Socket connection error:", error.message);
-          // Fallback to a default value if connection fails
-          setOnlinePlayers(42);
+          // Try to get count via API if socket fails
+          fetchOnlineCountFallback();
         });
 
         socketInstance.on("onlinePlayers", (count) => {
-          setOnlinePlayers(count);
+          if (typeof count === "number" && count >= 0) {
+            setOnlinePlayers(count);
+          }
         });
 
         // Also listen for onlineCount event (for backward compatibility)
         socketInstance.on("onlineCount", (count) => {
-          setOnlinePlayers(count);
+          if (typeof count === "number" && count >= 0) {
+            setOnlinePlayers(count);
+          }
         });
+
+        // Set up a fallback polling mechanism in case socket events aren't firing
+        countPollingInterval = setInterval(async () => {
+          try {
+            const response = await axios.get("/api/online-players");
+            if (response.data && typeof response.data.count === "number") {
+              setOnlinePlayers(response.data.count);
+            }
+          } catch (error) {
+            // Silent fail - we'll try again next interval
+          }
+        }, 30000); // Poll every 30 seconds
+      } else {
+        // If we don't have a username yet, try to get the count via API
+        fetchOnlineCountFallback();
       }
     } catch (error) {
-      // Fallback to a default value
-      setOnlinePlayers(42);
+      console.error("Socket initialization error:", error);
+      // Fallback to API for count
+      fetchOnlineCountFallback();
     }
 
+    // We don't disconnect the socket on unmount since it's a singleton
+    // It will be reused by other components
     return () => {
+      // Clear polling interval
+      if (countPollingInterval) {
+        clearInterval(countPollingInterval);
+      }
+
+      // Just remove our event listeners
       if (socketInstance) {
         try {
-          console.log("Disconnecting socket...");
-          socketInstance.disconnect();
+          socketInstance.off("onlinePlayers");
+          socketInstance.off("onlineCount");
+          socketInstance.off("connect_error");
         } catch (error) {
-          console.error("Error disconnecting socket:", error.message);
+          console.error("Error removing socket listeners:", error.message);
         }
       }
     };
@@ -104,7 +150,15 @@ export default function Header() {
 
   const logout = async () => {
     try {
-      // No need to update user status here as it's handled by Socket.IO disconnect
+      // First, properly disconnect the socket to update online count
+      try {
+        console.log("Disconnecting socket before logout");
+        disconnectSocket();
+      } catch (socketError) {
+        console.error("Socket disconnect error:", socketError);
+      }
+
+      // Then handle the backend logout
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = Cookies.get("token");
 
@@ -117,8 +171,13 @@ export default function Header() {
         // Continue with logout even if API call fails
       }
 
+      // Clear cookie and redirect
       Cookies.remove("token");
-      router.push("/");
+
+      // Force a small delay to ensure socket disconnection completes
+      setTimeout(() => {
+        router.push("/");
+      }, 300);
     } catch (error) {
       console.error("Error during logout:", error);
       // Fallback: Remove cookie and redirect anyway

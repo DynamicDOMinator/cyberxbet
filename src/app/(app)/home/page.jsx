@@ -233,7 +233,10 @@ export default function Home() {
                   {challenge.title}
                 </h3>
               </div>
-              <p dir={isEnglish ? "ltr" : "rtl"} className="text-white  text-[18px]  pt-3 pb-[32px]">
+              <p
+                dir={isEnglish ? "ltr" : "rtl"}
+                className="text-white  text-[18px]  pt-3 pb-[32px]"
+              >
                 {challenge.description}
               </p>
             </div>
