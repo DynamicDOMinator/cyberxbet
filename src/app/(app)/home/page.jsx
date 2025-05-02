@@ -9,6 +9,8 @@ import Cookies from "js-cookie";
 import Link from "next/link";
 import { useUserProfile } from "@/app/context/UserProfileContext";
 import { useRouter } from "next/navigation";
+import { createSocket } from "@/lib/socket-client";
+
 export default function Home() {
   const { isEnglish } = useLanguage();
   const { userName, convertToUserTimezone } = useUserProfile();
@@ -17,6 +19,33 @@ export default function Home() {
   const [userData, setUserData] = useState(null);
   const [activities, setActivities] = useState([]);
   const router = useRouter();
+
+  // Function to fetch activities data
+  const fetchActivities = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
+
+      const response = await axios.get(
+        `${apiUrl}/user/recentPlatformActivities`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          timeout: 8000, // 8 second timeout
+        }
+      );
+
+      if (response.data && response.data.activities) {
+        setActivities(response.data.activities);
+      }
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+      // Don't modify existing activities on error
+    }
+  };
+
+  // Initial data fetch
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -53,19 +82,8 @@ export default function Home() {
           }
         }
 
-        // Fetch activities
-        const activitiesResponse = await axios.get(
-          `${apiUrl}/user/recentPlatformActivities`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (activitiesResponse.data && activitiesResponse.data.activities) {
-          setActivities(activitiesResponse.data.activities);
-        }
+        // Initial activities fetch
+        await fetchActivities();
 
         // Only set isLoaded to true after all data has been processed
         setIsLoaded(true);
@@ -77,6 +95,48 @@ export default function Home() {
     };
 
     fetchData();
+  }, [userName]);
+
+  // Socket connection for real-time activity updates
+  useEffect(() => {
+    let socket;
+
+    // Only create socket if we have a username
+    if (userName) {
+      // Create or reuse socket
+      socket = createSocket(userName);
+
+      // Listen for events that should trigger activity refresh
+      socket.on("newSolve", (data) => {
+        console.log("Received new solve event, refreshing activities");
+        fetchActivities();
+      });
+
+      socket.on("firstBlood", (data) => {
+        console.log("Received first blood event, refreshing activities");
+        fetchActivities();
+      });
+
+      socket.on("activityUpdate", (data) => {
+        console.log("Received activity update event, refreshing activities");
+        fetchActivities();
+      });
+
+      // Join activity room
+      socket.emit("joinActivityRoom");
+    }
+
+    // Clean up event listeners on unmount
+    return () => {
+      if (socket) {
+        socket.off("newSolve");
+        socket.off("firstBlood");
+        socket.off("activityUpdate");
+
+        // Leave activity room
+        socket.emit("leaveActivityRoom");
+      }
+    };
   }, [userName]);
 
   // Function to determine difficulty color
@@ -375,7 +435,7 @@ export default function Home() {
                                 isEnglish ? "pl-0" : "pr-0"
                               }`}
                             >
-                              <span className="text-white text-sm lg:text-base">
+                              <span className="text-white text-sm lg:text-base min-w-[24px] md:min-w-[32px] text-right">
                                 {activity.total_bytes}
                               </span>
                               <Image
@@ -389,9 +449,9 @@ export default function Home() {
                                     ? "first blood"
                                     : "points"
                                 }
-                                width={20}
-                                height={24}
-                                className="lg:w-[25px] lg:h-[30px]"
+                                width={25}
+                                height={30}
+                                className=""
                               />
                             </div>
                           </td>
@@ -402,7 +462,7 @@ export default function Home() {
                                 isEnglish ? "pl-2 lg:pl-3" : "pr-2 lg:pr-3"
                               }`}
                             >
-                              <span className="text-sm lg:text-base">
+                              <span className="text-sm lg:text-base min-w-[20px] text-center">
                                 {index + 1}
                               </span>
                               <Image

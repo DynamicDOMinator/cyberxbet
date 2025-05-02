@@ -68,8 +68,8 @@ export default function TrainingChallenges() {
         return "text-[#9DFF00]";
       case "صعب":
         return "text-red-500";
-        case "صعب جدا":
-          return "text-red-700";
+      case "صعب جدا":
+        return "text-red-700";
       default:
         return "text-[#00D0FF]";
     }
@@ -83,6 +83,8 @@ export default function TrainingChallenges() {
         return isEnglish ? "Medium" : "متوسط";
       case "صعب":
         return isEnglish ? "Hard" : "صعب";
+      case "صعب جدا":
+        return isEnglish ? "Very Hard" : "صعب جدا";
       default:
         return difficulty;
     }
@@ -114,7 +116,7 @@ export default function TrainingChallenges() {
         {latestChallenges.map((challenge) => (
           <div
             key={challenge.uuid}
-        className="bg-white/3 backdrop-blur-xl rounded-[16px] p-4 flex flex-col justify-between min-h-[242px]"
+            className="bg-white/3 backdrop-blur-xl rounded-[16px] p-4 flex flex-col justify-between min-h-[242px]"
           >
             <div>
               <div className="flex items-center gap-4">
@@ -130,7 +132,10 @@ export default function TrainingChallenges() {
                   {challenge.title}
                 </h3>
               </div>
-              <p dir={isEnglish ? "ltr" : "rtl"} className="text-white  text-[18px] pt-3">
+              <p
+                dir={isEnglish ? "ltr" : "rtl"}
+                className="text-white  text-[18px] pt-3"
+              >
                 {challenge.description}
               </p>
             </div>
@@ -141,7 +146,7 @@ export default function TrainingChallenges() {
                   <>
                     Difficulty Level:{" "}
                     <span className={getDifficultyColor(challenge.difficulty)}>
-                      {challenge.difficulty}
+                      {getDifficultyText(challenge.difficulty)}
                     </span>
                   </>
                 ) : (
@@ -184,7 +189,7 @@ export default function TrainingChallenges() {
                   />
                 </div>
                 <h3 className="text-[24px] font-bold text-center">
-                  {category.title}
+                  {isEnglish ? category?.title : category?.ar_title}
                 </h3>
                 <p className="text-[#BCC9DB] text-[20px]  text-center">
                   {isEnglish

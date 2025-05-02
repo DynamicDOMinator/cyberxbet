@@ -279,7 +279,7 @@ export default function Leaderboard() {
                     height={20}
                     className="md:w-[25px] md:h-[25px]"
                   />
-                  <span className="text-white text-sm md:text-xl">
+                  <span className="text-white text-sm md:text-xl min-w-[24px] md:min-w-[32px] text-right">
                     {user.flames}
                   </span>
                 </div>
@@ -294,7 +294,7 @@ export default function Leaderboard() {
                     height={20}
                     className="md:w-[25px] md:h-[25px]"
                   />
-                  <span className="text-white text-sm md:text-xl">
+                  <span className="text-white text-sm md:text-xl min-w-[24px] md:min-w-[32px] text-right">
                     {user.droplets}
                   </span>
                 </div>
@@ -306,10 +306,10 @@ export default function Leaderboard() {
                     src="/blood.png"
                     alt="notes"
                     width={20}
-                    height={20}
-                    className="md:w-[25px] md:h-[25px]"
+                    height={30}
+                  
                   />
-                  <span className="text-white text-sm md:text-xl">
+                  <span className="text-white text-sm md:text-xl min-w-[24px] md:min-w-[32px] text-right">
                     {user.notes}
                   </span>
                 </div>

@@ -22,6 +22,9 @@ const challengeRooms = new Map(); // challengeId -> Set of socket IDs
 // Track leaderboard subscribers
 const leaderboardSubscribers = new Set();
 
+// Track activity subscribers
+const activitySubscribers = new Set();
+
 // Track connection timestamps to handle stale connections
 const connectionTimestamps = new Map(); // socketId -> timestamp
 
@@ -65,6 +68,7 @@ function resetAllTrackers() {
   connectionTimestamps.clear();
   tabToUser.clear();
   leaderboardSubscribers.clear();
+  activitySubscribers.clear();
 
   // Reset count
   console.log("All trackers reset. Current user count: 0");
@@ -141,6 +145,11 @@ const cleanupStaleConnections = (io) => {
       if (leaderboardSubscribers.has(socketId)) {
         leaderboardSubscribers.delete(socketId);
         console.log(`Removed stale leaderboard subscription: ${socketId}`);
+      }
+
+      if (activitySubscribers.has(socketId)) {
+        activitySubscribers.delete(socketId);
+        console.log(`Removed stale activity subscription: ${socketId}`);
       }
     }
   }
@@ -393,6 +402,44 @@ app.prepare().then(() => {
       );
     });
 
+    // Handle joining the activity room
+    socket.on("joinActivityRoom", () => {
+      console.log(`Socket ${socket.id} joining activity room`);
+
+      // Update connection timestamp
+      connectionTimestamps.set(socket.id, Date.now());
+
+      // Join the activity room
+      socket.join("activity");
+
+      // Track this socket as an activity subscriber
+      activitySubscribers.add(socket.id);
+
+      // Store that this socket has joined the activity room
+      socket.isInActivityRoom = true;
+
+      console.log(`Current activity subscribers: ${activitySubscribers.size}`);
+    });
+
+    // Handle leaving the activity room
+    socket.on("leaveActivityRoom", () => {
+      console.log(`Socket ${socket.id} leaving activity room`);
+
+      // Update connection timestamp
+      connectionTimestamps.set(socket.id, Date.now());
+
+      // Leave the activity room
+      socket.leave("activity");
+
+      // Remove from tracking
+      activitySubscribers.delete(socket.id);
+
+      // Update socket state
+      socket.isInActivityRoom = false;
+
+      console.log(`Current activity subscribers: ${activitySubscribers.size}`);
+    });
+
     // Handle leaving the leaderboard room
     socket.on("leaveLeaderboardRoom", () => {
       console.log(`Socket ${socket.id} leaving leaderboard room`);
@@ -470,6 +517,14 @@ app.prepare().then(() => {
         user_name: data.user_name || socket.userName,
         timestamp: Date.now(),
       });
+
+      // Notify activity subscribers as well
+      io.to("activity").emit("activityUpdate", {
+        type: "flag_submission",
+        challenge_id: data.challenge_id,
+        user_name: data.user_name || socket.userName,
+        timestamp: Date.now(),
+      });
     });
 
     // Handle first blood
@@ -494,6 +549,14 @@ app.prepare().then(() => {
 
       // Also notify leaderboard subscribers about the update
       io.to("leaderboard").emit("leaderboardUpdate", {
+        type: "first_blood",
+        challenge_id: data.challenge_id,
+        user_name: data.user_name || socket.userName,
+        timestamp: Date.now(),
+      });
+
+      // Notify activity subscribers as well
+      io.to("activity").emit("activityUpdate", {
         type: "first_blood",
         challenge_id: data.challenge_id,
         user_name: data.user_name || socket.userName,
@@ -545,6 +608,14 @@ app.prepare().then(() => {
         leaderboardSubscribers.delete(socket.id);
         console.log(
           `Removed from leaderboard subscribers, remaining: ${leaderboardSubscribers.size}`
+        );
+      }
+
+      // Clean up activity subscription if applicable
+      if (socket.isInActivityRoom) {
+        activitySubscribers.delete(socket.id);
+        console.log(
+          `Removed from activity subscribers, remaining: ${activitySubscribers.size}`
         );
       }
 
