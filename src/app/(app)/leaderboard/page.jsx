@@ -187,38 +187,19 @@ export default function Leaderboard() {
           dir={isEnglish ? "ltr" : "rtl"}
           className="relative bg-[#06373F26] px-2 sm:px-5 py-6 rounded-md overflow-x-auto"
         >
-          {/* Common Table Styles */}
-          <style jsx>{`
-            .leaderboard-table {
-              display: grid;
-              grid-template-columns: repeat(12, 1fr);
-              min-width: 600px;
-            }
-
-            @media (min-width: 768px) {
-              .leaderboard-table {
-                grid-template-columns: 2fr 1fr 1fr 1fr;
-              }
-            }
-          `}</style>
-
           {/* Table Headers */}
-          <div className="leaderboard-table px-4 sm:px-10 py-3 bg-[#38FFE50D] rounded-md mb-4 sm:mb-9">
-            <div className="col-span-5 md:col-span-1 text-white font-semibold flex items-center gap-[96px]">
-              <div className="w-8 md:w-10 flex justify-center">
-                {isEnglish ? "Rank" : "التصنيف"}
-              </div>
-              <div className="ml-16 md:ml-20">
-                {isEnglish ? "User" : "المستخدم"}
-              </div>
+          <div className="flex justify-between px-[40px] py-4 font-bold text-white text-[18px] bg-[#38FFE50D] rounded-md mb-4 sm:mb-9">
+            <div className="w-[260px] flex items-center gap-[96px]">
+              <div className="w-[60px]">{isEnglish ? "Rank" : "التصنيف"}</div>
+              <div className="w-[200px]">{isEnglish ? "User" : "المستخدم"}</div>
             </div>
-            <div className="col-span-2 md:col-span-1 text-white font-semibold flex justify-center">
+            <div className="w-[100px] text-center">
               {isEnglish ? "Bytes" : "البايتس"}
             </div>
-            <div className="col-span-3 md:col-span-1 text-white font-semibold flex justify-center">
+            <div className="w-[100px] text-center">
               {isEnglish ? "Challenges" : "التحديات"}
             </div>
-            <div className="col-span-2 md:col-span-1 text-white font-semibold flex justify-center">
+            <div className="w-[150px] text-center">
               {isEnglish ? "First Blood" : "البايتس الأولى"}
             </div>
           </div>
@@ -227,12 +208,12 @@ export default function Leaderboard() {
           {filteredData.map((user, index) => (
             <div
               key={index}
-              className={`leaderboard-table px-4 sm:px-10 py-3 mb-3 rounded-lg ${
+              className={`flex justify-between px-[40px] py-4 mb-3 rounded-lg ${
                 index % 2 === 0 ? "bg-[#06373F]" : "bg-transparent"
               }`}
             >
-              <div className="col-span-5 md:col-span-1 flex items-center  gap-[37px]">
-                <div className="w-8 md:w-10 flex justify-center">
+              <div className="w-[260px] gap-[37px] flex items-center">
+                <div className="w-[60px] flex items-center justify-center">
                   {user.rank <= 3 ? (
                     <Image
                       src={
@@ -253,9 +234,10 @@ export default function Leaderboard() {
                     </span>
                   )}
                 </div>
+
                 <div
                   onClick={() => router.push(`/profile/${user.username}`)}
-                  className="flex items-center cursor-pointer gap-2 ml-16 md:ml-20"
+                  className="w-[200px] flex items-center cursor-pointer gap-2"
                 >
                   <Image
                     src={user.profileImage}
@@ -264,13 +246,13 @@ export default function Leaderboard() {
                     height={30}
                     className="rounded-full"
                   />
-                  <span className="text-white text-sm md:text-xl font-bold truncate max-w-[100px] md:max-w-full">
+                  <span className="text-white text-sm md:text-xl font-bold">
                     {user.username}
                   </span>
                 </div>
               </div>
 
-              <div className="col-span-2 md:col-span-1 flex justify-center items-center">
+              <div className="w-[100px] flex justify-center">
                 <div className="flex flex-row-reverse items-center gap-1 md:gap-2">
                   <Image
                     src="/byte.png"
@@ -285,7 +267,7 @@ export default function Leaderboard() {
                 </div>
               </div>
 
-              <div className="col-span-3 md:col-span-1 flex justify-center items-center">
+              <div className="w-[100px] flex justify-center">
                 <div className="flex flex-row-reverse items-center gap-1 md:gap-2">
                   <Image
                     src="/icon-challnge.png"
@@ -300,15 +282,9 @@ export default function Leaderboard() {
                 </div>
               </div>
 
-              <div className="col-span-2 md:col-span-1 flex justify-center items-center">
-                <div className="flex flex-row-reverse items-center gap-1 md:gap-2">
-                  <Image
-                    src="/blood.png"
-                    alt="notes"
-                    width={20}
-                    height={30}
-                  
-                  />
+              <div className="w-[100px] flex justify-center">
+                <div className="flex flex-row-reverse items-center">
+                  <Image src="/blood.png" alt="notes" width={20} height={30} />
                   <span className="text-white text-sm md:text-xl min-w-[24px] md:min-w-[32px] text-right">
                     {user.notes}
                   </span>

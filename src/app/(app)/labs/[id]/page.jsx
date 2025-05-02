@@ -91,7 +91,7 @@ export default function TrainingChallenges() {
   };
 
   return (
-    <div className="pt-36 mx-auto px-[64px] py-8 max-w-[2000px]">
+    <div className="pt-36 mx-auto lg:px-[64px] px-10 py-8 max-w-[2000px]">
       {/* Header Section */}
       <h1
         className={`text-3xl font-bold mb-2 ${
@@ -140,7 +140,7 @@ export default function TrainingChallenges() {
               </p>
             </div>
 
-            <div className="flex lg:flex lg:flex-wrap items-center justify-between gap-4 pt-10">
+            <div className="flex lg:flex flex-wrap items-center justify-between gap-4 pt-10">
               <p>
                 {isEnglish ? (
                   <>
@@ -158,7 +158,7 @@ export default function TrainingChallenges() {
                   </>
                 )}
               </p>
-              <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110">
+              <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110 hover:bg-[#38FFE5]/10 hover:transition-all duration-300 hover:p-1 rounded-lg">
                 <Link href={`/challnge/${challenge.uuid}`}>
                   {isEnglish ? "Start Now" : "ابدأ الآن"}
                 </Link>
@@ -184,8 +184,9 @@ export default function TrainingChallenges() {
                   <Image
                     src={category.image}
                     alt={category.title}
-                    width={104}
-                    height={104}
+                    width={500}
+                    height={500}
+                    className="w-[104px] h-[104px]"
                   />
                 </div>
                 <h3 className="text-[24px] font-bold text-center">

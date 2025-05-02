@@ -544,21 +544,22 @@ export default function Events() {
 
           <div
             dir={isEnglish ? "ltr" : "rtl"}
-            className="grid mt-20  grid-cols-1 md:grid-cols-2 lg:grid-cols-3 md:mt-16 gap-4 md:gap-[56px]"
+            className="grid mt-20 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 md:mt-16 gap-4 md:gap-[56px] pb-10"
           >
             {event.map((event) => (
               <div
                 onClick={() => router.push(`/events/${event.uuid}`)}
                 key={event.uuid}
-                className="bg-white/1 cursor-pointer min-h-[320px] relative rounded-lg  shadow-lg hover:shadow-xl transition-all duration-300"
+                className="bg-white/1 cursor-pointer min-h-[320px] relative rounded-2xl  shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <div className="relative h-1/2 w-full">
                   <Image
-                    className="object-cover"
+                    className="object-cover rounded-t-2xl"
                     src={event.image}
                     alt={event.title}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    
                     priority
                   />
                 </div>

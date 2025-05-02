@@ -79,7 +79,7 @@ const ChallengesPage = () => {
   }
 
   return (
-    <div className="min-h-screen max-w-[2000px] mx-auto px-20 text-white p-6">
+    <div className="min-h-screen max-w-[2000px] mx-auto lg:px-20 px-10 text-white p-6">
       {/* Header Section */}
       <div
         className={`flex justify-between items-center mb-8 pt-28 ${
@@ -225,7 +225,7 @@ const ChallengesPage = () => {
         {challenges.map((challenge) => (
           <div
             key={challenge.uuid}
-            className="bg-white/5 rounded-lg p-6 lg:mt-20 hover:shadow-[0_0_15px_rgba(56,255,229,0.3)] transition-shadow"
+            className="bg-white/5 rounded-2xl p-6 lg:mt-20 hover:shadow-[0_0_15px_rgba(56,255,229,0.3)] transition-shadow"
           >
             <div
               className={`flex ${
@@ -277,7 +277,7 @@ const ChallengesPage = () => {
               </div>
             </div>
 
-            <div className="flex justify-between">
+            <div className="flex justify-between flex-wrap">
               <div className={`flex items-center gap-1 ${isEnglish ? "" : ""}`}>
                 <span className="text-white">
                   {isEnglish ? "Difficulty:" : "مستوى الصعوبة:"}
@@ -292,7 +292,7 @@ const ChallengesPage = () => {
               </div>
               <Link
                 href={`/challnge/${challenge.uuid}`}
-                className="text-[#38FFE5] hover:px-1 py-1 rounded hover:bg-[#38FFE5]/10 hover:transition-all duration-300"
+                className="text-[#38FFE5] font-semibold   rounded  hover:bg-[#38FFE5]/10 hover:transition-all duration-300 hover:p-1 hover:brightness-110"
               >
                 {isEnglish ? "Start Now" : "ابدأ الآن"}
               </Link>

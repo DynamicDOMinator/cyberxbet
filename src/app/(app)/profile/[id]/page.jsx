@@ -333,7 +333,7 @@ export default function Profile() {
             )}
           </h1>
           <p className="text-xl sm:text-3xl font-semibold">
-            {isEnglish ? "Beginner" : userData.title}
+            {isEnglish ? "Beginner" : userData.ar_title || userData.title}
           </p>
         </div>
       </div>
@@ -570,13 +570,28 @@ export default function Profile() {
                         isEnglish ? "text-left" : "text-right"
                       } pt-10 text-[18px]`}
                     >
-                      {isEnglish
-                        ? `60% remaining to achieve Professional status`
+                      {userData?.next_title === null &&
+                      userData?.next_title_arabic === null
+                        ? isEnglish
+                          ? "Congratulations! You've reached the maximum level."
+                          : "تهانيا! لقد وصلت إلى الحد الأقصى."
+                        : isEnglish
+                        ? `${
+                            userData?.percentage_for_next_title
+                              ? Math.floor(userData.percentage_for_next_title)
+                              : 0
+                          }% remaining to achieve ${
+                            userData?.next_title || "Professional"
+                          } status`
                         : `متبقي ${
                             userData?.percentage_for_next_title
                               ? Math.floor(userData.percentage_for_next_title)
                               : 0
-                          }% للحصول على  لقب ${userData?.next_title || ""}`}
+                          }% للحصول على لقب ${
+                            userData?.next_title_arabic ||
+                            userData?.next_title ||
+                            ""
+                          }`}
                     </p>
                   </div>
                 </div>

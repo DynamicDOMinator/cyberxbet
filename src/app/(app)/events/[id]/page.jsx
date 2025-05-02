@@ -2247,12 +2247,12 @@ export default function EventPage() {
           {activeTab === "leaderboard" && (
             <div className="flex flex-col items-center justify-center pb-7 ">
               <Image
-                src="/ranking.png"
-                height={80}
-                width={80}
+                src="/notfound.png"
+                height={140}
+                width={140}
                 alt="leaderboard"
               />
-              <h3 className=" font-bold text-center pt-2">
+              <h3 className=" font-bold text-center pt-4">
                 {isEnglish
                   ? "Leaderboard coming soon"
                   : "سيتم عرض المتصدرين قريبًا"}

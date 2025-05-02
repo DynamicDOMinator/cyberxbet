@@ -809,7 +809,7 @@ export default function AddChallenge() {
           </div>
 
           {/* Rejected Challenges */}
-          <div className="bg-[#FFFFFF0D] rounded-lg p-4 relative overflow-hidden">
+          <div className="bg-[#FFFFFF0D] rounded-lg p-4  relative overflow-hidden">
             <div className="flex items-center gap-1 ">
               <Image
                 src="/rejected.png"
@@ -835,7 +835,7 @@ export default function AddChallenge() {
       </div>
 
       {/* Challenges List Section */}
-      <div className=" px-4 py-6 bg-[#131619] rounded-lg mb-8">
+      <div className=" px-4 py-6 mx-4 bg-[#131619] rounded-lg mb-8">
         <div
           dir={isEnglish ? "ltr" : "rtl"}
           className="flex flex-col items-start mb-6 gap-4"
@@ -995,20 +995,9 @@ export default function AddChallenge() {
               .map((_, index) => (
                 <div
                   key={index}
-                  className="bg-[#131619] flex-shrink-0 w-full md:w-1/3 mb-5 rounded-lg overflow-hidden flex flex-col h-full animate-pulse"
+                 
                 >
-                  <div className="p-4 flex flex-col h-full">
-                    <div className="flex gap-2 items-center mb-4">
-                      <div className="bg-gray-700 w-8 h-8 rounded"></div>
-                      <div className="bg-gray-700 w-24 h-6 rounded"></div>
-                    </div>
-                    <div className="bg-gray-700 w-full h-12 rounded flex-grow mb-4"></div>
-                    <div className="flex justify-between items-center mt-4">
-                      <div className="bg-gray-700 w-24 h-5 rounded"></div>
-                      <div className="bg-gray-700 w-20 h-5 rounded"></div>
-                    </div>
-                  </div>
-                </div>
+               </div>
               ))
           ) : filteredChallenges.length > 0 ? (
             filteredChallenges.map((challenge) => {

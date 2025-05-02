@@ -228,7 +228,12 @@ export default function Home() {
                 isEnglish ? "text-left" : "text-right"
               } pt-10 text-[18px]`}
             >
-              {isEnglish
+              {userData?.next_title === null &&
+              userData?.next_title_arabic === null
+                ? isEnglish
+                  ? "Congratulations! You've reached the maximum level."
+                  : "تهانيا! لقد وصلت إلى الحد الأقصى."
+                : isEnglish
                 ? `${
                     userData?.percentage_for_next_title || 0
                   }% remaining to achieve ${
@@ -238,7 +243,9 @@ export default function Home() {
                     userData?.percentage_for_next_title
                       ? Math.floor(userData.percentage_for_next_title)
                       : 0
-                  }% للحصول على  لقب ${userData?.next_title || ""}`}
+                  }% للحصول على لقب ${
+                    userData?.next_title_arabic || userData?.next_title || ""
+                  }`}
             </p>
           </div>
 
@@ -322,7 +329,7 @@ export default function Home() {
                   </>
                 )}
               </p>
-              <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110">
+              <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110 hover:bg-[#38FFE5]/10 hover:transition-all duration-300 hover:p-1 rounded-lg">
                 <Link href={`/challnge/${challenge.uuid}`}>
                   {isEnglish ? "Start Now" : "ابدأ الآن"}
                 </Link>

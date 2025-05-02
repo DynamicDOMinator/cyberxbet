@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import Image from "next/image";
+import Link from "next/link";
 import ConfettiAnimation from "@/components/ConfettiAnimation";
 import LoadingPage from "../../../components/LoadingPage";
 import { useLanguage } from "@/app/context/LanguageContext";
@@ -31,6 +32,9 @@ export default function ChallengePage() {
   const [isAvailable, setIsAvailable] = useState(true);
   const [socket, setSocket] = useState(null);
   const [userData, setUserData] = useState(null);
+  const [labData, setLabData] = useState(null);
+  const [labCategoryData, setLabCategoryData] = useState(null);
+  const [categoryData, setCategoryData] = useState(null);
   const { id } = useParams();
   const { isEnglish } = useLanguage();
   const { convertToUserTimezone } = useUserProfile();
@@ -101,6 +105,16 @@ export default function ChallengePage() {
         challengeResult.value.data
       ) {
         setChallenge(challengeResult.value.data.data);
+        // Set lab, lab_category, and category data if available
+        if (challengeResult.value.data.lab) {
+          setLabData(challengeResult.value.data.lab);
+        }
+        if (challengeResult.value.data.lab_category) {
+          setLabCategoryData(challengeResult.value.data.lab_category);
+        }
+        if (challengeResult.value.data.data?.category) {
+          setCategoryData(challengeResult.value.data.data.category);
+        }
         if (challengeResult.value.data.data.available === false) {
           setIsAvailable(false);
         }
@@ -461,6 +475,39 @@ export default function ChallengePage() {
         <LoadingPage />
       ) : (
         <div className="max-w-[2000px] pt-36 mx-auto pb-5">
+          {/* Breadcrumb Navigation */}
+          <div
+            dir={isEnglish ? "ltr" : "rtl"}
+            className="flex items-center gap-2 px-10 mb-12 text-xl"
+          >
+            {labData && (
+              <>
+                <Link
+                  href={`/labs/${labData.uuid}`}
+               
+                >
+                  {isEnglish ? labData.name : labData.ar_name}
+                </Link>
+                <span className="text-gray-400 text-xl">›</span>
+              </>
+            )}
+            {labCategoryData && (
+              <>
+                <Link
+                  href={`/challnges/${labCategoryData.uuid}`}
+                  
+                >
+                  {isEnglish ? labCategoryData.title : labCategoryData.ar_title}
+                </Link>
+                <span className="text-gray-400 text-xl">›</span>
+              </>
+            )}
+
+            <span className="font-medium text-[#38FFE5] text-xl">
+              {challenge?.title}
+            </span>
+          </div>
+
           {challenge?.flag_type === "multiple_individual" ? (
             challenge?.flags_data?.map((flag, index) => (
               <div key={index} className="mb-8">
@@ -557,6 +604,7 @@ export default function ChallengePage() {
                       alt="First Blood"
                       width={32}
                       height={32}
+                      className="md:w-[32px] md:h-[38px]"
                     />
                   </div>
                   <div>
@@ -598,6 +646,7 @@ export default function ChallengePage() {
                       alt="Challenge Bytes"
                       width={32}
                       height={32}
+                      className="md:w-[32px] md:h-[38px]"
                     />
                   </div>
                   <div>
@@ -616,6 +665,7 @@ export default function ChallengePage() {
                       alt="Hacks"
                       width={32}
                       height={32}
+                      className="md:w-[32px] md:h-[38px]"
                     />
                   </div>
                   <div>
@@ -634,7 +684,7 @@ export default function ChallengePage() {
 
           <div
             dir={isEnglish ? "ltr" : "rtl"}
-            className="pt-10 pb-5 px-5 bg-[#FFFFFF0D] rounded-lg mx-10"
+            className="pt-10 pb-5 px-5 bg-[#FFFFFF0D] rounded-2xl mx-10"
           >
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
@@ -748,7 +798,7 @@ export default function ChallengePage() {
                     {/* Flag Submission Section */}
                     <div
                       dir={isEnglish ? "ltr" : "rtl"}
-                      className="bg-[#FFFFFF0D] relative rounded-lg p-6 flex flex-col min-h-[250px]"
+                      className="bg-[#FFFFFF0D] relative rounded-2xl p-6 flex flex-col min-h-[250px]"
                     >
                       <div className="flex items-center gap-4 mb-6">
                         <Image
@@ -834,7 +884,7 @@ export default function ChallengePage() {
                     {challenge?.file && (
                       <div
                         dir={isEnglish ? "ltr" : "rtl"}
-                        className="bg-[#FFFFFF0D] rounded-lg p-6 flex flex-col min-h-[250px]"
+                        className="bg-[#FFFFFF0D] rounded-2xl p-6 flex flex-col min-h-[250px]"
                       >
                         <div className="flex items-center gap-4 mb-6">
                           <Image
