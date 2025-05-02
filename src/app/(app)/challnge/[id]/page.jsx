@@ -482,10 +482,7 @@ export default function ChallengePage() {
           >
             {labData && (
               <>
-                <Link
-                  href={`/labs/${labData.uuid}`}
-               
-                >
+                <Link href={`/labs/${labData.uuid}`}>
                   {isEnglish ? labData.name : labData.ar_name}
                 </Link>
                 <span className="text-gray-400 text-xl">›</span>
@@ -493,10 +490,7 @@ export default function ChallengePage() {
             )}
             {labCategoryData && (
               <>
-                <Link
-                  href={`/challnges/${labCategoryData.uuid}`}
-                  
-                >
+                <Link href={`/challnges/${labCategoryData.uuid}`}>
                   {isEnglish ? labCategoryData.title : labCategoryData.ar_title}
                 </Link>
                 <span className="text-gray-400 text-xl">›</span>
@@ -977,34 +971,76 @@ export default function ChallengePage() {
                         activitiesData.map((user, index) => {
                           // Get the most recent solved_at time
                           const latestSolvedAt = user.solved_at
-                            ? convertToUserTimezone(new Date(user.solved_at))
+                            ? user.solved_at
                             : null;
 
                           // Format the time difference
                           const formatTimeAgo = (date) => {
-                            const now = new Date();
-                            const diffInSeconds = Math.floor(
-                              (now - date) / 1000
-                            );
+                            if (!date)
+                              return isEnglish
+                                ? "Unknown time"
+                                : "وقت غير معروف";
 
-                            if (diffInSeconds < 60)
-                              return isEnglish ? "Just now" : "الآن";
-                            if (diffInSeconds < 3600) {
-                              const minutes = Math.floor(diffInSeconds / 60);
+                            try {
+                              // Parse the date from the API response
+                              const apiDate = new Date(date);
+                              const now = new Date();
+
+                              // Directly calculate time difference ignoring the year
+                              // by setting today's date with the time from the API
+                              const todayWithApiTime = new Date();
+                              todayWithApiTime.setHours(
+                                apiDate.getHours(),
+                                apiDate.getMinutes(),
+                                apiDate.getSeconds()
+                              );
+
+                              // Adjust for Cairo timezone (UTC+2)
+                              // The time difference should be calculated based on the local time
+                              let diffInSeconds = Math.floor(
+                                (now - todayWithApiTime) / 1000
+                              );
+
+                              // If it's negative (future time today), add 24 hours
+                              if (diffInSeconds < 0) {
+                                diffInSeconds += 86400; // 24 hours in seconds
+                              }
+
+                              if (diffInSeconds < 60)
+                                return isEnglish ? "Just now" : "الآن";
+                              if (diffInSeconds < 3600) {
+                                const minutes = Math.floor(diffInSeconds / 60);
+                                return isEnglish
+                                  ? `${minutes} ${
+                                      minutes === 1 ? "minute" : "minutes"
+                                    } ago`
+                                  : `منذ ${minutes} ${
+                                      minutes === 1 ? "دقيقة" : "دقائق"
+                                    }`;
+                              }
+                              if (diffInSeconds < 86400) {
+                                const hours = Math.floor(diffInSeconds / 3600);
+                                return isEnglish
+                                  ? `${hours} ${
+                                      hours === 1 ? "hour" : "hours"
+                                    } ago`
+                                  : `منذ ${hours} ${
+                                      hours === 1 ? "ساعة" : "ساعات"
+                                    }`;
+                              }
+                              const days = Math.floor(diffInSeconds / 86400);
                               return isEnglish
-                                ? `${minutes} minutes ago`
-                                : `منذ ${minutes} دقيقة`;
-                            }
-                            if (diffInSeconds < 86400) {
-                              const hours = Math.floor(diffInSeconds / 3600);
+                                ? `${days} ${days === 1 ? "day" : "days"} ago`
+                                : `منذ ${days} ${days === 1 ? "يوم" : "أيام"}`;
+                            } catch (error) {
+                              console.error(
+                                "Error formatting time ago:",
+                                error
+                              );
                               return isEnglish
-                                ? `${hours} hours ago`
-                                : `منذ ${hours} ساعة`;
+                                ? "Unknown time"
+                                : "وقت غير معروف";
                             }
-                            const days = Math.floor(diffInSeconds / 86400);
-                            return isEnglish
-                              ? `${days} days ago`
-                              : `منذ ${days} يوم`;
                           };
 
                           return (
@@ -1273,7 +1309,7 @@ export default function ChallengePage() {
                 </div>
               </div>
             </div>
-           )} 
+          )}
           {/* ================================================================================== */}
           {/* anther aimation for submit flag  */}
           {isSubmitFlag && (
