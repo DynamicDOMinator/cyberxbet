@@ -146,8 +146,14 @@ function createVirtualSocket(userName, tabId) {
   // Track challenge rooms this socket has joined
   const joinedRooms = new Set();
 
+  // Track event rooms for team updates
+  const joinedTeamRooms = new Set();
+
   // Map to track polling intervals by challenge ID
   const challengePollingIntervals = new Map();
+
+  // Map to track polling intervals for team rooms
+  const teamPollingIntervals = new Map();
 
   // Function to reset the connection state
   const resetConnection = async () => {
@@ -181,114 +187,44 @@ function createVirtualSocket(userName, tabId) {
     }
   };
 
-  // Connect to the API immediately
-  (async () => {
-    try {
-      // Signal connection
-      console.log("Connecting to Vercel API socket emulation...");
-      const response = await axios.post("/api/socket", {
-        action: "connect",
-        userName: userName || undefined,
-      });
+  // Function to setup team update polling
+  const setupTeamPolling = (eventId) => {
+    // Don't set up duplicate polling
+    if (teamPollingIntervals.has(eventId)) return;
 
-      // Store anonymous ID if one was assigned
-      if (response.data.id) {
-        anonymousId = response.data.id;
-        console.log("Connected as anonymous user:", anonymousId);
-      }
+    // Poll for team updates every 5 seconds
+    let lastUpdateTime = Date.now();
 
-      online = response.data.count;
-      connected = true;
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await axios.get(
+          `/api/socket?event_id=${eventId}&team_updates=true`
+        );
 
-      // Call connect handlers
-      if (eventHandlers.connect) {
-        eventHandlers.connect.forEach((handler) => handler());
-      }
+        // If there are team updates since our last check
+        if (
+          response.data.teamUpdates &&
+          response.data.lastTeamUpdate > lastUpdateTime
+        ) {
+          lastUpdateTime = response.data.lastTeamUpdate;
 
-      // Emit online count
-      if (eventHandlers.onlinePlayers) {
-        eventHandlers.onlinePlayers.forEach((handler) => handler(online));
-      }
-
-      if (eventHandlers.onlineCount) {
-        eventHandlers.onlineCount.forEach((handler) => handler(online));
-      }
-
-      // Poll for updates every 30 seconds
-      const intervalId = setInterval(async () => {
-        try {
-          const response = await axios.get("/api/socket");
-          online = response.data.online;
-
-          // Emit online count
-          if (eventHandlers.onlinePlayers) {
-            eventHandlers.onlinePlayers.forEach((handler) => handler(online));
-          }
-
-          if (eventHandlers.onlineCount) {
-            eventHandlers.onlineCount.forEach((handler) => handler(online));
-          }
-
-          // Check if there's a large discrepancy in the count
-          // If we expect 1-3 users but see 8+, something is wrong
-          if (online > 7 && typeof window !== "undefined") {
-            // Reset connection state to fix the count
-            await resetConnection();
-          }
-        } catch (error) {
-          console.error("Error polling for online users:", error);
-        }
-      }, 30000);
-
-      // Set up a heartbeat to keep the connection active (every 60 seconds)
-      const heartbeatId = setInterval(async () => {
-        try {
-          await axios.post("/api/socket", {
-            action: "heartbeat",
-            userName,
-            id: anonymousId,
+          // Process each team update
+          response.data.teamUpdates.forEach((update) => {
+            if (eventHandlers.teamUpdate) {
+              eventHandlers.teamUpdate.forEach((handler) => handler(update));
+            }
           });
-        } catch (error) {
-          console.error("Error sending heartbeat:", error);
         }
-      }, 60000);
-
-      // Setup cleanup
-      window.addEventListener("beforeunload", async () => {
-        clearInterval(intervalId);
-        clearInterval(heartbeatId);
-
-        // Clean up challenge polling intervals
-        for (const intervalId of challengePollingIntervals.values()) {
-          clearInterval(intervalId);
-        }
-
-        await axios.post("/api/socket", {
-          action: "disconnect",
-          userName,
-          id: anonymousId,
-        });
-      });
-    } catch (error) {
-      console.error("Error connecting to socket API:", error);
-      // Use a fallback value for online count
-      online = 1;
-      connected = true;
-
-      // Still call handlers with fallback data
-      if (eventHandlers.connect) {
-        eventHandlers.connect.forEach((handler) => handler());
+      } catch (error) {
+        console.error(
+          `Error polling for team updates in event ${eventId}:`,
+          error
+        );
       }
+    }, 3000); // Poll every 3 seconds
 
-      if (eventHandlers.onlinePlayers) {
-        eventHandlers.onlinePlayers.forEach((handler) => handler(online));
-      }
-
-      if (eventHandlers.onlineCount) {
-        eventHandlers.onlineCount.forEach((handler) => handler(online));
-      }
-    }
-  })();
+    teamPollingIntervals.set(eventId, intervalId);
+  };
 
   // Function to setup challenge polling
   const setupChallengePolling = (challengeId) => {
@@ -389,6 +325,68 @@ function createVirtualSocket(userName, tabId) {
           }
         })();
       }
+      // Handle joining a team room
+      else if (event === "joinTeamRoom" && data) {
+        const eventId = typeof data === "string" ? data : data.eventId;
+
+        if (eventId) {
+          joinedTeamRooms.add(eventId);
+
+          // Set up polling for team updates in this event
+          setupTeamPolling(eventId);
+
+          // Notify the server about joining the team room
+          (async () => {
+            try {
+              await axios.post("/api/socket", {
+                action: "joinTeamRoom",
+                event_id: eventId,
+                userName,
+              });
+            } catch (error) {
+              console.error("Error joining team room:", error);
+            }
+          })();
+        }
+      }
+      // Handle leaving a team room
+      else if (event === "leaveTeamRoom" && data) {
+        const eventId = typeof data === "string" ? data : data.eventId;
+
+        if (eventId && joinedTeamRooms.has(eventId)) {
+          joinedTeamRooms.delete(eventId);
+
+          // Clear polling interval
+          if (teamPollingIntervals.has(eventId)) {
+            clearInterval(teamPollingIntervals.get(eventId));
+            teamPollingIntervals.delete(eventId);
+          }
+        }
+      }
+      // Handle team updates
+      else if (event === "teamUpdate" && data && data.action) {
+        console.log("Handling teamUpdate in socket client:", data);
+        (async () => {
+          try {
+            await axios.post("/api/socket", {
+              action: "teamUpdate",
+              eventId: data.eventId,
+              teamUuid: data.teamUuid,
+              teamName: data.teamName || "",
+              username: data.username || userName,
+              removedUser: data.removedUser,
+              newPoints: data.newPoints,
+              newTeamTotal: data.newTeamTotal,
+              solvedCount: data.solvedCount,
+              isFirstBlood: data.isFirstBlood || false,
+              update_type: data.action,
+              update_data: data,
+            });
+          } catch (error) {
+            console.error("Error handling team update via socket:", error);
+          }
+        })();
+      }
       // Handle joining a challenge room
       else if (event === "joinChallengeRoom" && data) {
         const challengeId = typeof data === "string" ? data : data.challenge_id;
@@ -429,31 +427,47 @@ function createVirtualSocket(userName, tabId) {
       }
       // Handle flag submission
       else if (event === "flagSubmitted" && data && data.challenge_id) {
+        console.log("Handling flagSubmitted in socket client:", data);
         (async () => {
           try {
             await axios.post("/api/socket", {
               action: "flagSubmitted",
               challenge_id: data.challenge_id,
-              userName: data.user_name || userName,
+              userName: data.username || userName,
+              eventId: data.eventId,
+              teamUuid: data.teamUuid,
+              teamName: data.teamName || "",
+              isFirstBlood: data.isFirstBlood || false,
+              newPoints: data.newPoints,
+              newTeamTotal: data.newTeamTotal,
+              points: data.points,
               flag_data: data,
             });
           } catch (error) {
-            console.error("Error submitting flag:", error);
+            console.error("Error submitting flag via socket:", error);
           }
         })();
       }
       // Handle first blood
       else if (event === "flagFirstBlood" && data && data.challenge_id) {
+        console.log("Handling flagFirstBlood in socket client:", data);
         (async () => {
           try {
             await axios.post("/api/socket", {
               action: "flagFirstBlood",
               challenge_id: data.challenge_id,
-              userName: data.user_name || userName,
+              userName: data.username || userName,
+              eventId: data.eventId,
+              teamUuid: data.teamUuid,
+              teamName: data.teamName || "",
+              isFirstBlood: true,
+              newPoints: data.newPoints,
+              newTeamTotal: data.newTeamTotal,
+              points: data.points,
               flag_data: data,
             });
           } catch (error) {
-            console.error("Error submitting first blood:", error);
+            console.error("Error submitting first blood via socket:", error);
           }
         })();
       }
@@ -485,6 +499,12 @@ function createVirtualSocket(userName, tabId) {
         clearInterval(intervalId);
       }
       challengePollingIntervals.clear();
+
+      // Clear all team polling intervals
+      for (const intervalId of teamPollingIntervals.values()) {
+        clearInterval(intervalId);
+      }
+      teamPollingIntervals.clear();
 
       (async () => {
         try {

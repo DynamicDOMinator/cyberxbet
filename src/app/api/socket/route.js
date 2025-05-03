@@ -17,6 +17,9 @@ const anonymousUsers = new Set();
 // Store for challenge data
 let challengeData = new Map(); // Map of challenge_id -> { solvers: [], lastUpdated: timestamp }
 
+// Store for team updates
+let teamUpdates = new Map(); // Map of event_id -> { updates: [], lastUpdated: timestamp }
+
 // Function to reset all connection data
 function resetAllConnections() {
   onlineUsers = [];
@@ -59,13 +62,36 @@ function cleanupStaleConnections() {
   }
 }
 
+// Function to clean up old team updates (older than 1 hour)
+function cleanupOldTeamUpdates() {
+  const now = Date.now();
+  const oldThreshold = 60 * 60 * 1000; // 1 hour
+
+  teamUpdates.forEach((data, eventId) => {
+    // Remove updates older than the threshold
+    data.updates = data.updates.filter(
+      (update) => now - update.timestamp < oldThreshold
+    );
+
+    // If no updates left, remove the event entry
+    if (data.updates.length === 0) {
+      teamUpdates.delete(eventId);
+    }
+  });
+}
+
 // GET handler for polling
 export async function GET(req) {
   // Clean up stale connections
   cleanupStaleConnections();
 
+  // Clean up old team updates
+  cleanupOldTeamUpdates();
+
   const url = new URL(req.url);
   const challengeId = url.searchParams.get("challenge_id");
+  const eventId = url.searchParams.get("event_id");
+  const teamUpdatesParam = url.searchParams.get("team_updates");
   const resetParam = url.searchParams.get("reset");
 
   // Handle reset request
@@ -74,6 +100,24 @@ export async function GET(req) {
     return NextResponse.json({
       online: 0,
       message: "All connection data reset",
+    });
+  }
+
+  // Handle team updates request
+  if (eventId && teamUpdatesParam === "true") {
+    const eventTeamData = teamUpdates.get(eventId) || {
+      updates: [],
+      lastTeamUpdate: Date.now(),
+    };
+
+    console.log(
+      `GET /api/socket - returning team updates for event ${eventId}`
+    );
+    return NextResponse.json({
+      event_id: eventId,
+      teamUpdates: eventTeamData.updates,
+      lastTeamUpdate: eventTeamData.lastTeamUpdate,
+      message: "Team updates retrieved",
     });
   }
 
@@ -106,7 +150,7 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const data = await req.json();
-    const { action, userName, challenge_id, flag_data } = data;
+    const { action, userName, challenge_id, event_id, flag_data } = data;
 
     console.log(
       `Socket API: ${action} request for user ${userName || "anonymous"}`
@@ -189,6 +233,61 @@ export async function POST(req) {
         count: 0,
       });
     }
+    // Handle team update events
+    else if (action === "teamUpdate" && event_id) {
+      // Get or initialize team updates for this event
+      if (!teamUpdates.has(event_id)) {
+        teamUpdates.set(event_id, {
+          updates: [],
+          lastTeamUpdate: Date.now(),
+        });
+      }
+
+      const eventTeamData = teamUpdates.get(event_id);
+
+      // Create the update object
+      const updateData = {
+        ...data,
+        timestamp: Date.now(),
+      };
+
+      // Add update to the list (keep max 100 updates)
+      eventTeamData.updates.push(updateData);
+      if (eventTeamData.updates.length > 100) {
+        eventTeamData.updates = eventTeamData.updates.slice(-100);
+      }
+
+      // Update timestamp
+      eventTeamData.lastTeamUpdate = Date.now();
+
+      // Update connection timestamp
+      if (userName) connectionTimestamps.set(userName, Date.now());
+
+      console.log(
+        `Team update in event ${event_id} by ${userName || "anonymous"}: ${
+          data.action
+        }`
+      );
+      return NextResponse.json({
+        status: "success",
+        message: "Team update recorded",
+        event_id,
+      });
+    }
+    // Handle joining team room
+    else if (action === "joinTeamRoom" && event_id) {
+      // Update connection timestamp
+      if (userName) connectionTimestamps.set(userName, Date.now());
+
+      console.log(
+        `User ${userName || "anonymous"} joined team room for event ${event_id}`
+      );
+      return NextResponse.json({
+        status: "success",
+        message: "Joined team room",
+        event_id,
+      });
+    }
     // Handle flag submission events
     else if (action === "flagSubmitted" && challenge_id && userName) {
       // Get or initialize challenge data
@@ -206,6 +305,12 @@ export async function POST(req) {
         challenge.solvers.push({
           userName,
           timestamp: Date.now(),
+          eventId: data.eventId || flag_data?.eventId,
+          teamUuid: data.teamUuid || flag_data?.teamUuid,
+          newPoints: data.newPoints || flag_data?.newPoints,
+          newTeamTotal: data.newTeamTotal || flag_data?.newTeamTotal,
+          points: data.points || flag_data?.points,
+          isFirstBlood: data.isFirstBlood || flag_data?.isFirstBlood || false,
           ...flag_data,
         });
       }
@@ -218,10 +323,13 @@ export async function POST(req) {
       console.log(
         `Flag submitted by ${userName} for challenge ${challenge_id}`
       );
+
       return NextResponse.json({
         status: "success",
         message: "Flag submission recorded",
         challenge_id,
+        eventId: data.eventId || flag_data?.eventId,
+        teamUuid: data.teamUuid || flag_data?.teamUuid,
         solvers: challenge.solvers.length,
       });
     }
@@ -243,6 +351,12 @@ export async function POST(req) {
         challenge.firstBlood = {
           userName,
           timestamp: Date.now(),
+          eventId: data.eventId || flag_data?.eventId,
+          teamUuid: data.teamUuid || flag_data?.teamUuid,
+          newPoints: data.newPoints || flag_data?.newPoints,
+          newTeamTotal: data.newTeamTotal || flag_data?.newTeamTotal,
+          points: data.points || flag_data?.points,
+          isFirstBlood: true,
           ...flag_data,
         };
       }
@@ -253,10 +367,13 @@ export async function POST(req) {
       if (userName) connectionTimestamps.set(userName, Date.now());
 
       console.log(`First blood by ${userName} for challenge ${challenge_id}`);
+
       return NextResponse.json({
         status: "success",
         message: "First blood recorded",
         challenge_id,
+        eventId: data.eventId || flag_data?.eventId,
+        teamUuid: data.teamUuid || flag_data?.teamUuid,
       });
     }
     // Handle join challenge room events

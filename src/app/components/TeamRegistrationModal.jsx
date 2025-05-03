@@ -1,10 +1,11 @@
 import { useLanguage } from "@/app/context/LanguageContext";
 import { HiOutlineUsers } from "react-icons/hi2";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Cookies from "js-cookie";
+import { createSocket } from "@/lib/socket-client";
 
 export default function TeamRegistrationModal({
   isOpen,
@@ -22,6 +23,20 @@ export default function TeamRegistrationModal({
   const [teamPassword, setTeamPassword] = useState("");
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const token = Cookies.get("token");
+  const [socket, setSocket] = useState(null);
+
+  // Initialize socket connection
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const userName = Cookies.get("username");
+    const newSocket = createSocket(userName);
+    setSocket(newSocket);
+
+    return () => {
+      // No need to disconnect since socket is managed globally
+    };
+  }, [isOpen]);
 
   const handleCreateTeam = async () => {
     try {
@@ -40,6 +55,20 @@ export default function TeamRegistrationModal({
         toast.success(
           isEnglish ? "Team created successfully!" : "تم إنشاء الفريق بنجاح!"
         );
+
+        // Emit team created event
+        if (socket) {
+          const userName = Cookies.get("username");
+          socket.emit("teamUpdate", {
+            action: "create",
+            eventId: eventUuid,
+            teamUuid: response.data.data.uuid,
+            teamName: createTeam,
+            userName: userName,
+            teamData: response.data.data,
+          });
+        }
+
         if (onSuccess) onSuccess();
         onClose();
       }
@@ -72,13 +101,29 @@ export default function TeamRegistrationModal({
         }
       );
 
-      if (response.data?.status === "success") {
+      if (response.data?.status === "success" || response.status === 200) {
         const teamName = response.data?.data?.team?.name || joinTeam;
+        const teamUuid = response.data?.data?.team?.uuid;
+
         toast.success(
           isEnglish
             ? `Successfully joined team "${teamName}"!`
             : `تم الانضمام إلى الفريق "${teamName}" بنجاح!`
         );
+
+        // Emit team join event
+        if (socket) {
+          const userName = Cookies.get("username");
+          socket.emit("teamUpdate", {
+            action: "join",
+            eventId: eventUuid,
+            teamUuid: teamUuid,
+            teamName: teamName,
+            userName: userName,
+            teamData: response.data?.data,
+          });
+        }
+
         if (onSuccess) onSuccess();
         onClose();
       } else {
@@ -87,6 +132,18 @@ export default function TeamRegistrationModal({
             ? "Joined team successfully!"
             : "تم الانضمام إلى الفريق بنجاح!"
         );
+
+        // Emit team join event even if we don't have complete data
+        if (socket) {
+          const userName = Cookies.get("username");
+          socket.emit("teamUpdate", {
+            action: "join",
+            eventId: eventUuid,
+            teamName: joinTeam,
+            userName: userName,
+          });
+        }
+
         if (onSuccess) onSuccess();
         onClose();
       }

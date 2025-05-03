@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useUserProfile } from "@/app/context/UserProfileContext";
 import { useRouter } from "next/navigation";
+import { createSocket } from "@/lib/socket-client";
 
 export default function TeamDetailsModal({
   isOpen,
@@ -18,6 +19,7 @@ export default function TeamDetailsModal({
   const router = useRouter();
   const [teamDetails, setTeamDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -27,8 +29,111 @@ export default function TeamDetailsModal({
         setTeamDetails(teamData);
         setIsLoading(false);
       }
+
+      // Initialize socket connection when modal opens
+      const userName = Cookies.get("username");
+      const newSocket = createSocket(userName);
+      setSocket(newSocket);
+
+      // Join the appropriate team room for updates
+      if (newSocket && teamUuid) {
+        const eventId = teamData?.event_id || teamData?.event?.uuid;
+        if (eventId) {
+          newSocket.emit("joinTeamRoom", eventId);
+        }
+      }
     }
+
+    return () => {
+      // Clean up socket connection when modal closes
+      if (socket) {
+        const eventId = teamDetails?.event_id || teamDetails?.event?.uuid;
+        if (eventId) {
+          socket.emit("leaveTeamRoom", eventId);
+        }
+        socket.off("flagSubmitted");
+        socket.off("teamUpdate");
+      }
+    };
   }, [isOpen, teamUuid, teamData]);
+
+  // Add a function to forcefully refresh team details
+  const forceRefreshTeamDetails = async () => {
+    try {
+      console.log("Force refreshing team details after flag submission");
+      await fetchTeamDetails();
+      console.log("Team details refreshed successfully");
+    } catch (error) {
+      console.error("Error refreshing team details:", error);
+    }
+  };
+
+  // Update the socket listeners to use the force refresh approach
+  useEffect(() => {
+    if (!socket || !teamDetails) return;
+
+    console.log(
+      "Setting up socket listeners for TeamDetailsModal with teamUuid:",
+      teamUuid
+    );
+
+    // Listen for flag submission updates
+    socket.on("flagSubmitted", (data) => {
+      console.log("Team modal received flagSubmitted event:", data);
+
+      if (data.teamUuid === teamUuid) {
+        // Force refresh team details instead of trying to update state manually
+        setTimeout(() => {
+          forceRefreshTeamDetails();
+        }, 500);
+      }
+    });
+
+    // Listen for team updates
+    socket.on("teamUpdate", (data) => {
+      console.log("Team modal received teamUpdate event:", data);
+
+      if (data.teamUuid === teamUuid) {
+        // Handle member removed
+        if (data.action === "remove") {
+          console.log(`Team modal removing member: ${data.removedUser}`);
+          setTeamDetails((prevDetails) => {
+            if (!prevDetails) return null;
+            return {
+              ...prevDetails,
+              members: prevDetails.members.filter(
+                (member) => member.username !== data.removedUser
+              ),
+            };
+          });
+        }
+        // For all other updates, force refresh
+        else {
+          setTimeout(() => {
+            forceRefreshTeamDetails();
+          }, 500);
+        }
+      }
+    });
+
+    // Listen explicitly for first blood events
+    socket.on("flagFirstBlood", (data) => {
+      console.log("Team modal received flagFirstBlood event:", data);
+
+      if (data.teamUuid === teamUuid) {
+        // Force refresh team details instead of trying to update state manually
+        setTimeout(() => {
+          forceRefreshTeamDetails();
+        }, 500);
+      }
+    });
+
+    return () => {
+      socket.off("flagSubmitted");
+      socket.off("teamUpdate");
+      socket.off("flagFirstBlood");
+    };
+  }, [socket, teamDetails, teamUuid]);
 
   const fetchTeamDetails = async () => {
     try {
@@ -209,7 +314,6 @@ export default function TeamDetailsModal({
                           )}
                         </div>
                       </div>
-                   
                     </div>
                   </div>
                 ))}

@@ -19,6 +19,9 @@ const tabToUser = new Map(); // tabId -> userName
 // Track challenge rooms and participants
 const challengeRooms = new Map(); // challengeId -> Set of socket IDs
 
+// Track event team rooms
+const teamRooms = new Map(); // eventId -> Set of socket IDs
+
 // Track leaderboard subscribers
 const leaderboardSubscribers = new Set();
 
@@ -27,6 +30,12 @@ const activitySubscribers = new Set();
 
 // Track connection timestamps to handle stale connections
 const connectionTimestamps = new Map(); // socketId -> timestamp
+
+// Track recent team updates for broadcasting to new joiners
+const recentTeamUpdates = new Map(); // eventId -> Array of recent updates
+
+// Track team activities
+const teamActivities = new Map(); // teamUuid -> Array of activities
 
 // Function to get unique user count
 const getUniqueUserCount = () => {
@@ -38,6 +47,11 @@ const getChallengeRoomUsers = (challengeId) => {
   return challengeRooms.has(challengeId)
     ? challengeRooms.get(challengeId).size
     : 0;
+};
+
+// Function to get users in a team room
+const getTeamRoomUsers = (eventId) => {
+  return teamRooms.has(eventId) ? teamRooms.get(eventId).size : 0;
 };
 
 // Function declaration for broadcasting online count - moved up to be accessible in cleanupStaleConnections
@@ -65,10 +79,13 @@ function resetAllTrackers() {
   onlineUsers.clear();
   anonymousConnections.clear();
   challengeRooms.clear();
+  teamRooms.clear();
   connectionTimestamps.clear();
   tabToUser.clear();
   leaderboardSubscribers.clear();
   activitySubscribers.clear();
+  recentTeamUpdates.clear();
+  teamActivities.clear();
 
   // Reset count
   console.log("All trackers reset. Current user count: 0");
@@ -127,6 +144,16 @@ const cleanupStaleConnections = (io) => {
         }
       }
 
+      // Remove from team rooms
+      for (const [eventId, socketSet] of teamRooms.entries()) {
+        if (socketSet.has(socketId)) {
+          socketSet.delete(socketId);
+          if (socketSet.size === 0) {
+            teamRooms.delete(eventId);
+          }
+        }
+      }
+
       // Remove the timestamp
       connectionTimestamps.delete(socketId);
     } else {
@@ -151,6 +178,20 @@ const cleanupStaleConnections = (io) => {
         activitySubscribers.delete(socketId);
         console.log(`Removed stale activity subscription: ${socketId}`);
       }
+    }
+  }
+
+  // Clean up old team updates (keep only last 24 hours)
+  const oldUpdateThreshold = 24 * 60 * 60 * 1000; // 24 hours
+  for (const [eventId, updates] of recentTeamUpdates.entries()) {
+    const filteredUpdates = updates.filter(
+      (update) => now - update.timestamp < oldUpdateThreshold
+    );
+
+    if (filteredUpdates.length === 0) {
+      recentTeamUpdates.delete(eventId);
+    } else {
+      recentTeamUpdates.set(eventId, filteredUpdates);
     }
   }
 
@@ -232,6 +273,19 @@ app.prepare().then(() => {
       return;
     }
 
+    // Add API endpoint for team room participants
+    if (parsedUrl.pathname.startsWith("/api/team-room/")) {
+      const eventId = parsedUrl.pathname.split("/").pop();
+      res.setHeader("Content-Type", "application/json");
+      res.end(
+        JSON.stringify({
+          count: getTeamRoomUsers(eventId),
+          event_id: eventId,
+        })
+      );
+      return;
+    }
+
     handle(req, res, parsedUrl);
   });
 
@@ -256,6 +310,34 @@ app.prepare().then(() => {
       count,
     });
     console.log(`Broadcasting challenge room ${challengeId} count: ${count}`);
+  };
+
+  // Function to broadcast team update
+  const broadcastTeamUpdate = (eventId, updateData) => {
+    try {
+      io.to(`team_${eventId}`).emit("teamUpdate", updateData);
+      console.log(
+        `Broadcasting team update for event ${eventId}: ${updateData.action}`
+      );
+
+      // Store recent update for new joiners
+      if (!recentTeamUpdates.has(eventId)) {
+        recentTeamUpdates.set(eventId, []);
+      }
+
+      const updates = recentTeamUpdates.get(eventId);
+      updates.push({ ...updateData, timestamp: Date.now() });
+
+      // Keep only the 100 most recent updates
+      if (updates.length > 100) {
+        recentTeamUpdates.set(eventId, updates.slice(-100));
+      }
+    } catch (error) {
+      console.error(
+        `Error broadcasting team update for event ${eventId}:`,
+        error
+      );
+    }
   };
 
   // Set up periodic cleanup of stale connections (every 5 minutes)
@@ -352,6 +434,155 @@ app.prepare().then(() => {
         }
 
         addUser(data.userName);
+      }
+    });
+
+    // Handle joining a team room for event updates
+    socket.on("joinTeamRoom", (eventId) => {
+      console.log(
+        `Socket ${socket.id} joining team room for event: ${eventId}`
+      );
+
+      // Update connection timestamp
+      connectionTimestamps.set(socket.id, Date.now());
+
+      // Join the room
+      socket.join(`team_${eventId}`);
+
+      // Track the socket in the team room
+      if (!teamRooms.has(eventId)) {
+        teamRooms.set(eventId, new Set());
+      }
+      teamRooms.get(eventId).add(socket.id);
+
+      // Store the event ID on the socket for disconnect handling
+      if (!socket.teamRooms) {
+        socket.teamRooms = new Set();
+      }
+      socket.teamRooms.add(eventId);
+
+      // Send recent team updates for this event to the new joiner
+      if (recentTeamUpdates.has(eventId)) {
+        const updates = recentTeamUpdates.get(eventId);
+        if (updates.length > 0) {
+          // Get updates from the last hour only
+          const now = Date.now();
+          const recentUpdates = updates.filter(
+            (update) => now - update.timestamp < 60 * 60 * 1000
+          );
+
+          if (recentUpdates.length > 0) {
+            socket.emit("recentTeamUpdates", {
+              eventId,
+              updates: recentUpdates,
+            });
+          }
+        }
+      }
+
+      console.log(
+        `Team room ${eventId} now has ${teamRooms.get(eventId).size} members`
+      );
+    });
+
+    // Handle leaving a team room
+    socket.on("leaveTeamRoom", (eventId) => {
+      console.log(
+        `Socket ${socket.id} leaving team room for event: ${eventId}`
+      );
+
+      // Update connection timestamp
+      connectionTimestamps.set(socket.id, Date.now());
+
+      // Leave the room
+      socket.leave(`team_${eventId}`);
+
+      // Remove from tracking
+      if (teamRooms.has(eventId)) {
+        teamRooms.get(eventId).delete(socket.id);
+
+        // Clean up empty rooms
+        if (teamRooms.get(eventId).size === 0) {
+          teamRooms.delete(eventId);
+          console.log(
+            `Team room for event ${eventId} is now empty and removed`
+          );
+        } else {
+          console.log(
+            `Team room ${eventId} now has ${
+              teamRooms.get(eventId).size
+            } members`
+          );
+        }
+      }
+
+      // Update socket's team rooms
+      if (socket.teamRooms) {
+        socket.teamRooms.delete(eventId);
+      }
+    });
+
+    // Handle team updates (join, leave, etc.)
+    socket.on("teamUpdate", (data) => {
+      if (!data || !data.action || !data.eventId) return;
+
+      // Update connection timestamp
+      connectionTimestamps.set(socket.id, Date.now());
+
+      console.log(`Team update: ${data.action} for event ${data.eventId}`);
+      console.log("Team update full data:", JSON.stringify(data));
+
+      // Check for missing required data
+      if (data.action === "points_update" && !data.teamUuid) {
+        console.warn("Warning: Missing teamUuid in points_update event");
+      }
+
+      // For create/join/remove, broadcast to everyone in the event's team room
+      if (
+        data.action === "create" ||
+        data.action === "join" ||
+        data.action === "remove"
+      ) {
+        io.to(`team_${data.eventId}`).emit("teamUpdate", {
+          ...data,
+          timestamp: Date.now(),
+        });
+      }
+      // For points updates, broadcast to everyone in the event's team room
+      else if (data.action === "points_update") {
+        console.log(
+          `Broadcasting points update for team ${
+            data.teamUuid || "unknown"
+          } in event ${data.eventId}`
+        );
+        console.log(`User ${data.username} now has ${data.newPoints} points`);
+
+        // Broadcast to everyone in the team room INCLUDING the sender
+        io.to(`team_${data.eventId}`).emit("teamUpdate", {
+          ...data,
+          timestamp: Date.now(),
+        });
+
+        // Store team points update in team activities
+        if (data.teamUuid && !teamActivities.has(data.teamUuid)) {
+          teamActivities.set(data.teamUuid, []);
+        }
+
+        if (teamActivities.has(data.teamUuid)) {
+          const activitiesList = teamActivities.get(data.teamUuid);
+          activitiesList.push({
+            type: "points_update",
+            data: {
+              ...data,
+              timestamp: Date.now(),
+            },
+          });
+
+          // Keep only the last 50 activities
+          if (activitiesList.length > 50) {
+            teamActivities.set(data.teamUuid, activitiesList.slice(-50));
+          }
+        }
       }
     });
 
@@ -499,32 +730,45 @@ app.prepare().then(() => {
 
       console.log(
         `Flag submitted for challenge ${data.challenge_id} by ${
-          socket.userName || "anonymous"
+          socket.userName || data.username || "anonymous"
         }`
       );
 
-      // Broadcast to everyone in the challenge room EXCEPT the sender
-      socket.broadcast.to(`challenge_${data.challenge_id}`).emit("newSolve", {
-        challenge_id: data.challenge_id,
-        user_name: data.user_name || socket.userName,
-        timestamp: Date.now(),
-      });
+      // Log the full data object for debugging
+      console.log("Flag submission full data:", JSON.stringify(data));
 
-      // Also notify leaderboard subscribers about the update
-      io.to("leaderboard").emit("leaderboardUpdate", {
-        type: "flag_submission",
-        challenge_id: data.challenge_id,
-        user_name: data.user_name || socket.userName,
-        timestamp: Date.now(),
-      });
+      // Check for missing required data
+      if (!data.eventId) {
+        console.warn("Warning: Missing eventId in flagSubmitted event");
+      }
 
-      // Notify activity subscribers as well
-      io.to("activity").emit("activityUpdate", {
-        type: "flag_submission",
-        challenge_id: data.challenge_id,
-        user_name: data.user_name || socket.userName,
+      if (!data.teamUuid) {
+        console.warn("Warning: Missing teamUuid in flagSubmitted event");
+      }
+
+      // Add additional data for the socket broadcast
+      const broadcastData = {
+        ...data,
+        username: data.username || socket.userName,
+        profile_image: data.profile_image || null,
         timestamp: Date.now(),
-      });
+      };
+
+      // Broadcast the regular solve event to everyone in the challenge room
+      // This will update the activity feed in real-time
+      io.to(`challenge_${data.challenge_id}`).emit("newSolve", broadcastData);
+
+      // Broadcast to the event room for scoreboard updates
+      if (data.eventId) {
+        io.to(`event_${data.eventId}`).emit("leaderboardUpdate", {
+          type: "flag_submission",
+          teamUuid: data.teamUuid,
+          teamName: data.teamName,
+          points: data.points,
+          newTeamTotal: data.newTeamTotal,
+          timestamp: Date.now(),
+        });
+      }
     });
 
     // Handle first blood
@@ -535,33 +779,35 @@ app.prepare().then(() => {
       connectionTimestamps.set(socket.id, Date.now());
 
       console.log(
-        `First blood for challenge ${data.challenge_id} by ${
-          socket.userName || "anonymous"
+        `FIRST BLOOD! Challenge ${data.challenge_id} by ${
+          socket.userName || data.username || "anonymous"
         }`
       );
 
-      // Broadcast to EVERYONE in the challenge room (including sender)
-      io.to(`challenge_${data.challenge_id}`).emit("firstBlood", {
-        challenge_id: data.challenge_id,
-        user_name: data.user_name || socket.userName,
+      // Add additional data for the socket broadcast
+      const broadcastData = {
+        ...data,
+        username: data.username || socket.userName,
+        profile_image: data.profile_image || null,
         timestamp: Date.now(),
-      });
+        is_first_blood: true,
+      };
 
-      // Also notify leaderboard subscribers about the update
-      io.to("leaderboard").emit("leaderboardUpdate", {
-        type: "first_blood",
-        challenge_id: data.challenge_id,
-        user_name: data.user_name || socket.userName,
-        timestamp: Date.now(),
-      });
+      // Broadcast the first blood event to everyone in the challenge room
+      io.to(`challenge_${data.challenge_id}`).emit("firstBlood", broadcastData);
 
-      // Notify activity subscribers as well
-      io.to("activity").emit("activityUpdate", {
-        type: "first_blood",
-        challenge_id: data.challenge_id,
-        user_name: data.user_name || socket.userName,
-        timestamp: Date.now(),
-      });
+      // Also broadcast to the event room for scoreboard updates
+      if (data.eventId) {
+        io.to(`event_${data.eventId}`).emit("leaderboardUpdate", {
+          type: "first_blood",
+          teamUuid: data.teamUuid,
+          teamName: data.teamName,
+          points: data.points,
+          newTeamTotal: data.newTeamTotal,
+          timestamp: Date.now(),
+          isFirstBlood: true,
+        });
+      }
     });
 
     socket.on("disconnect", () => {
@@ -631,6 +877,23 @@ app.prepare().then(() => {
             } else {
               // Broadcast updated count
               broadcastChallengeRoomCount(challengeId);
+            }
+          }
+        }
+      }
+
+      // Clean up team rooms
+      if (socket.teamRooms) {
+        for (const eventId of socket.teamRooms) {
+          if (teamRooms.has(eventId)) {
+            teamRooms.get(eventId).delete(socket.id);
+
+            // Clean up empty rooms
+            if (teamRooms.get(eventId).size === 0) {
+              teamRooms.delete(eventId);
+              console.log(
+                `Team room for event ${eventId} is now empty and removed`
+              );
             }
           }
         }

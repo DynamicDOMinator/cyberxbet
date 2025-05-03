@@ -9,6 +9,8 @@ import LoadingPage from "../../../components/LoadingPage";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useUserProfile } from "@/app/context/UserProfileContext";
 import { useRouter } from "next/navigation";
+import { createSocket } from "@/lib/socket-client";
+
 export default function ChallengePage() {
   const [challenge, setChallenge] = useState(null);
   const [flags, setflags] = useState(false);
@@ -28,22 +30,22 @@ export default function ChallengePage() {
   const [isLocked, setIsLocked] = useState(false);
   const [teamData, setTeamData] = useState(null);
   const [showEmptyState, setShowEmptyState] = useState(false);
+  const [socket, setSocket] = useState(null);
+  const [pendingActivitiesCount, setPendingActivitiesCount] = useState(0);
 
   const { id } = useParams();
   const { isEnglish } = useLanguage();
   const { convertToUserTimezone } = useUserProfile();
   const router = useRouter();
+
   // Handle parsing API date strings correctly (assuming API returns UTC+3)
   const parseApiDate = (dateString) => {
     if (!dateString) return null;
 
     try {
-      console.log("Original API dateString:", dateString);
-
       // Handle ISO format with timezone info (like 2025-04-26T02:16:17+03:00)
       if (dateString.includes("T") && dateString.includes("+")) {
         const date = new Date(dateString);
-        console.log("Parsed ISO date with timezone:", date.toISOString());
         return date;
       }
 
@@ -65,14 +67,6 @@ export default function ChallengePage() {
       const serverTimezoneOffsetHours = 3;
       date.setUTCHours(date.getUTCHours() - serverTimezoneOffsetHours);
 
-      // Debug timezone info
-      console.log("API Date String:", dateString);
-      console.log("Parsed to UTC Date:", date.toISOString());
-      console.log(
-        "User browser timezone:",
-        Intl.DateTimeFormat().resolvedOptions().timeZone
-      );
-
       return date;
     } catch (error) {
       console.error("Error parsing API date:", error);
@@ -85,6 +79,7 @@ export default function ChallengePage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = Cookies.get("token");
 
+      // Step 1: Fetch challenge data
       const challengeResponse = await axios.get(
         `${apiUrl}/event-challenges/${id}`,
         {
@@ -95,17 +90,41 @@ export default function ChallengePage() {
       );
       setChallenge(challengeResponse.data.data);
 
-      // Fetch solved flags data
-      const solvedResponse = await axios.get(
-        `${apiUrl}/challenges/${id}/check`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      // Step 2: Fetch team data (if challenge data contains event_uuid)
+      if (challengeResponse.data.data?.event_uuid) {
+        try {
+          const teamResponse = await axios.get(
+            `${apiUrl}/${challengeResponse.data.data.event_uuid}/my-team`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          if (teamResponse.data.data) {
+            setTeamData(teamResponse.data.data);
+          }
+        } catch (teamError) {
+          console.error("Error fetching team data:", teamError);
         }
-      );
+      }
+
+      // Step 3: Fetch solved flags data
+      try {
+        const solvedResponse = await axios.get(
+          `${apiUrl}/challenges/${id}/check`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+      } catch (error) {
+        console.error("Error checking solved flags:", error);
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching initial data:", error);
     } finally {
       setLoadingPage(false);
     }
@@ -147,6 +166,140 @@ export default function ChallengePage() {
     }
   }, [flags]);
 
+  // Replace the custom fetchActivitiesData function with a simpler version that doesn't change the UI structure
+  const fetchActivitiesData = async (id) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
+
+      const response = await axios.get(`${apiUrl}/challenges/${id}/team-`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data.status === "success" && response.data.data?.members) {
+        return response.data.data.members;
+      }
+      return [];
+    } catch (error) {
+      console.error(
+        "Error fetching activities data:",
+        error.response?.data || error.message
+      );
+      return [];
+    }
+  };
+
+  // Update the socket event handlers to handle real-time updates properly
+  useEffect(() => {
+    const userName = Cookies.get("username");
+    const newSocket = createSocket(userName);
+    setSocket(newSocket);
+
+    // Join the challenge room
+    if (newSocket) {
+      newSocket.emit("joinChallengeRoom", id);
+
+      // Listen for new solves from other users
+      newSocket.on("newSolve", async (data) => {
+        console.log("Received new solve event:", data);
+
+        if (activities) {
+          // Simply trigger a refresh of the data to ensure consistency
+          const freshData = await fetchActivitiesData(id);
+          if (freshData && freshData.length > 0) {
+            setActivitiesData(freshData);
+            setShowEmptyState(false);
+          }
+        } else {
+          // We're not on the activities tab, increment the counter only
+          setPendingActivitiesCount((prev) => prev + 1);
+        }
+      });
+
+      // Listen for first blood events
+      newSocket.on("firstBlood", async (data) => {
+        console.log("Received first blood event:", data);
+
+        if (activities) {
+          // Simply trigger a refresh of the data to ensure consistency
+          const freshData = await fetchActivitiesData(id);
+          if (freshData && freshData.length > 0) {
+            setActivitiesData(freshData);
+            setShowEmptyState(false);
+          }
+        } else {
+          // We're not on the activities tab, increment the counter only
+          setPendingActivitiesCount((prev) => prev + 1);
+        }
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.off("newSolve");
+        socket.off("firstBlood");
+        socket.emit("leaveChallengeRoom", id);
+      }
+    };
+  }, [id, activities]);
+
+  // Update the useEffect for fetching activities data when tab becomes active
+  useEffect(() => {
+    if (activities) {
+      // Load activities data when the activities tab is active
+      const loadActivitiesData = async () => {
+        try {
+          const data = await fetchActivitiesData(id);
+          if (data && data.length > 0) {
+            setActivitiesData(data);
+            setShowEmptyState(false);
+          } else {
+            setShowEmptyState(true);
+          }
+          // Reset counter when tab becomes active
+          setPendingActivitiesCount(0);
+        } catch (error) {
+          console.error("Error loading activities data:", error);
+          setShowEmptyState(true);
+        }
+      };
+
+      loadActivitiesData();
+    }
+  }, [activities, id]);
+
+  // Add a function to fetch team information at the beginning of the file
+  useEffect(() => {
+    // Fetch team information when component mounts
+    const fetchTeamInfo = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = Cookies.get("token");
+        const response = await axios.get(
+          `${apiUrl}/${challenge?.event_uuid}/my-team`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.data?.data) {
+          setTeamData(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching team information:", error);
+      }
+    };
+
+    if (challenge?.event_uuid) {
+      fetchTeamInfo();
+    }
+  }, [challenge?.event_uuid]);
+
+  // Modify the submitFlag function to ensure team data is included in the socket payload
   const submitFlag = async () => {
     try {
       setIsLoading(true);
@@ -171,34 +324,189 @@ export default function ChallengePage() {
       // Check for solved flags after successful submission
       await checkSolvedFlags();
 
-      if (
-        response.status === 200 &&
-        response.data.flag_type === "multiple_all"
-      ) {
-        setNotfication(true);
-        setTimeout(() => {
-          setNotfication(false);
-        }, 5000);
-      } else if (response.data.data) {
-        setNotfication(false);
-      }
+      if (response.status === 200 && response.data.status === "success") {
+        try {
+          // Try to get the latest team data first to ensure we have team UUID
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+          const token = Cookies.get("token");
 
-      if (
-        response.data.data &&
-        response.data.data.is_first_blood !== undefined
-      ) {
-        if (response.data.data.is_first_blood === true) {
-          setIsFirstBlood(true);
-          setFirstblood(response.data.data.first_blood_points);
-          setTimeout(() => {
-            setIsFirstBlood(false);
-          }, 5000);
-        } else if (response.data.data.is_first_blood === false) {
-          setIsSubmitFlag(true);
-          setPoints(response.data.data.points);
-          setTimeout(() => {
-            setIsSubmitFlag(false);
-          }, 5000);
+          // Get event ID from challenge
+          const eventId = challenge?.event_uuid || "";
+
+          if (eventId) {
+            // Get latest team data
+            const teamResponse = await axios.get(
+              `${apiUrl}/${eventId}/my-team`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            if (teamResponse.data?.data) {
+              setTeamData(teamResponse.data.data);
+
+              // Now we have fresh team data, emit socket events
+              const username = Cookies.get("username") || "";
+              const pointsEarned = response.data.data.points || 0;
+              const isFirstBlood = response.data.data.is_first_blood || false;
+
+              // Find the user's total points in the team members array
+              let userPoints = 0;
+              if (
+                username &&
+                teamResponse.data.data.members &&
+                Array.isArray(teamResponse.data.data.members)
+              ) {
+                const userMember = teamResponse.data.data.members.find(
+                  (m) =>
+                    m.username &&
+                    username &&
+                    m.username.toLowerCase() === username.toLowerCase()
+                );
+                userPoints = userMember?.total_bytes || 0;
+              }
+
+              // Create payload with complete information
+              const socketPayload = {
+                challenge_id: id,
+                username: username,
+                eventId: eventId,
+                teamUuid: teamResponse.data.data.uuid,
+                teamName: teamResponse.data.data.name,
+                points: pointsEarned,
+                newPoints: userPoints,
+                newTeamTotal:
+                  teamResponse.data.data.statistics?.total_bytes || 0,
+                isFirstBlood: isFirstBlood,
+                solvedCount:
+                  teamResponse.data.data.statistics?.total_challenges_solved ||
+                  0,
+                challenge_name: challenge?.title || "Challenge",
+              };
+
+              console.log("Emitting flag event:", socketPayload);
+
+              // Emit appropriate events
+              if (socket) {
+                if (isFirstBlood) {
+                  socket.emit("flagFirstBlood", socketPayload);
+                } else {
+                  socket.emit("flagSubmitted", socketPayload);
+                }
+
+                // Always emit team update for scoreboard
+                socket.emit("teamUpdate", {
+                  action: "points_update",
+                  ...socketPayload,
+                });
+              }
+
+              // Now show appropriate notification
+              if (isFirstBlood) {
+                setIsFirstBlood(true);
+                setFirstblood(response.data.data.first_blood_points);
+                setTimeout(() => setIsFirstBlood(false), 5000);
+              } else {
+                setIsSubmitFlag(true);
+                setPoints(pointsEarned);
+                setTimeout(() => setIsSubmitFlag(false), 5000);
+              }
+
+              // Update the activities list to include the current user's submission immediately
+              if (activities) {
+                // Create a solver entry for the current user
+                const currentUserSolver = {
+                  username: username,
+                  user_name: username,
+                  userName: username,
+                  profile_image: "/icon1.png", // Default icon, will be updated later
+                  is_first_blood: isFirstBlood,
+                  solved_at: new Date().toISOString(),
+                };
+
+                // Update activities data to include this submission
+                setActivitiesData((prev) => {
+                  // Check if this user is already in the list with better comparison
+                  const userExists =
+                    prev &&
+                    Array.isArray(prev) &&
+                    prev.some(
+                      (user) =>
+                        (user.username &&
+                          username &&
+                          user.username.toLowerCase() ===
+                            username.toLowerCase()) ||
+                        (user.user_name &&
+                          username &&
+                          user.user_name.toLowerCase() ===
+                            username.toLowerCase()) ||
+                        (user.userName &&
+                          username &&
+                          user.userName.toLowerCase() ===
+                            username.toLowerCase())
+                    );
+
+                  if (userExists) {
+                    // Update the existing entry
+                    return prev.map((user) => {
+                      const userMatches =
+                        (user.username &&
+                          username &&
+                          user.username.toLowerCase() ===
+                            username.toLowerCase()) ||
+                        (user.user_name &&
+                          username &&
+                          user.user_name.toLowerCase() ===
+                            username.toLowerCase()) ||
+                        (user.userName &&
+                          username &&
+                          user.userName.toLowerCase() ===
+                            username.toLowerCase());
+
+                      return userMatches
+                        ? {
+                            ...user,
+                            is_first_blood: isFirstBlood,
+                            solved_at: new Date().toISOString(),
+                          }
+                        : user;
+                    });
+                  } else {
+                    // Add the new solver to the beginning of the array
+                    return Array.isArray(prev)
+                      ? [currentUserSolver, ...prev]
+                      : [currentUserSolver];
+                  }
+                });
+
+                // Show empty state if needed
+                setShowEmptyState(false);
+              }
+
+              // Fetch updated team data after a short delay
+              setTimeout(async () => {
+                try {
+                  const refreshTeamResponse = await axios.get(
+                    `${apiUrl}/${eventId}/my-team`,
+                    {
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                      },
+                    }
+                  );
+                  if (refreshTeamResponse.data?.data) {
+                    setTeamData(refreshTeamResponse.data.data);
+                  }
+                } catch (error) {
+                  console.error("Error refreshing team data:", error);
+                }
+              }, 1000);
+            }
+          }
+        } catch (error) {
+          console.error("Error handling flag submission after success:", error);
         }
       }
     } catch (error) {
@@ -302,7 +610,9 @@ export default function ChallengePage() {
                           />
                           <p
                             onClick={() =>
-                              router.push(`/profile/${flag.first_blood?.user_name}`)
+                              router.push(
+                                `/profile/${flag.first_blood?.user_name}`
+                              )
                             }
                             className="text-white font-semibold cursor-pointer"
                           >
@@ -542,11 +852,13 @@ export default function ChallengePage() {
                   setDetails(false);
                   setActivities(true);
                 }}
-                className={`text-lg font-semibold pb-2 cursor-pointer ${
+                className={`text-lg font-semibold pb-2 cursor-pointer relative ${
                   activities ? "border-b-4 border-[#38FFE5]" : ""
                 }`}
               >
                 {isEnglish ? "Activities" : "الأنشطة"}
+
+              
               </button>
             </div>
 
@@ -732,36 +1044,20 @@ export default function ChallengePage() {
                   </p>
                 </div>
 
-                {!activitiesData ||
-                activitiesData.length === 0 ||
-                showEmptyState ? (
-                  <div className="bg-[#FFFFFF0D] rounded-lg p-4 sm:p-6 mt-4 mx-10">
-                    <div className="flex flex-col items-center justify-center py-8">
-                      <Image
-                        src="/ranking.png"
-                        height={80}
-                        width={80}
-                        alt="activities"
-                        className="w-16 h-16 sm:w-20 sm:h-20 mb-4"
-                      />
-                      <h3 className="text-lg sm:text-xl font-medium text-center">
-                        {isEnglish
-                          ? "No activities to show yet"
-                          : "لا توجد أنشطة لعرضها حتى الآن"}
-                      </h3>
-                      <p className="text-sm text-gray-400 mt-2 text-center max-w-md">
-                        {isEnglish
-                          ? "Team activities will appear here once the event starts"
-                          : "ستظهر أنشطة الفريق هنا بمجرد بدء الفعالية"}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
+                {activitiesData && activitiesData.length > 0 ? (
                   <div
                     dir={isEnglish ? "ltr" : "rtl"}
                     className="mx-10 mb-5 pb-5 mt-10 bg-[#06373F26] px-5"
                   >
                     {activitiesData.map((user, index) => {
+                      // Generate a guaranteed unique key that won't be NaN
+                      const userKey = `${index}-${
+                        user.username ||
+                        user.user_name ||
+                        user.userName ||
+                        "unknown"
+                      }-${Date.now()}`;
+
                       // Get the most recent solved_at time
                       const latestSolvedAt =
                         user.solved_flags?.length > 0
@@ -784,9 +1080,6 @@ export default function ChallengePage() {
                           return isEnglish
                             ? "Not solved yet"
                             : "لم يتم الحل بعد";
-
-                        // Debug time
-                        console.log("Formatted date for relative time:", date);
 
                         // Get current date for comparison
                         const now = new Date();
@@ -818,27 +1111,9 @@ export default function ChallengePage() {
                           : `منذ ${days} يوم`;
                       };
 
-                      // Add function to show actual date and time
-                      const formatFullDateTime = (date) => {
-                        if (!date) return "";
-
-                        const options = {
-                          year: "numeric",
-                          month: "numeric",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        };
-
-                        return date.toLocaleString(
-                          isEnglish ? "en-US" : "ar-SA",
-                          options
-                        );
-                      };
-
                       return (
                         <div
-                          key={index}
+                          key={userKey}
                           className={`flex items-center justify-between flex-wrap py-5 rounded-lg px-5 ${
                             index % 2 === 0 ? "bg-transparent" : "bg-[#06373F]"
                           }`}
@@ -857,9 +1132,15 @@ export default function ChallengePage() {
                               />
                             </div>
                             <div
-                              onClick={() =>
-                                router.push(`/profile/${user.user_name}`)
-                              }
+                              onClick={() => {
+                                // Handle different possible username fields
+                                const displayUsername =
+                                  user.username ||
+                                  user.user_name ||
+                                  user.userName ||
+                                  "Unknown User";
+                                router.push(`/profile/${displayUsername}`);
+                              }}
                               className="flex items-center gap-4 cursor-pointer"
                             >
                               <Image
@@ -869,7 +1150,11 @@ export default function ChallengePage() {
                                 height={32}
                               />
                               <p className="text-xl font-semibold">
-                                {user.user_name}
+                                {/* Display username with fallbacks for different field names */}
+                                {user.username ||
+                                  user.user_name ||
+                                  user.userName ||
+                                  "Unknown User"}
                               </p>
                             </div>
                           </div>
@@ -881,6 +1166,28 @@ export default function ChallengePage() {
                         </div>
                       );
                     })}
+                  </div>
+                ) : (
+                  <div className="bg-[#FFFFFF0D] rounded-lg p-4 sm:p-6 mt-4 mx-10">
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <Image
+                        src="/ranking.png"
+                        height={80}
+                        width={80}
+                        alt="activities"
+                        className="w-16 h-16 sm:w-20 sm:h-20 mb-4"
+                      />
+                      <h3 className="text-lg sm:text-xl font-medium text-center">
+                        {isEnglish
+                          ? "No activities to show yet"
+                          : "لا توجد أنشطة لعرضها حتى الآن"}
+                      </h3>
+                      <p className="text-sm text-gray-400 mt-2 text-center max-w-md">
+                        {isEnglish
+                          ? "Team activities will appear here once the event starts"
+                          : "ستظهر أنشطة الفريق هنا بمجرد بدء الفعالية"}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
@@ -968,55 +1275,54 @@ export default function ChallengePage() {
             </div>
           )}
 
-          {/* ============================================================================== */}
-          {/* firt blood animation card  */}
+          {/* First blood animation card  */}
           {isFirstBlood && (
-            <div className="fixed inset-0 z-50  flex items-center justify-center  backdrop-blur-[2px]  ">
-            <div className="bg-[url('/blooda.png')] flex items-center justify-center w-full h-full bg-cover bg-center bg-no-repeat  ">
-              <div className="flex items-center justify-center  bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">
-                <div>
-                  <div className="flex items-center justify-center gap-4 pb-16">
-                    <h3 className="text-white text-xl md:text-2xl font-semibold">
-                      {isEnglish ? "First Blood" : "الدم الأول"}
-                    </h3>
-                    <Image
-                      src="/blood.png"
-                      alt="First Blood"
-                      width={32}
-                      height={32}
-                    />
-                  </div>
-
+            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[2px]">
+              <div className="bg-[url('/blooda.png')] flex items-center justify-center w-full h-full bg-cover bg-center bg-no-repeat">
+                <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">
                   <div>
-                    <p className="text-white text-xl md:text-2xl text-center font-semibold">
-                      {isEnglish
-                        ? "Congratulations! You got the first blood"
-                        : "تهانينا! لقد حزت على العلم الأول"}
-                    </p>
-                    <p
-                      dir="rtl"
-                      className="text-white text-center text-xl md:text-2xl font-semibold"
-                    >
-                      <span className="text-red-500"> {firstblood} </span>
-                      <span dir="rtl" className="text-red-500">
-                        {isEnglish ? "Bytes" : "بايتس"}{" "}
-                      </span>
-                      {isEnglish
-                        ? "will be added to your account"
-                        : "ستضاف إلى حسابك"}
-                    </p>
+                    <div className="flex items-center justify-center gap-4 pb-16">
+                      <h3 className="text-white text-xl md:text-2xl font-semibold">
+                        {isEnglish ? "First Blood" : "الدم الأول"}
+                      </h3>
+                      <Image
+                        src="/blood.png"
+                        alt="First Blood"
+                        width={32}
+                        height={32}
+                      />
+                    </div>
+
+                    <div>
+                      <p className="text-white text-xl md:text-2xl text-center font-semibold">
+                        {isEnglish
+                          ? "Congratulations! You got the first blood"
+                          : "تهانينا! لقد حزت على العلم الأول"}
+                      </p>
+                      <p
+                        dir="rtl"
+                        className="text-white text-center text-xl md:text-2xl font-semibold"
+                      >
+                        <span className="text-red-500">{firstblood}</span>
+                        <span dir="rtl" className="text-red-500">
+                          {isEnglish ? "Bytes" : "بايتس"}{" "}
+                        </span>
+                        {isEnglish
+                          ? "will be added to your account"
+                          : "ستضاف إلى حسابك"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
           )}
-          {/* ================================================================================== */}
-          {/* anther aimation for submit flag  */}
+
+          {/* Submit flag animation  */}
           {isSubmitFlag && (
-            <div className="fixed inset-0 z-50  flex items-center justify-center ">
+            <div className="fixed inset-0 z-50 flex items-center justify-center">
               <ConfettiAnimation />
-              <div className="flex items-center justify-center  bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">
+              <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">
                 <div>
                   <div className="flex items-center justify-center gap-4 pb-16">
                     <h3 className="text-white text-xl md:text-2xl font-semibold">
@@ -1040,7 +1346,7 @@ export default function ChallengePage() {
                       dir="rtl"
                       className="text-white text-center text-xl md:text-2xl font-semibold"
                     >
-                      <span className="text-[#38FFE5]"> {points} </span>
+                      <span className="text-[#38FFE5]">{points}</span>
                       <span dir="rtl" className="text-[#38FFE5]">
                         {isEnglish ? "Bytes" : "بايتس"}{" "}
                       </span>
@@ -1053,29 +1359,28 @@ export default function ChallengePage() {
               </div>
             </div>
           )}
-          {/* ========================================================= */}
 
-          {/* notfication flag  */}
-
+          {/* Notification flag  */}
           {notfication && (
-             <div className="w-full h-full fixed inset-0 z-50">
-             <div className="absolute bottom-4 right-4 w-fit z-50">
-               <div className="bg-[#131619] border border-[#38FFE5] rounded-lg p-4 shadow-lg slide-in-animation">
-                 <div className="flex items-center gap-3">
-                   <div>
-                     <h3 className="text-white text-lg font-semibold">
-                       {isEnglish
-                         ? "Congratulations! You captured the flag"
-                         : "تهانينا! لقد التقط العلم"}
-                     </h3>
-                   </div>
-                   <Image src="/flag.png" alt="Flag" width={24} height={24} />
-                 </div>
-               </div>
-             </div>
-           </div>
+            <div className="w-full h-full fixed inset-0 z-50">
+              <div className="absolute bottom-4 right-4 w-fit z-50">
+                <div className="bg-[#131619] border border-[#38FFE5] rounded-lg p-4 shadow-lg slide-in-animation">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <h3 className="text-white text-lg font-semibold">
+                        {isEnglish
+                          ? "Congratulations! You captured the flag"
+                          : "تهانينا! لقد التقط العلم"}
+                      </h3>
+                    </div>
+                    <Image src="/flag.png" alt="Flag" width={24} height={24} />
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
-            <style jsx global>{`
+
+          <style jsx global>{`
             @keyframes slideInFromLeft {
               0% {
                 transform: translateX(100%);

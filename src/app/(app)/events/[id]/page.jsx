@@ -13,6 +13,7 @@ import TeamRegistrationModal from "@/app/components/TeamRegistrationModal";
 import { IoCopy } from "react-icons/io5";
 import toast, { Toaster } from "react-hot-toast";
 import { useUserProfile } from "@/app/context/UserProfileContext";
+import { createSocket } from "@/lib/socket-client";
 
 import LoadingPage from "@/app/components/LoadingPage";
 import { useRouter } from "next/navigation";
@@ -65,6 +66,181 @@ export default function EventPage() {
   const [scoreboardData, setScoreboardData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTeamUuid, setSelectedTeamUuid] = useState(null);
+  const [socket, setSocket] = useState(null);
+  const [isRemovedFromTeam, setIsRemovedFromTeam] = useState(false);
+
+  // Add a function to force refresh team data
+  const forceRefreshTeamData = async () => {
+    try {
+      await getTeams();
+    } catch (error) {
+      console.error("Error refreshing team data:", error);
+    }
+  };
+
+  // Initialize socket connection
+  useEffect(() => {
+    const userName = Cookies.get("username");
+    const newSocket = createSocket(userName);
+    setSocket(newSocket);
+
+    // Join the team updates room for this event
+    if (newSocket) {
+      newSocket.emit("joinTeamRoom", id);
+
+      // Listen for team updates
+      newSocket.on("teamUpdate", (data) => {
+        console.log("Received team update:", data);
+        // Force refresh team data for any team update for this event
+        if (data.eventId === id) {
+          // Add small delay to ensure database has updated
+          setTimeout(() => {
+            forceRefreshTeamData();
+          }, 500);
+
+          // Also handle different team update events
+          if (data.action === "join" || data.action === "create") {
+            // Special handling for join/create events
+            if (teams?.uuid === data.teamUuid) {
+              getTeams();
+            }
+          } else if (data.action === "remove") {
+            // If I was removed
+            const myUsername = Cookies.get("username");
+            if (data.removedUser === myUsername) {
+              setTeams(null);
+              setIsInTeam(false);
+              setIsRemovedFromTeam(true);
+              setHasCheckedTeam(true);
+              setButtonText(isEnglish ? "Join Team" : "انضمام");
+
+              // Show toast notification
+              toast.error(
+                isEnglish
+                  ? "You have been removed from the team"
+                  : "تمت إزالتك من الفريق"
+              );
+            }
+          } else if (data.action === "points_update") {
+            // For points updates, directly update scoreboard if we're viewing it
+            if (isEventScoreBoard && activeTab === "leaderboard") {
+              updateScoreboardWithNewPoints(
+                data.username,
+                data.points || 0,
+                data.isFirstBlood || false,
+                data.teamUuid
+              );
+            }
+          }
+        }
+      });
+
+      // Listen specifically for leaderboard updates - these are direct scoreboard update events
+      newSocket.on("leaderboardUpdate", (data) => {
+        console.log("Received leaderboard update:", data);
+        if (
+          data.eventId === id &&
+          isEventScoreBoard &&
+          activeTab === "leaderboard"
+        ) {
+          // Display a mini notification if some team scores
+          if (data.teamUuid) {
+            const teamName = data.teamName || "Unknown team";
+            const points = data.points || 0;
+            const challengeName = data.challenge_name || "a challenge";
+
+            // Show a toast notification for all scoreboard participants
+            toast.info(
+              isEnglish
+                ? `${teamName} solved ${challengeName} for ${points} points!`
+                : `حل فريق ${teamName} التحدي ${challengeName} مقابل ${points} نقطة!`,
+              { duration: 3000 }
+            );
+          }
+
+          // Update the scoreboard immediately
+          updateScoreboardWithNewPoints(
+            data.username,
+            data.points || 0,
+            data.isFirstBlood || false,
+            data.teamUuid
+          );
+        }
+      });
+
+      // Listen for flag submission updates from any team member
+      newSocket.on("flagSubmitted", (data) => {
+        console.log("Received flag submission:", data);
+        if (data.eventId === id) {
+          // Force refresh team data regardless of which team submitted
+          setTimeout(() => {
+            forceRefreshTeamData();
+          }, 500);
+
+          // Show a toast notification for the flag submission if it's my team
+          if (teams?.uuid === data.teamUuid) {
+            const username = data.username;
+            toast.success(
+              isEnglish
+                ? `${username} solved a challenge for ${data.points} points!`
+                : `حل ${username} تحديًا مقابل ${data.points} نقطة!`
+            );
+          }
+
+          // Update scoreboard if we're viewing it
+          if (isEventScoreBoard && activeTab === "leaderboard") {
+            updateScoreboardWithNewPoints(
+              data.username,
+              data.points || 0,
+              false,
+              data.teamUuid
+            );
+          }
+        }
+      });
+
+      // Listen for first blood specific events
+      newSocket.on("flagFirstBlood", (data) => {
+        console.log("Received first blood:", data);
+        if (data.eventId === id) {
+          // Force refresh team data regardless of which team got first blood
+          setTimeout(() => {
+            forceRefreshTeamData();
+          }, 500);
+
+          // Show a toast notification for the first blood if it's my team
+          if (teams?.uuid === data.teamUuid) {
+            const username = data.username;
+            toast.success(
+              isEnglish
+                ? `${username} got first blood for ${data.points} points!`
+                : `حصل ${username} على الدم الأول مقابل ${data.points} نقطة!`
+            );
+          }
+
+          // Update scoreboard if we're viewing it
+          if (isEventScoreBoard && activeTab === "leaderboard") {
+            updateScoreboardWithNewPoints(
+              data.username,
+              data.points || 0,
+              true,
+              data.teamUuid
+            );
+          }
+        }
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.off("teamUpdate");
+        socket.off("flagSubmitted");
+        socket.off("flagFirstBlood");
+        socket.off("leaderboardUpdate");
+        socket.emit("leaveTeamRoom", id);
+      }
+    };
+  }, [id, teams?.uuid, isEnglish, isEventScoreBoard, activeTab]);
 
   useEffect(() => {
     // Update the current date/time based on user's timezone
@@ -330,6 +506,13 @@ export default function EventPage() {
       setTeams(res.data.data);
       setNewTeamName(res.data.data?.name || ""); // Set current team name for edit modal
       setHasCheckedTeam(true);
+      setIsInTeam(true);
+
+      // Reset removed state if we successfully get team data
+      if (isRemovedFromTeam) {
+        setIsRemovedFromTeam(false);
+      }
+
       return res;
     } catch (error) {
       console.error("Error fetching teams:", error);
@@ -338,6 +521,7 @@ export default function EventPage() {
       ) {
         setTeams(null);
         setHasCheckedTeam(true);
+        setIsInTeam(false);
       }
       throw error; // Propagate the error for proper promise handling
     }
@@ -389,10 +573,39 @@ export default function EventPage() {
           Authorization: `Bearer ${Cookies.get("token")}`,
         },
       });
-      // Refresh the teams data after successful deletion
-      getTeams();
+
+      // Emit socket event for member removal
+      if (socket) {
+        socket.emit("teamUpdate", {
+          action: "remove",
+          eventId: id,
+          teamUuid: teams?.uuid,
+          teamName: teams?.name,
+          removedUser: username,
+          removedBy: Cookies.get("username"),
+        });
+      }
+
+      // Update the local state instead of full refresh
+      setTeams((prevTeams) => {
+        if (!prevTeams) return null;
+        return {
+          ...prevTeams,
+          members: prevTeams.members.filter(
+            (member) => member.username !== username
+          ),
+        };
+      });
+
+      // Show success notification
+      toast.success(
+        isEnglish
+          ? `Removed ${username} from team`
+          : `تمت إزالة ${username} من الفريق`
+      );
     } catch (error) {
       console.error("Error deleting member:", error);
+      toast.error(isEnglish ? "Failed to remove member" : "فشل في إزالة العضو");
     }
   };
 
@@ -490,6 +703,19 @@ export default function EventPage() {
       checkIfInTeam();
     }
   }, [currentPhase, isEnglish]);
+
+  // Show a notification when user is removed from team
+  useEffect(() => {
+    if (isRemovedFromTeam) {
+      toast.error(
+        isEnglish
+          ? "You have been removed from the team"
+          : "تمت إزالتك من الفريق"
+      );
+      // Reset the state to prevent duplicate notifications
+      setIsRemovedFromTeam(false);
+    }
+  }, [isRemovedFromTeam, isEnglish]);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -675,10 +901,237 @@ export default function EventPage() {
     }
   };
 
+  // Function to handle real-time scoreboard updates
+  const updateScoreboardWithNewPoints = (
+    username,
+    newPoints,
+    isFirstBlood = false,
+    teamUuid = null
+  ) => {
+    setScoreboardData((prevData) => {
+      if (!prevData || prevData.length === 0) return prevData;
+
+      // First, map the data to add the updated fields and calculate the new scores
+      const updatedData = prevData
+        .map((team) => {
+          // If teamUuid is provided, we match by team UUID
+          const isTeamMatch = teamUuid
+            ? team.team_uuid === teamUuid
+            : team.members?.some((member) => member.username === username);
+
+          if (isTeamMatch) {
+            // Update team stats
+            const updatedPoints = Number(team.points) + Number(newPoints);
+            const updatedChallengesSolved = Number(team.challenges_solved) + 1;
+            const updatedFirstBloodCount = isFirstBlood
+              ? Number(team.first_blood_count) + 1
+              : Number(team.first_blood_count);
+
+            console.log(
+              `Updating team ${team.team_name} with new points: ${newPoints}, total: ${updatedPoints}`
+            );
+
+            return {
+              ...team,
+              points: updatedPoints,
+              challenges_solved: updatedChallengesSolved,
+              first_blood_count: updatedFirstBloodCount,
+              // Mark this team as having just received points for animation
+              justUpdated: true,
+              justUpdatedTime: Date.now(),
+            };
+          }
+
+          return team;
+        })
+        .sort((a, b) => b.points - a.points); // Resort by points
+
+      return updatedData;
+    });
+  };
+
+  // Clear the justUpdated flag after animation duration
+  useEffect(() => {
+    if (!scoreboardData || scoreboardData.length === 0) return;
+
+    // Check if any team has the justUpdated flag
+    const hasUpdated = scoreboardData.some((team) => team.justUpdated);
+
+    if (hasUpdated) {
+      // Set a timeout to clear the flag after animation plays
+      const timer = setTimeout(() => {
+        setScoreboardData((prevData) =>
+          prevData.map((team) => ({
+            ...team,
+            justUpdated: false,
+          }))
+        );
+      }, 3000); // 3 seconds animation
+
+      return () => clearTimeout(timer);
+    }
+  }, [scoreboardData]);
+
+  // useEffect for socket initialization and event handling
+  useEffect(() => {
+    const userName = Cookies.get("username");
+    const newSocket = createSocket(userName);
+    setSocket(newSocket);
+
+    // Join the team updates room for this event
+    if (newSocket) {
+      newSocket.emit("joinTeamRoom", id);
+
+      // Listen for team updates
+      newSocket.on("teamUpdate", (data) => {
+        console.log("Received team update:", data);
+        // Force refresh team data for any team update for this event
+        if (data.eventId === id) {
+          // Add small delay to ensure database has updated
+          setTimeout(() => {
+            forceRefreshTeamData();
+          }, 500);
+
+          // Also handle different team update events
+          if (data.action === "join" || data.action === "create") {
+            // Special handling for join/create events
+            if (teams?.uuid === data.teamUuid) {
+              getTeams();
+            }
+          } else if (data.action === "remove") {
+            // If I was removed
+            const myUsername = Cookies.get("username");
+            if (data.removedUser === myUsername) {
+              setTeams(null);
+              setIsInTeam(false);
+              setIsRemovedFromTeam(true);
+              setHasCheckedTeam(true);
+              setButtonText(isEnglish ? "Join Team" : "انضمام");
+
+              // Show toast notification
+              toast.error(
+                isEnglish
+                  ? "You have been removed from the team"
+                  : "تمت إزالتك من الفريق"
+              );
+            }
+          } else if (data.action === "points_update") {
+            // For points updates, directly update scoreboard if we're viewing it
+            if (isEventScoreBoard && activeTab === "leaderboard") {
+              updateScoreboardWithNewPoints(
+                data.username,
+                data.points || 0,
+                data.isFirstBlood || false,
+                data.teamUuid
+              );
+            }
+          }
+        }
+      });
+
+      // Listen for flag submission updates from any team member
+      newSocket.on("flagSubmitted", (data) => {
+        console.log("Received flag submission:", data);
+        if (data.eventId === id) {
+          // Force refresh team data regardless of which team submitted
+          setTimeout(() => {
+            forceRefreshTeamData();
+          }, 500);
+
+          // Show a toast notification for the flag submission if it's my team
+          if (teams?.uuid === data.teamUuid) {
+            const username = data.username;
+            toast.success(
+              isEnglish
+                ? `${username} solved a challenge for ${data.points} points!`
+                : `حل ${username} تحديًا مقابل ${data.points} نقطة!`
+            );
+          }
+
+          // Update scoreboard if we're viewing it
+          if (isEventScoreBoard && activeTab === "leaderboard") {
+            updateScoreboardWithNewPoints(
+              data.username,
+              data.points || 0,
+              false,
+              data.teamUuid
+            );
+          }
+        }
+      });
+
+      // Listen for first blood specific events
+      newSocket.on("flagFirstBlood", (data) => {
+        console.log("Received first blood:", data);
+        if (data.eventId === id) {
+          // Force refresh team data regardless of which team got first blood
+          setTimeout(() => {
+            forceRefreshTeamData();
+          }, 500);
+
+          // Show a toast notification for the first blood if it's my team
+          if (teams?.uuid === data.teamUuid) {
+            const username = data.username;
+            toast.success(
+              isEnglish
+                ? `${username} got first blood for ${data.points} points!`
+                : `حصل ${username} على الدم الأول مقابل ${data.points} نقطة!`
+            );
+          }
+
+          // Update scoreboard if we're viewing it
+          if (isEventScoreBoard && activeTab === "leaderboard") {
+            updateScoreboardWithNewPoints(
+              data.username,
+              data.points || 0,
+              true,
+              data.teamUuid
+            );
+          }
+        }
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.off("teamUpdate");
+        socket.off("flagSubmitted");
+        socket.off("flagFirstBlood");
+        socket.emit("leaveTeamRoom", id);
+      }
+    };
+  }, [id, teams?.uuid, isEnglish, isEventScoreBoard, activeTab]);
+
+  // Additional effect to trigger scoreboard fetch when switching to leaderboard tab
+  useEffect(() => {
+    if (activeTab === "leaderboard" && isEventScoreBoard) {
+      eventScoreBoard();
+    }
+  }, [activeTab]);
+
   return isLoading ? (
     <LoadingPage />
   ) : (
     <div className="mt-28 lg:mt-36 px-4 sm:px-6 md:px-8 lg:px-10 max-w-[2000px] mx-auto">
+      {/* Add global styles for animations */}
+      <style jsx global>{`
+        @keyframes scoreUpdate {
+          0% {
+            background-color: rgba(56, 255, 229, 0.5);
+          }
+          50% {
+            background-color: rgba(56, 255, 229, 0.3);
+          }
+          100% {
+            background-color: transparent;
+          }
+        }
+
+        .score-updated {
+          animation: scoreUpdate 3s ease-out forwards;
+        }
+      `}</style>
+
       <Toaster
         position="top-center"
         containerStyle={{
@@ -1371,7 +1824,7 @@ export default function EventPage() {
                               </p>
                               <div className="flex items-center gap-2 pt-1">
                                 <p className="font-semibold text-sm sm:text-base md:text-lg">
-                                  {joinSecret || "*****************"}
+                                  {"*****************"}
                                 </p>
                               </div>
                             </div>
@@ -1475,14 +1928,15 @@ export default function EventPage() {
                               )}
 
                             {/* Only show the "..." button during team_formation phase */}
-                            {currentPhase === "team_formation" && (
-                              <button
-                                onClick={() => setIsRemove(!isRemove)}
-                                className="cursor-pointer text-lg sm:text-xl"
-                              >
-                                ...
-                              </button>
-                            )}
+                            {currentPhase === "team_formation" &&
+                              member.role === "leader" && (
+                                <button
+                                  onClick={() => setIsRemove(!isRemove)}
+                                  className="cursor-pointer text-lg sm:text-xl"
+                                >
+                                  ...
+                                </button>
+                              )}
                           </div>
                         </div>
                       ))}
@@ -1543,155 +1997,184 @@ export default function EventPage() {
                             </table>
                           </div>
 
-                          {/* Body rows */}
-                          {teams?.members?.flatMap((member) =>
-                            member.challenge_completions?.map(
-                              (challenge, index) => (
-                                <div
-                                  key={`${member.uuid}-${challenge.challenge_uuid}-${index}`}
-                                  className={`${
-                                    index % 2 === 0
-                                      ? "bg-[#06373F] rounded-lg"
-                                      : ""
-                                  } mb-2`}
-                                >
-                                  <table className="w-full">
-                                    <tbody>
-                                      <tr
-                                        className={`flex items-center justify-between ${
+                          {/* Body rows with proper alternating backgrounds */}
+                          {(() => {
+                            // Create a flat array of all activities
+                            const allActivities = [];
+
+                            // Collect all challenges from all members
+                            teams?.members?.forEach((member) => {
+                              if (member.challenge_completions) {
+                                member.challenge_completions.forEach(
+                                  (challenge) => {
+                                    allActivities.push({
+                                      member,
+                                      challenge,
+                                    });
+                                  }
+                                );
+                              }
+                            });
+
+                            // Sort by completion date (most recent first)
+                            allActivities.sort(
+                              (a, b) =>
+                                new Date(b.challenge.completed_at) -
+                                new Date(a.challenge.completed_at)
+                            );
+
+                            // Map the activities with proper index for alternating backgrounds
+                            return allActivities.map((activity, rowIndex) => (
+                              <div
+                                key={`activity-row-${rowIndex}`}
+                                className={`${
+                                  rowIndex % 2 === 0
+                                    ? "bg-[#06373F] rounded-lg"
+                                    : ""
+                                } mb-2`}
+                              >
+                                <table className="w-full">
+                                  <tbody>
+                                    <tr
+                                      className={`flex items-center justify-between ${
+                                        isEnglish
+                                          ? "flex-row-reverse"
+                                          : "flex-row"
+                                      }`}
+                                    >
+                                      <td
+                                        dir={isEnglish ? "ltr" : "rtl"}
+                                        className={`py-2 lg:py-3 text-white/70 w-[25%] text-sm lg:text-base ${
                                           isEnglish
-                                            ? "flex-row-reverse"
-                                            : "flex-row"
+                                            ? "pl-3 lg:pl-5"
+                                            : "pr-3 lg:pr-5"
                                         }`}
                                       >
-                                        <td
+                                        {(() => {
+                                          const completedDate =
+                                            convertToUserTimezone(
+                                              new Date(
+                                                activity.challenge.completed_at
+                                              )
+                                            );
+                                          const now =
+                                            getCurrentDateInUserTimezone();
+                                          const diffInMillis =
+                                            now - completedDate;
+                                          const diffInMinutes = Math.floor(
+                                            diffInMillis / (1000 * 60)
+                                          );
+
+                                          if (diffInMinutes < 60) {
+                                            return isEnglish
+                                              ? `${diffInMinutes} minutes ago`
+                                              : `منذ ${diffInMinutes} دقيقة`;
+                                          } else if (diffInMinutes < 1440) {
+                                            const hours = Math.floor(
+                                              diffInMinutes / 60
+                                            );
+                                            return isEnglish
+                                              ? `${hours} hour${
+                                                  hours > 1 ? "s" : ""
+                                                } ago`
+                                              : `منذ ${hours} ساعة`;
+                                          } else {
+                                            const days = Math.floor(
+                                              diffInMinutes / 1440
+                                            );
+                                            return isEnglish
+                                              ? `${days} day${
+                                                  days > 1 ? "s" : ""
+                                                } ago`
+                                              : `منذ ${days} يوم`;
+                                          }
+                                        })()}
+                                      </td>
+                                      <td className="py-2 lg:py-3 w-[25%]">
+                                        <div
                                           dir={isEnglish ? "ltr" : "rtl"}
-                                          className={`py-2 lg:py-3 text-white/70 w-[25%] text-sm lg:text-base ${
-                                            isEnglish
-                                              ? "pl-3 lg:pl-5"
-                                              : "pr-3 lg:pr-5"
+                                          className={`flex items-center gap-1 lg:gap-2 ${
+                                            isEnglish ? "pl-0" : "pr-0"
                                           }`}
                                         >
-                                          {(() => {
-                                            const completedDate =
-                                              convertToUserTimezone(
-                                                new Date(challenge.completed_at)
-                                              );
-                                            const now =
-                                              getCurrentDateInUserTimezone();
-                                            const diffInMillis =
-                                              now - completedDate;
-                                            const diffInMinutes = Math.floor(
-                                              diffInMillis / (1000 * 60)
-                                            );
-
-                                            if (diffInMinutes < 60) {
-                                              return isEnglish
-                                                ? `${diffInMinutes} minutes ago`
-                                                : `منذ ${diffInMinutes} دقيقة`;
-                                            } else if (diffInMinutes < 1440) {
-                                              const hours = Math.floor(
-                                                diffInMinutes / 60
-                                              );
-                                              return isEnglish
-                                                ? `${hours} hour${
-                                                    hours > 1 ? "s" : ""
-                                                  } ago`
-                                                : `منذ ${hours} ساعة`;
-                                            } else {
-                                              const days = Math.floor(
-                                                diffInMinutes / 1440
-                                              );
-                                              return isEnglish
-                                                ? `${days} day${
-                                                    days > 1 ? "s" : ""
-                                                  } ago`
-                                                : `منذ ${days} يوم`;
+                                          <span className="text-white text-sm lg:text-base min-w-[40px] text-center">
+                                            {activity.challenge.bytes}
+                                          </span>
+                                          <Image
+                                            src={
+                                              activity.challenge.is_first_blood
+                                                ? "/blood.png"
+                                                : "/byte.png"
                                             }
-                                          })()}
-                                        </td>
-                                        <td className="py-2 lg:py-3 w-[25%]">
-                                          <div
-                                            dir={isEnglish ? "ltr" : "rtl"}
-                                            className={`flex items-center gap-1 lg:gap-2 ${
-                                              isEnglish ? "pl-0" : "pr-0"
-                                            }`}
-                                          >
-                                            <span className="text-white text-sm lg:text-base">
-                                              {challenge.bytes}
-                                            </span>
-                                            <Image
-                                              src={
-                                                challenge.is_first_blood
-                                                  ? "/blood.png"
-                                                  : "/byte.png"
-                                              }
-                                              alt={
-                                                challenge.is_first_blood
-                                                  ? "first blood"
-                                                  : "points"
-                                              }
-                                              width={20}
-                                              height={24}
-                                              className="lg:w-[25px] lg:h-[30px]"
-                                              title={
-                                                isEnglish
-                                                  ? challenge.is_first_blood
-                                                    ? "First Blood"
-                                                    : "Bytes"
-                                                  : challenge.is_first_blood
-                                                  ? "البايتس الأولى"
-                                                  : "بايتس"
-                                              }
-                                            />
-                                          </div>
-                                        </td>
-                                        <td className="py-2 lg:py-3 w-[50%]">
-                                          <div
-                                            onClick={() =>
-                                              router.push(
-                                                `/profile/${member.username}`
-                                              )
+                                            alt={
+                                              activity.challenge.is_first_blood
+                                                ? "first blood"
+                                                : "points"
                                             }
-                                            dir={isEnglish ? "ltr" : "rtl"}
-                                            className={`flex cursor-pointer items-center gap-2 lg:gap-3 ${
+                                            width={20}
+                                            height={24}
+                                            className="lg:w-[25px] lg:h-[30px]"
+                                            title={
                                               isEnglish
-                                                ? "pl-2 lg:pl-3"
-                                                : "pr-2 lg:pr-3"
-                                            }`}
-                                          >
-                                            <Image
-                                              src={
-                                                member.profile_image ||
-                                                "/icon1.png"
-                                              }
-                                              alt="user"
-                                              width={24}
-                                              height={24}
-                                              className="rounded-full lg:w-[32px] lg:h-[32px]"
-                                              unoptimized={true}
-                                            />
-                                            <span className="text-white text-sm lg:text-base">
-                                              {member.username}
-                                            </span>
-                                            <span className="text-white text-sm lg:text-base">
-                                              {isEnglish
-                                                ? challenge.is_first_blood
-                                                  ? `got first blood in ${challenge.challenge_name}`
-                                                  : `earned bytes in ${challenge.challenge_name}`
-                                                : challenge.is_first_blood
-                                                ? `حصل على البايتس الأول في ${challenge.challenge_name}`
-                                                : `حصل على بايتس في ${challenge.challenge_name}`}
-                                            </span>
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    </tbody>
-                                  </table>
-                                </div>
-                              )
-                            )
-                          )}
+                                                ? activity.challenge
+                                                    .is_first_blood
+                                                  ? "First Blood"
+                                                  : "Bytes"
+                                                : activity.challenge
+                                                    .is_first_blood
+                                                ? "البايتس الأولى"
+                                                : "بايتس"
+                                            }
+                                          />
+                                        </div>
+                                      </td>
+                                      <td className="py-2 lg:py-3 w-[50%]">
+                                        <div
+                                          onClick={() =>
+                                            router.push(
+                                              `/profile/${activity.member.username}`
+                                            )
+                                          }
+                                          dir={isEnglish ? "ltr" : "rtl"}
+                                          className={`flex cursor-pointer items-center gap-2 lg:gap-3 ${
+                                            isEnglish
+                                              ? "pl-2 lg:pl-3"
+                                              : "pr-2 lg:pr-3"
+                                          }`}
+                                        >
+                                          <Image
+                                            src={
+                                              activity.member.profile_image ||
+                                              "/icon1.png"
+                                            }
+                                            alt="user"
+                                            width={24}
+                                            height={24}
+                                            className="rounded-full lg:w-[32px] lg:h-[32px]"
+                                            unoptimized={true}
+                                          />
+                                          <span className="text-white text-sm lg:text-base">
+                                            {activity.member.username}
+                                          </span>
+                                          <span className="text-white text-sm lg:text-base">
+                                            {isEnglish
+                                              ? activity.challenge
+                                                  .is_first_blood
+                                                ? `got first blood in ${activity.challenge.challenge_name}`
+                                                : `earned bytes in ${activity.challenge.challenge_name}`
+                                              : activity.challenge
+                                                  .is_first_blood
+                                              ? `حصل على البايتس الأول في ${activity.challenge.challenge_name}`
+                                              : `حصل على بايتس في ${activity.challenge.challenge_name}`}
+                                          </span>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            ));
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -2119,8 +2602,8 @@ export default function EventPage() {
                   dir={isEnglish ? "ltr" : "rtl"}
                   key={index}
                   className={`rounded-lg mb-3 px-4 md:px-10 py-3 ${
-                    index % 2 === 0 ? "bg-[#06373F]" : "bg-transparent"
-                  }`}
+                    team.justUpdated ? "score-updated" : ""
+                  } ${index % 2 === 0 ? "bg-[#06373F]" : "bg-transparent"}`}
                 >
                   <div
                     className={`grid grid-cols-5 ${
@@ -2181,7 +2664,11 @@ export default function EventPage() {
                     </div>
 
                     <div className="col-span-1 flex justify-center">
-                      <div className="flex flex-row-reverse items-center gap-2">
+                      <div
+                        className={`flex flex-row-reverse items-center gap-2 ${
+                          team.justUpdated ? "font-bold" : ""
+                        }`}
+                      >
                         <Image
                           src="/byte.png"
                           alt="points"
@@ -2189,7 +2676,11 @@ export default function EventPage() {
                           height={25}
                           className="w-5 h-5 md:w-6 md:h-6"
                         />
-                        <span className="text-white text-sm md:text-xl">
+                        <span
+                          className={`text-white text-sm md:text-xl ${
+                            team.justUpdated ? "text-[#38FFE5]" : ""
+                          }`}
+                        >
                           {team.points}
                         </span>
                       </div>
@@ -2204,7 +2695,11 @@ export default function EventPage() {
                           height={25}
                           className="w-5 h-5 md:w-6 md:h-6"
                         />
-                        <span className="text-white text-sm md:text-xl">
+                        <span
+                          className={`text-white text-sm md:text-xl ${
+                            team.justUpdated ? "text-[#38FFE5]" : ""
+                          }`}
+                        >
                           {team.challenges_solved}
                         </span>
                       </div>
@@ -2219,7 +2714,11 @@ export default function EventPage() {
                           height={25}
                           className="w-5 h-5 md:w-6 md:h-6"
                         />
-                        <span className="text-white text-sm md:text-xl">
+                        <span
+                          className={`text-white text-sm md:text-xl ${
+                            team.justUpdated ? "text-[#38FFE5]" : ""
+                          }`}
+                        >
                           {team.first_blood_count}
                         </span>
                       </div>
