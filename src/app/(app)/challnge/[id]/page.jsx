@@ -304,10 +304,6 @@ export default function ChallengePage() {
               // Continue even if socket emission fails
             }
           }
-
-          setTimeout(() => {
-            setIsFirstBlood(false);
-          }, 5000);
         } else if (response.data.data.is_first_blood === false) {
           setIsSubmitFlag(true);
           setPoints(response.data.data.points);
@@ -329,18 +325,32 @@ export default function ChallengePage() {
               // Continue even if socket emission fails
             }
           }
-
-          setTimeout(() => {
-            setIsSubmitFlag(false);
-          }, 5000);
         }
       }
 
       // Refresh the activities data after submission
       try {
         fetchActivitiesData();
+
+        // Check if all flags are solved after successful submission
+        const solvedFlagsResponse = await axios.get(
+          `${apiUrl}/challenges/${id}/check-solved-flags`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            timeout: 5000, // 5 second timeout
+          }
+        );
+
+        if (solvedFlagsResponse.data.data.all_flags_solved === true) {
+          setIsLocked(true);
+        }
       } catch (activitiesError) {
-        console.error("Error refreshing activities:", activitiesError);
+        console.error(
+          "Error refreshing activities or checking solved flags:",
+          activitiesError
+        );
         // Continue even if refreshing activities fails
       }
     } catch (error) {
@@ -1270,9 +1280,12 @@ export default function ChallengePage() {
           {/* ============================================================================== */}
           {/* firt blood animation card  */}
           {isFirstBlood && (
-            <div className="fixed inset-0 z-50  flex items-center justify-center   backdrop-blur-[2px]  ">
-              <div className="bg-[url('/blooda.png')] flex items-center m-48  justify-center w-full h-full bg-cover bg-center bg-no-repeat  ">
-                <div className="flex items-center justify-center  bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[2px]">
+              <div
+                onClick={() => setIsFirstBlood(false)}
+                className="bg-[url('/blooda.png')] flex items-center m-48 justify-center w-full h-full bg-cover bg-center bg-no-repeat"
+              >
+                <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">
                   <div>
                     <div className="flex items-center justify-center gap-4 pb-16">
                       <h3 className="text-white text-xl md:text-2xl font-semibold">
@@ -1313,9 +1326,12 @@ export default function ChallengePage() {
           {/* ================================================================================== */}
           {/* anther aimation for submit flag  */}
           {isSubmitFlag && (
-            <div className="fixed inset-0 z-50  flex items-center justify-center  bg-black/50 backdrop-blur-sm ">
+            <div
+              onClick={() => setIsSubmitFlag(false)}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            >
               <ConfettiAnimation />
-              <div className="flex items-center justify-center  bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">
+              <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">
                 <div>
                   <div className="flex items-center justify-center gap-4 pb-16">
                     <h3 className="text-white text-xl md:text-2xl font-semibold">

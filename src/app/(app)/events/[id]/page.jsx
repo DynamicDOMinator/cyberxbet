@@ -35,6 +35,7 @@ export default function EventPage() {
   const [buttonText, setButtonText] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState({
+    days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0,
@@ -183,13 +184,14 @@ export default function EventPage() {
         return;
       }
 
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
       const hours = Math.floor(
         (difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
       );
       const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-      setTimeRemaining({ hours, minutes, seconds });
+      setTimeRemaining({ days, hours, minutes, seconds });
     };
 
     calculateTimeRemaining();
@@ -1054,39 +1056,25 @@ export default function EventPage() {
             <div className="flex flex-col w-full h-full justify-center items-center gap-2">
               <Image src="/lock.png" alt="lock" width={160} height={160} />
 
-              <div className="flex flex-col items-center  mb-4">
-                <div className="flex items-center gap-2 bg-black p-3 rounded-lg">
-                  <div className="bg-white/10 rounded-md p-3">
-                    <span className="text-white text-2xl font-bold">
-                      {timeRemaining.hours.toString().padStart(2, "0")}
-                    </span>
-                    <span className="text-white text-xs block text-center mt-1">
-                      {isEnglish ? "Hours" : "ساعات"}
-                    </span>
-                  </div>
-                  <span className="text-[#38FFE5] text-2xl animate-pulse">
-                    :
-                  </span>
-                  <div className="bg-white/10 rounded-md p-3">
-                    <span className="text-white text-2xl font-bold">
-                      {timeRemaining.minutes.toString().padStart(2, "0")}
-                    </span>
-                    <span className="text-white text-xs block text-center mt-1">
-                      {isEnglish ? "Minutes" : "دقائق"}
-                    </span>
-                  </div>
-                  <span className="text-[#38FFE5] text-2xl animate-pulse">
-                    :
-                  </span>
-                  <div className="bg-white/10 rounded-md p-3">
-                    <span className="text-white text-2xl font-bold">
-                      {timeRemaining.seconds.toString().padStart(2, "0")}
-                    </span>
-                    <span className="text-white text-xs block text-center mt-1">
-                      {isEnglish ? "Seconds" : "ثواني"}
-                    </span>
-                  </div>
-                </div>
+              <div dir className="flex flex-col items-center text-center my-4 ">
+                {isEnglish ? (
+                  <h3 className="text-2xl font-bold text-white">
+                    {timeRemaining.days.toString().padStart(2, "0")}d :
+                    {timeRemaining.hours.toString().padStart(2, "0")}h :
+                    {timeRemaining.minutes.toString().padStart(2, "0")}m :
+                    {timeRemaining.seconds.toString().padStart(2, "0")}s
+                  </h3>
+                ) : (
+                  <h3 className="text-2xl  font-bold text-white">
+                    ي {timeRemaining.days.toString().padStart(2, "0")} : س{" "}
+                    {timeRemaining.hours.toString().padStart(2, "0")} : د{" "}
+                    {timeRemaining.minutes.toString().padStart(2, "0")} : ث{" "}
+                    {timeRemaining.seconds.toString().padStart(2, "0")}
+                  </h3>
+                )}
+                <p className="mt-2 text-white text-lg">
+                  {isEnglish ? "Left" : "متبقي"}
+                </p>
               </div>
             </div>
           </div>

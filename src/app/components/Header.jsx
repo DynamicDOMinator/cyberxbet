@@ -303,7 +303,7 @@ export default function Header() {
               <MenuButton className="flex items-center gap-2 hover:bg-gray-800 transition-all duration-500 py-2 px-2 rounded-md text-white focus:outline-none cursor-pointer">
                 <div
                   className={`${
-                    !profileImage ? "border border-[#38FFE5]/50" : ""
+                    !profileImage ? "" : ""
                   } rounded-full p-1 flex items-center justify-center`}
                 >
                   <Image
