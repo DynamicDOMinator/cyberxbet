@@ -35,42 +35,75 @@ export default function ChallengePage() {
 
   const { id } = useParams();
   const { isEnglish } = useLanguage();
-  const { convertToUserTimezone } = useUserProfile();
+  const { convertToUserTimezone, getCurrentDateInUserTimezone } =
+    useUserProfile();
   const router = useRouter();
 
-  // Handle parsing API date strings correctly (assuming API returns UTC+3)
+  // Handle parsing API date strings correctly
   const parseApiDate = (dateString) => {
     if (!dateString) return null;
 
     try {
-      // Handle ISO format with timezone info (like 2025-04-26T02:16:17+03:00)
-      if (dateString.includes("T") && dateString.includes("+")) {
-        const date = new Date(dateString);
+      // Special handling for dates that are in the future (2025-*)
+      // This is a workaround for the API returning future dates
+      if (dateString.includes("2025-")) {
+        // Replace 2025 with current year
+        const currentYear = new Date().getFullYear();
+        const adjustedDateString = dateString.replace(
+          "2025-",
+          `${currentYear}-`
+        );
+
+        // For ISO format dates
+        if (adjustedDateString.includes("T")) {
+          return new Date(adjustedDateString);
+        }
+
+        // For SQL-style dates (YYYY-MM-DD HH:MM:SS)
+        const [datePart, timePart] = adjustedDateString.split(" ");
+        if (!datePart || !timePart) return new Date(adjustedDateString);
+
+        const [year, month, day] = datePart.split("-").map(Number);
+        const [hour, minute, second] = timePart.split(":").map(Number);
+
+        // Create date object using local time
+        const date = new Date();
+        date.setFullYear(year);
+        date.setMonth(month - 1); // JavaScript months are 0-indexed
+        date.setDate(day);
+        date.setHours(hour);
+        date.setMinutes(minute);
+        date.setSeconds(second);
+
         return date;
       }
 
-      // Parse the date string (YYYY-MM-DD HH:MM:SS)
+      // Normal date handling for non-future dates
+      // For ISO format dates
+      if (dateString.includes("T")) {
+        return new Date(dateString);
+      }
+
+      // For SQL-style dates (YYYY-MM-DD HH:MM:SS)
       const [datePart, timePart] = dateString.split(" ");
       if (!datePart || !timePart) return new Date(dateString);
 
       const [year, month, day] = datePart.split("-").map(Number);
       const [hour, minute, second] = timePart.split(":").map(Number);
 
-      // Create date object (API server is in UTC+3, so we convert to UTC)
-      // Month is 0-indexed in JavaScript Date
-      // For UTC+3 timezone, subtract 3 hours to get UTC time
-      const date = new Date(
-        Date.UTC(year, month - 1, day, hour, minute, second)
-      );
-
-      // Adjust for server timezone (UTC+3)
-      const serverTimezoneOffsetHours = 3;
-      date.setUTCHours(date.getUTCHours() - serverTimezoneOffsetHours);
+      // Create date object using local time
+      const date = new Date();
+      date.setFullYear(year);
+      date.setMonth(month - 1); // JavaScript months are 0-indexed
+      date.setDate(day);
+      date.setHours(hour);
+      date.setMinutes(minute);
+      date.setSeconds(second);
 
       return date;
     } catch (error) {
-      console.error("Error parsing API date:", error);
-      return new Date(dateString);
+      console.error("Error parsing date:", error, dateString);
+      return new Date(dateString); // Fallback to native parsing
     }
   };
 
@@ -584,7 +617,7 @@ export default function ChallengePage() {
                   dir={isEnglish ? "ltr" : "rtl"}
                   className="grid grid-cols-1 px-10 md:grid-cols-2 lg:grid-cols-3 gap-6"
                 >
-                  <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-lg gap-4">
+                  <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-2xl gap-4">
                     <div>
                       <Image
                         src="/blood.png"
@@ -627,7 +660,7 @@ export default function ChallengePage() {
                     </div>
                   </div>
 
-                  <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-lg gap-4">
+                  <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-2xl gap-4">
                     <div>
                       <Image
                         src="/byte.png"
@@ -647,7 +680,7 @@ export default function ChallengePage() {
                     </div>
                   </div>
 
-                  <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-lg gap-4">
+                  <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-2xl gap-4">
                     <div>
                       <Image
                         src="/icon20.png"
@@ -673,7 +706,7 @@ export default function ChallengePage() {
                 dir={isEnglish ? "ltr" : "rtl"}
                 className="grid grid-cols-1 px-10 md:grid-cols-2 lg:grid-cols-3 gap-6"
               >
-                <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-lg gap-4">
+                <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-2xl gap-4">
                   <div>
                     <Image
                       src="/blood.png"
@@ -714,7 +747,7 @@ export default function ChallengePage() {
                   </div>
                 </div>
 
-                <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-lg gap-4">
+                <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-2xl gap-4">
                   <div>
                     <Image
                       src="/byte.png"
@@ -732,7 +765,7 @@ export default function ChallengePage() {
                   </div>
                 </div>
 
-                <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-lg gap-4">
+                <div className="bg-[#FFFFFF0D] flex items-center justify-start py-4 px-5 rounded-2xl gap-4">
                   <div>
                     <Image
                       src="/icon20.png"
@@ -757,7 +790,7 @@ export default function ChallengePage() {
 
           <div
             dir={isEnglish ? "ltr" : "rtl"}
-            className="pt-10 pb-5 px-5 bg-[#FFFFFF0D] rounded-lg mx-10"
+            className="pt-10 pb-5 px-5 bg-[#FFFFFF0D] rounded-2xl mx-10"
           >
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
@@ -857,8 +890,6 @@ export default function ChallengePage() {
                 }`}
               >
                 {isEnglish ? "Activities" : "الأنشطة"}
-
-              
               </button>
             </div>
 
@@ -872,7 +903,7 @@ export default function ChallengePage() {
                 {/* Flag Submission Section */}
                 <div
                   dir={isEnglish ? "ltr" : "rtl"}
-                  className="bg-[#FFFFFF0D] relative rounded-lg p-6 flex flex-col min-h-[250px]"
+                  className="bg-[#FFFFFF0D] relative rounded-2xl p-6 flex flex-col min-h-[250px]"
                 >
                   <div className="flex items-center gap-4 mb-6">
                     <Image
@@ -924,7 +955,7 @@ export default function ChallengePage() {
                           <input
                             type="text"
                             placeholder={isEnglish ? "Flag" : "العلم"}
-                            className="bg-[#0B0D0F] w-full border border-gray-700 rounded-lg p-3 text-white"
+                            className="bg-[#0B0D0F] w-full border border-gray-700 rounded-2xl p-3 text-white"
                             value={flagInput}
                             onChange={(e) => setFlagInput(e.target.value)}
                           />
@@ -933,7 +964,7 @@ export default function ChallengePage() {
                         <button
                           onClick={submitFlag}
                           disabled={isLoading}
-                          className="bg-[#38FFE5] w-full lg:w-1/3 py-3 cursor-pointer hover:bg-[#38FFE5]/90 text-black font-semibold px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="bg-[#38FFE5] w-full lg:w-1/3 py-3 cursor-pointer hover:bg-[#38FFE5]/90 text-black font-semibold px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {isLoading ? (
                             <div className="flex items-center justify-center">
@@ -958,7 +989,7 @@ export default function ChallengePage() {
                 {challenge?.file && (
                   <div
                     dir={isEnglish ? "ltr" : "rtl"}
-                    className="bg-[#FFFFFF0D] rounded-lg p-6 flex flex-col min-h-[250px]"
+                    className="bg-[#FFFFFF0D] rounded-2xl p-6 flex flex-col min-h-[250px]"
                   >
                     <div className="flex items-center gap-4 mb-6">
                       <Image
@@ -981,7 +1012,7 @@ export default function ChallengePage() {
                       <a
                         href={challenge.file}
                         download
-                        className="lg:w-1/2 bg-transparent w-full cursor-pointer border border-[#38FFE5] hover:bg-[#38FFE5]/10 text-[#38FFE5] font-semibold py-3 rounded-lg transition-all inline-block text-center"
+                        className="lg:w-1/2 bg-transparent w-full cursor-pointer border border-[#38FFE5] hover:bg-[#38FFE5]/10 text-[#38FFE5] font-semibold py-3 rounded-xl transition-all inline-block text-center"
                       >
                         {isEnglish ? "Download File" : "تحميل الملف"}
                       </a>
@@ -993,7 +1024,7 @@ export default function ChallengePage() {
                 {challenge?.link && (
                   <div
                     dir={isEnglish ? "ltr" : "rtl"}
-                    className="bg-[#FFFFFF0D] rounded-lg p-6 flex flex-col min-h-[250px]"
+                    className="bg-[#FFFFFF0D] rounded-2xl p-6 flex flex-col min-h-[250px]"
                   >
                     <div className="flex items-center gap-4 mb-6">
                       <Image
@@ -1017,7 +1048,7 @@ export default function ChallengePage() {
                     <div className="mt-auto">
                       <button
                         onClick={() => window.open(challenge.link, "_blank")}
-                        className="lg:w-1/2 w-full bg-transparent cursor-pointer border border-[#38FFE5] hover:bg-[#38FFE5]/10 text-[#38FFE5] font-semibold py-3 rounded-lg transition-all"
+                        className="lg:w-1/2 w-full bg-transparent cursor-pointer border border-[#38FFE5] hover:bg-[#38FFE5]/10 text-[#38FFE5] font-semibold py-3 rounded-xl transition-all"
                       >
                         {isEnglish ? "Start Challenge" : "ابدأ التحدي"}
                       </button>
@@ -1059,20 +1090,21 @@ export default function ChallengePage() {
                       }-${Date.now()}`;
 
                       // Get the most recent solved_at time
-                      const latestSolvedAt =
-                        user.solved_flags?.length > 0
-                          ? convertToUserTimezone(
-                              new Date(
-                                Math.max(
-                                  ...user.solved_flags.map((flag) =>
-                                    parseApiDate(flag.solved_at).getTime()
-                                  )
-                                )
-                              )
+                      const latestSolvedAt = user.solved_at
+                        ? convertToUserTimezone(parseApiDate(user.solved_at))
+                        : user.solved_flags?.length > 0
+                        ? convertToUserTimezone(
+                            parseApiDate(
+                              user.solved_flags.reduce((latest, flag) => {
+                                const flagDate = parseApiDate(flag.solved_at);
+                                const latestDate = parseApiDate(latest);
+                                return flagDate > latestDate
+                                  ? flag.solved_at
+                                  : latest;
+                              }, user.solved_flags[0].solved_at)
                             )
-                          : user.solved_at
-                          ? convertToUserTimezone(parseApiDate(user.solved_at))
-                          : null;
+                          )
+                        : null;
 
                       // Format the time difference
                       const formatTimeAgo = (date) => {
@@ -1081,34 +1113,70 @@ export default function ChallengePage() {
                             ? "Not solved yet"
                             : "لم يتم الحل بعد";
 
-                        // Get current date for comparison
-                        const now = new Date();
+                        try {
+                          // Get current time
+                          const now = new Date();
 
-                        // Calculate time difference in seconds
-                        const diffInSeconds = Math.floor((now - date) / 1000);
+                          // Get hours and minutes from both dates
+                          const nowHours = now.getHours();
+                          const nowMinutes = now.getMinutes();
+                          const solvedHours = date.getHours();
+                          const solvedMinutes = date.getMinutes();
 
-                        // Format relative time
-                        if (diffInSeconds < 60)
-                          return isEnglish ? "Just now" : "الآن";
+                          // Calculate time difference directly (simplified approach)
+                          // If the solved time is greater than current time, assume it was from previous day
+                          let hourDiff, minuteDiff;
 
-                        if (diffInSeconds < 3600) {
-                          const minutes = Math.floor(diffInSeconds / 60);
+                          if (
+                            solvedHours > nowHours ||
+                            (solvedHours === nowHours &&
+                              solvedMinutes > nowMinutes)
+                          ) {
+                            // Time is from previous day, e.g. solved at 20:00, now is 16:00
+                            hourDiff = 24 - solvedHours + nowHours;
+
+                            // Adjust for minutes
+                            if (nowMinutes < solvedMinutes) {
+                              hourDiff--;
+                              minuteDiff = 60 - solvedMinutes + nowMinutes;
+                            } else {
+                              minuteDiff = nowMinutes - solvedMinutes;
+                            }
+                          } else {
+                            // Same day
+                            hourDiff = nowHours - solvedHours;
+
+                            // Adjust for minutes
+                            if (nowMinutes < solvedMinutes) {
+                              hourDiff--;
+                              minuteDiff = 60 - solvedMinutes + nowMinutes;
+                            } else {
+                              minuteDiff = nowMinutes - solvedMinutes;
+                            }
+                          }
+
+                          // Show minutes if less than an hour
+                          if (hourDiff === 0) {
+                            // If very recent (less than 5 minutes)
+                            if (minuteDiff < 5) {
+                              return isEnglish ? "Just now" : "الآن";
+                            }
+
+                            return isEnglish
+                              ? `${minuteDiff} minute${
+                                  minuteDiff !== 1 ? "s" : ""
+                                } ago`
+                              : `منذ ${minuteDiff} دقيقة`;
+                          }
+
+                          // Show hours
                           return isEnglish
-                            ? `${minutes} minute${minutes !== 1 ? "s" : ""} ago`
-                            : `منذ ${minutes} دقيقة`;
+                            ? `${hourDiff} hour${hourDiff !== 1 ? "s" : ""} ago`
+                            : `منذ ${hourDiff} ساعة`;
+                        } catch (error) {
+                          console.error("Error calculating time:", error);
+                          return isEnglish ? "Recently" : "حديثا";
                         }
-
-                        if (diffInSeconds < 86400) {
-                          const hours = Math.floor(diffInSeconds / 3600);
-                          return isEnglish
-                            ? `${hours} hour${hours !== 1 ? "s" : ""} ago`
-                            : `منذ ${hours} ساعة`;
-                        }
-
-                        const days = Math.floor(diffInSeconds / 86400);
-                        return isEnglish
-                          ? `${days} day${days !== 1 ? "s" : ""} ago`
-                          : `منذ ${days} يوم`;
                       };
 
                       return (
@@ -1122,7 +1190,7 @@ export default function ChallengePage() {
                             <div>
                               <Image
                                 src={
-                                  index === 0 || user.is_first_blood
+                                  user.is_first_blood
                                     ? "/blood.png"
                                     : "/flag.png"
                                 }
@@ -1159,7 +1227,16 @@ export default function ChallengePage() {
                             </div>
                           </div>
                           <div className="flex flex-col items-end gap-2">
-                            <p className="text-[#BCC9DB] text-[18px]">
+                            <p
+                              className="text-[#BCC9DB] text-[18px]"
+                              title={
+                                latestSolvedAt
+                                  ? latestSolvedAt.toLocaleString(
+                                      isEnglish ? "en-US" : "ar-SA"
+                                    )
+                                  : ""
+                              }
+                            >
                               {formatTimeAgo(latestSolvedAt)}
                             </p>
                           </div>
@@ -1168,7 +1245,7 @@ export default function ChallengePage() {
                     })}
                   </div>
                 ) : (
-                  <div className="bg-[#FFFFFF0D] rounded-lg p-4 sm:p-6 mt-4 mx-10">
+                  <div className="bg-[#FFFFFF0D] rounded-2xl p-4 sm:p-6 mt-4 mx-10">
                     <div className="flex flex-col items-center justify-center py-8">
                       <Image
                         src="/ranking.png"
@@ -1201,7 +1278,7 @@ export default function ChallengePage() {
                 onClick={() => setflags(false)}
                 className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
               />
-              <div className="relative z-10 bg-[#131619] rounded-lg p-6 w-full max-w-[600px] mx-4">
+              <div className="relative z-10 bg-[#131619] rounded-2xl p-6 w-full max-w-[600px] mx-4">
                 <div className="flex flex-col items-center gap-4 mb-6">
                   <Image
                     src="/flag.png"
@@ -1266,7 +1343,7 @@ export default function ChallengePage() {
                 <div className="mt-8 flex justify-center">
                   <button
                     onClick={() => setflags(false)}
-                    className="bg-[#38FFE5] cursor-pointer text-black font-semibold px-8 py-2 rounded-lg hover:bg-[#38FFE5]/90 transition-all"
+                    className="bg-[#38FFE5] cursor-pointer text-black font-semibold px-8 py-2 rounded-xl hover:bg-[#38FFE5]/90 transition-all"
                   >
                     {isEnglish ? "Go Back" : "الرجوع للخلف"}
                   </button>
@@ -1279,7 +1356,7 @@ export default function ChallengePage() {
           {isFirstBlood && (
             <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[2px]">
               <div className="bg-[url('/blooda.png')] flex items-center justify-center w-full h-full bg-cover bg-center bg-no-repeat">
-                <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">
+                <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-2xl p-4">
                   <div>
                     <div className="flex items-center justify-center gap-4 pb-16">
                       <h3 className="text-white text-xl md:text-2xl font-semibold">
@@ -1322,7 +1399,7 @@ export default function ChallengePage() {
           {isSubmitFlag && (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
               <ConfettiAnimation />
-              <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">
+              <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-2xl p-4">
                 <div>
                   <div className="flex items-center justify-center gap-4 pb-16">
                     <h3 className="text-white text-xl md:text-2xl font-semibold">
@@ -1364,7 +1441,7 @@ export default function ChallengePage() {
           {notfication && (
             <div className="w-full h-full fixed inset-0 z-50">
               <div className="absolute bottom-4 right-4 w-fit z-50">
-                <div className="bg-[#131619] border border-[#38FFE5] rounded-lg p-4 shadow-lg slide-in-animation">
+                <div className="bg-[#131619] border border-[#38FFE5] rounded-2xl p-4 shadow-lg slide-in-animation">
                   <div className="flex items-center gap-3">
                     <div>
                       <h3 className="text-white text-lg font-semibold">

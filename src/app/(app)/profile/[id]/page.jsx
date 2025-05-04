@@ -730,7 +730,7 @@ export default function Profile() {
                                         isEnglish ? "pl-0" : "pr-0"
                                       }`}
                                     >
-                                      <span className="text-white text-sm lg:text-base">
+                                      <span className="text-white text-sm lg:text-base min-w-[40px] text-right">
                                         {item.is_first_blood
                                           ? item.first_blood_bytes
                                           : item.total_bytes}
@@ -822,9 +822,9 @@ export default function Profile() {
           <div>
             <Image src="/blood.png" alt="profile" width={36} height={36} />
           </div>
-          <div>
+          <div className="w-full">
             <h1>{isEnglish ? "First Bytes" : "البايتس الاولي"}</h1>
-            <p className="font-bold pt-2">
+            <p className="font-bold pt-2 min-w-[80px]">
               {isEnglish
                 ? `${userData?.total_firstblood_bytes || 0} bytes`
                 : `${userData?.total_firstblood_bytes || 0} بايتس`}
@@ -836,9 +836,9 @@ export default function Profile() {
           <div>
             <Image src="/byte.png" alt="profile" width={36} height={36} />
           </div>
-          <div>
+          <div className="w-full">
             <h1>{isEnglish ? "Total Bytes" : "مجموع البايتس"}</h1>
-            <p className="font-bold pt-2">
+            <p className="font-bold pt-2 min-w-[80px]">
               {isEnglish
                 ? `${userData?.total_bytes || 0} bytes`
                 : `${userData?.total_bytes || 0} بايتس`}
@@ -877,28 +877,36 @@ export default function Profile() {
 
               <div className="px-7 pt-10 flex flex-col gap-8">
                 <div className="flex items-center justify-between">
-                  <p>{solvedByDifficulty.easy || 0}</p>
+                  <p className="min-w-[40px] text-right">
+                    {solvedByDifficulty.easy || 0}
+                  </p>
                   <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
                     {isEnglish ? "Easy" : "سهل"}
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <p>{solvedByDifficulty.medium || 0}</p>
+                  <p className="min-w-[40px] text-right">
+                    {solvedByDifficulty.medium || 0}
+                  </p>
                   <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
                     {isEnglish ? "Medium" : "متوسط"}
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <p>{solvedByDifficulty.hard || 0}</p>
+                  <p className="min-w-[40px] text-right">
+                    {solvedByDifficulty.hard || 0}
+                  </p>
                   <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
                     {isEnglish ? "Hard" : "صعب"}
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <p>{solvedByDifficulty.very_hard || 0}</p>
+                  <p className="min-w-[40px] text-right">
+                    {solvedByDifficulty.very_hard || 0}
+                  </p>
                   <p className="text-[#FF1100] font-bold text-base sm:text-lg">
                     {isEnglish ? "Very Hard" : "صعب جدا"}
                   </p>
@@ -924,28 +932,36 @@ export default function Profile() {
 
               <div className="px-7 pt-10 flex flex-col gap-8">
                 <div className="flex items-center justify-between">
-                  <p>{lab3Data.solved_by_difficulty.easy || 0}</p>
+                  <p className="min-w-[40px] text-right">
+                    {lab3Data.solved_by_difficulty.easy || 0}
+                  </p>
                   <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
                     {isEnglish ? "Easy" : "سهل"}
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <p>{lab3Data.solved_by_difficulty.medium || 0}</p>
+                  <p className="min-w-[40px] text-right">
+                    {lab3Data.solved_by_difficulty.medium || 0}
+                  </p>
                   <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
                     {isEnglish ? "Medium" : "متوسط"}
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <p>{lab3Data.solved_by_difficulty.hard || 0}</p>
+                  <p className="min-w-[40px] text-right">
+                    {lab3Data.solved_by_difficulty.hard || 0}
+                  </p>
                   <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
                     {isEnglish ? "Hard" : "صعب"}
                   </p>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <p>{lab3Data.solved_by_difficulty.very_hard || 0}</p>
+                  <p className="min-w-[40px] text-right">
+                    {lab3Data.solved_by_difficulty.very_hard || 0}
+                  </p>
                   <p className="text-[#FF1100] font-bold text-base sm:text-lg">
                     {isEnglish ? "Very Hard" : "صعب جدا"}
                   </p>
@@ -976,28 +992,36 @@ export default function Profile() {
 
             <div className="px-7 pt-10 flex flex-col gap-8">
               <div className="flex items-center justify-between">
-                <p>{solvedByDifficulty.easy || 0}</p>
+                <p className="min-w-[40px] text-right">
+                  {solvedByDifficulty.easy || 0}
+                </p>
                 <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
                   {isEnglish ? "Easy" : "سهل"}
                 </p>
               </div>
 
               <div className="flex items-center justify-between">
-                <p>{solvedByDifficulty.medium || 0}</p>
+                <p className="min-w-[40px] text-right">
+                  {solvedByDifficulty.medium || 0}
+                </p>
                 <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
                   {isEnglish ? "Medium" : "متوسط"}
                 </p>
               </div>
 
               <div className="flex items-center justify-between">
-                <p>{solvedByDifficulty.hard || 0}</p>
+                <p className="min-w-[40px] text-right">
+                  {solvedByDifficulty.hard || 0}
+                </p>
                 <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
                   {isEnglish ? "Hard" : "صعب"}
                 </p>
               </div>
 
               <div className="flex items-center justify-between">
-                <p>{solvedByDifficulty.very_hard || 0}</p>
+                <p className="min-w-[40px] text-right">
+                  {solvedByDifficulty.very_hard || 0}
+                </p>
                 <p className="text-[#FF1100] font-bold text-base sm:text-lg">
                   {isEnglish ? "Very Hard" : "صعب جدا"}
                 </p>
