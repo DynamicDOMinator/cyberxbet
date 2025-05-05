@@ -1298,18 +1298,20 @@ export default function ChallengePage() {
           {/* ============================================================================== */}
           {/* firt blood animation card  */}
           {isFirstBlood && (
-            <div className="fixed inset-0 z-50  flex items-center justify-center backdrop-blur-[2px]">
+            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[2px] ">
               <div
                 onClick={() => setIsFirstBlood(false)}
-                className="relative flex items-center w-[600px] h-[600px] justify-center"
+                className="blood-bg relative flex items-center w-[600px] h-[600px] justify-center overflow-hidden"
               >
                 <Image
                   src="/blooda.png"
                   alt="Blood animation background"
-                  fill
-                  className="object-cover object-center fixed z-0" 
+                  width={600}
+                  height={600}
+                  priority
+                  className="absolute inset-0 object-cover object-center "
                 />
-                <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] fixed z-10 min-h-[300px] rounded-lg p-4">
+                <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] relative z-10 min-h-[300px] rounded-lg p-4">
                   <div>
                     <div className="flex items-center justify-center gap-4 pb-16">
                       <h3 className="text-white text-xl md:text-2xl font-semibold">
@@ -1320,6 +1322,7 @@ export default function ChallengePage() {
                         alt="First Blood"
                         width={32}
                         height={32}
+                        priority
                       />
                     </div>
 
@@ -1346,16 +1349,16 @@ export default function ChallengePage() {
                 </div>
               </div>
             </div>
-         )} 
+          )}
           {/* ================================================================================== */}
           {/* anther aimation for submit flag  */}
           {isSubmitFlag && (
             <div
               onClick={() => setIsSubmitFlag(false)}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px]"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] animate-fadeIn"
             >
               <ConfettiAnimation />
-              <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">
+              <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4 animate-scaleIn">
                 <div>
                   <div className="flex items-center justify-center gap-4 pb-16">
                     <h3 className="text-white text-xl md:text-2xl font-semibold">
@@ -1366,6 +1369,7 @@ export default function ChallengePage() {
                       alt="First Blood"
                       width={32}
                       height={32}
+                      priority
                     />
                   </div>
 
@@ -1428,6 +1432,53 @@ export default function ChallengePage() {
             .slide-in-animation {
               animation: slideInFromLeft 0.5s ease-out forwards;
             }
+
+            @keyframes fadeIn {
+              from {
+                opacity: 0;
+              }
+              to {
+                opacity: 1;
+              }
+            }
+
+            @keyframes pulse {
+              0% {
+                transform: scale(1);
+              }
+              50% {
+                transform: scale(1.05);
+              }
+              100% {
+                transform: scale(1);
+              }
+            }
+
+            @keyframes scaleIn {
+              from {
+                transform: scale(0.9);
+                opacity: 0;
+              }
+              to {
+                transform: scale(1);
+                opacity: 1;
+              }
+            }
+
+            .animate-fadeIn {
+              animation: fadeIn 0.3s ease-in forwards;
+            }
+
+            .animate-pulse {
+              animation: pulse 3s infinite ease-in-out;
+            }
+
+            .animate-scaleIn {
+              animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+                forwards;
+            }
+
+           
           `}</style>
         </div>
       )}
