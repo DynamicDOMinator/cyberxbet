@@ -1278,7 +1278,11 @@ export default function ProfileSettings() {
           </div>
           {/* Personal Information Section */}
           <div className="bg-[#131619] rounded-xl p-[64px] mt-8 sm:mt-16">
-            <h2 className="text-2xl font-semibold mb-6 text-right">
+            <h2
+              className={`text-2xl font-semibold mb-6 ${
+                isEnglish ? "text-left" : "text-right"
+              }`}
+            >
               {isEnglish ? "Personal Information" : "المعلومات الشخصية"}
             </h2>
 
@@ -1385,9 +1389,7 @@ export default function ProfileSettings() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:gap-x-[238px] lg:gap-y-[56px] md:gap-10 ">
               <div className="flex flex-col">
                 <label
-                  className={` ${
-                    isEnglish ? "text-left" : "text-right"
-                  } mb-2`}
+                  className={` ${isEnglish ? "text-left" : "text-right"} mb-2`}
                 >
                   {isEnglish ? "Username" : "اسم المستخدم"}
                 </label>
@@ -1398,15 +1400,15 @@ export default function ProfileSettings() {
                   onFocus={handleUsernameFocus}
                   onBlur={handleUsernameBlur}
                   placeholder={userName || ""}
+                  dir={isEnglish ? "ltr" : "rtl"}
                   className="bg-[#0B0D0F] rounded-xl p-3 text-right w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300 text-white placeholder-gray-500"
+                  style={{ textAlign: isEnglish ? "left" : "right" }}
                 />
               </div>
 
               <div className="flex flex-col">
                 <label
-                  className={` ${
-                    isEnglish ? "text-left" : "text-right"
-                  } mb-2`}
+                  className={` ${isEnglish ? "text-left" : "text-right"} mb-2`}
                 >
                   {isEnglish ? "Email" : "البريد الإلكتروني"}
                 </label>
@@ -1417,8 +1419,10 @@ export default function ProfileSettings() {
                         <input
                           type="email"
                           value={newEmail}
+                          dir={isEnglish ? "ltr" : "rtl"}
                           onChange={(e) => setNewEmail(e.target.value)}
                           className="bg-[#0B0D0F]  rounded-xl rounded-r-none p-3 text-right w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300"
+                          style={{ textAlign: isEnglish ? "left" : "right" }}
                         />
                         <div className="flex gap-2">
                           <button
@@ -1443,6 +1447,7 @@ export default function ProfileSettings() {
                         placeholder={email}
                         className="bg-[#0B0D0F] rounded-xl p-3 text-right pr-12 w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300"
                         readOnly
+                        style={{ textAlign: isEnglish ? "left" : "right" }}
                       />
                       <button
                         className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-[#00D8C8] transition-colors"
@@ -1473,9 +1478,7 @@ export default function ProfileSettings() {
 
               <div className="flex flex-col">
                 <label
-                  className={` ${
-                    isEnglish ? "text-left" : "text-right"
-                  } mb-2`}
+                  className={` ${isEnglish ? "text-left" : "text-right"} mb-2`}
                 >
                   {isEnglish ? "Country" : "البلد"}
                 </label>
@@ -1490,9 +1493,7 @@ export default function ProfileSettings() {
 
               <div className="flex flex-col">
                 <label
-                  className={` ${
-                    isEnglish ? "text-left" : "text-right"
-                  } mb-2`}
+                  className={` ${isEnglish ? "text-left" : "text-right"} mb-2`}
                 >
                   {isEnglish ? "Timezone" : "المنطقة الزمنية"}
                 </label>
@@ -1536,7 +1537,11 @@ export default function ProfileSettings() {
 
           {/* Social Media Connections Section */}
           <div className="bg-[#131619] rounded-xl p-6 mt-8">
-            <h2 className="text-2xl font-semibold mb-6 text-right">
+            <h2
+              className={`text-2xl font-semibold mb-6 ${
+                isEnglish ? "text-left" : "text-right"
+              }`}
+            >
               {isEnglish ? "Connect Your Platforms" : "اتصل بمنصاتك"}
             </h2>
 
@@ -1617,6 +1622,7 @@ export default function ProfileSettings() {
                         : ""
                     }
                     dir="ltr"
+                    style={{ textAlign: "left" }}
                   />
                   {validationErrors.discord && (
                     <p className="text-red-500 text-xs mt-1 text-right">
@@ -1719,6 +1725,7 @@ export default function ProfileSettings() {
                         : "رابط حسابك في لينكد إن"
                     }
                     dir="ltr"
+                    style={{ textAlign: "left" }}
                   />
                   {validationErrors.linkedin && (
                     <p className="text-red-500 text-xs mt-1 text-right">
@@ -1823,6 +1830,7 @@ export default function ProfileSettings() {
                         : ""
                     }
                     dir="ltr"
+                    style={{ textAlign: "left" }}
                   />
                   {validationErrors.instagram && (
                     <p className="text-red-500 text-xs mt-1 text-right">
@@ -1928,6 +1936,7 @@ export default function ProfileSettings() {
                         : ""
                     }
                     dir="ltr"
+                    style={{ textAlign: "left" }}
                   />
                   {validationErrors.tiktok && (
                     <p className="text-red-500 text-xs mt-1 text-right">
@@ -2032,6 +2041,7 @@ export default function ProfileSettings() {
                         : ""
                     }
                     dir="ltr"
+                    style={{ textAlign: "left" }}
                   />
                   {validationErrors.youtube && (
                     <p className="text-red-500 text-xs mt-1 text-right">
@@ -2136,6 +2146,7 @@ export default function ProfileSettings() {
                         : ""
                     }
                     dir="ltr"
+                    style={{ textAlign: "left" }}
                   />
                   {validationErrors.twitter && (
                     <p className="text-red-500 text-xs mt-1 text-right">
@@ -2321,6 +2332,7 @@ export default function ProfileSettings() {
                           : "أدخل كلمة المرور الحالية"
                       }
                       dir="ltr"
+                      style={{ textAlign: "left" }}
                     />
                     <button
                       type="button"
@@ -2391,6 +2403,7 @@ export default function ProfileSettings() {
                           : "أدخل كلمة المرور الجديدة"
                       }
                       dir="ltr"
+                      style={{ textAlign: "left" }}
                     />
                     <button
                       type="button"
