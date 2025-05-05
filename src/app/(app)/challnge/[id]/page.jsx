@@ -1303,14 +1303,14 @@ export default function ChallengePage() {
                 onClick={() => setIsFirstBlood(false)}
                 className="blood-bg relative flex items-center w-[600px] h-[600px] justify-center overflow-hidden"
               >
-                <Image
+                {/* <Image
                   src="/blooda.png"
                   alt="Blood animation background"
                   width={600}
                   height={600}
                   priority
                   className="absolute inset-0 object-cover object-center "
-                />
+                /> */}
                 <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] relative z-10 min-h-[300px] rounded-lg p-4">
                   <div>
                     <div className="flex items-center justify-center gap-4 pb-16">
@@ -1478,7 +1478,13 @@ export default function ChallengePage() {
                 forwards;
             }
 
-           
+            .blood-bg::before {
+              content: "";
+              position: absolute;
+              inset: 0;
+              background: url("/blooda.png") center/cover no-repeat;
+              z-index: 0;
+            }
           `}</style>
         </div>
       )}
