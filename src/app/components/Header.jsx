@@ -247,7 +247,7 @@ export default function Header() {
               <MenuItems
                 transition
                 anchor="bottom end"
-                className="w-52 origin-top-right rounded-xl border border-white/5 bg-black/75 mt-7 p-2 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+                className="w-52 origin-top-right rounded-xl border border-white/5 bg-[#06373F]/25 mt-7 p-2 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
               >
                 {labs &&
                   labs.map((lab) => (
@@ -255,7 +255,7 @@ export default function Header() {
                       <Link href={`/labs/${lab.uuid}`}>
                         <p
                           dir={isEnglish ? "ltr" : "rtl"}
-                          className="py-2 px-4 hover:bg-white/10 rounded"
+                          className="py-2 px-4 hover:bg-[#06373F] rounded-lg"
                         >
                           {isEnglish ? lab.name : lab.ar_name}
                         </p>
@@ -323,13 +323,13 @@ export default function Header() {
                 anchor="bottom end"
                 className={`w-52 origin-top-right rounded-xl ${
                   isEnglish ? "lg:mr-10" : "lg:ml-10"
-                } lg:mt-5 bg-[#0B0D0F33] p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0`}
+                } lg:mt-5 bg-[#06373F]/25 p-1 text-sm/6 text-white transition duration-100 ease-out [--anchor-gap:var(--spacing-1)] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0`}
               >
                 <MenuItem>
                   <button
                     dir={isEnglish ? "ltr" : "rtl"}
                     onClick={() => router.push(`/profile/${userName}`)}
-                    className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10 cursor-pointer"
+                    className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-[#06373F] cursor-pointer"
                   >
                     <RiUserLine className="size-4 fill-[#38FFE5]" />
                     {isEnglish ? "Account" : "الحساب"}
@@ -339,7 +339,7 @@ export default function Header() {
                   <button
                     dir={isEnglish ? "ltr" : "rtl"}
                     onClick={() => router.push("/profile-settings")}
-                    className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10 cursor-pointer"
+                    className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-[#06373F] cursor-pointer"
                   >
                     <CiSettings className="size-4 fill-[#38FFE5]" />
                     {isEnglish ? "Settings" : "الإعدادات"}
@@ -349,7 +349,7 @@ export default function Header() {
                 <MenuItem>
                   <button
                     dir={isEnglish ? "ltr" : "rtl"}
-                    className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-white/10 cursor-pointer"
+                    className="group flex w-full items-center gap-2 rounded-lg py-1.5 px-3 data-[focus]:bg-[#06373F] cursor-pointer"
                     onClick={() => setIsEnglish(!isEnglish)}
                   >
                     <MdLanguage className="size-4 fill-[#38FFE5]" />
