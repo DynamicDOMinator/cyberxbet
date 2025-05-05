@@ -251,7 +251,7 @@ export default function Home() {
 
           <div className="lg:basis-1/3 w-full">
             <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 min-h-[165px] backdrop-blur-xl rounded-2xl p-3 sm:p-4">
-              <Image src="/ranking.png" alt="progress" width={36} height={36} />
+              <Image src="/ranking.png" alt="progress" width={56} height={56} />
               <p className="text-[#BCC9DB] text-[16px] sm:text-[18px]">
                 {userData?.rank > 0
                   ? userData.rank
