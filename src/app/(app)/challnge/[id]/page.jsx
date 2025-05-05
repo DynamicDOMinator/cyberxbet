@@ -38,6 +38,7 @@ export default function ChallengePage() {
   const { id } = useParams();
   const { isEnglish } = useLanguage();
   const { convertToUserTimezone } = useUserProfile();
+  const router = useRouter();
 
   const calculateTimeDifference = (createdAt, solvedAt) => {
     if (!createdAt || !solvedAt) return null;
@@ -104,6 +105,17 @@ export default function ChallengePage() {
         challengeResult.status === "fulfilled" &&
         challengeResult.value.data
       ) {
+        // Check if the challenge exists (has id or uuid)
+        if (
+          !challengeResult.value.data.data ||
+          (!challengeResult.value.data.data.id &&
+            !challengeResult.value.data.data.uuid)
+        ) {
+          // No valid challenge data found, redirect to 404
+          router.push("/404");
+          return;
+        }
+
         setChallenge(challengeResult.value.data.data);
         // Set lab, lab_category, and category data if available
         if (challengeResult.value.data.lab) {
@@ -118,6 +130,10 @@ export default function ChallengePage() {
         if (challengeResult.value.data.data.available === false) {
           setIsAvailable(false);
         }
+      } else {
+        // Challenge API call failed or returned invalid data
+        router.push("/404");
+        return;
       }
 
       // Process solved flags data if available
@@ -131,11 +147,13 @@ export default function ChallengePage() {
       console.error("Fatal error in fetchInitialData:", error);
       // Set default state for essential UI elements
       setIsAvailable(false);
+      // Redirect to 404 page on error
+      router.push("/404");
+      return;
     } finally {
       setLoadingPage(false);
     }
   };
-  const router = useRouter();
 
   // Initialize socket connection
   useEffect(() => {
