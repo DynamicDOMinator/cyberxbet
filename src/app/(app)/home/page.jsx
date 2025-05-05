@@ -235,7 +235,9 @@ export default function Home() {
                   : "تهانيا! لقد وصلت إلى الحد الأقصى."
                 : isEnglish
                 ? `${
-                    userData?.percentage_for_next_title || 0
+                    userData?.percentage_for_next_title
+                      ? Math.floor(userData.percentage_for_next_title)
+                      : 0
                   }% remaining to achieve ${
                     userData?.next_title || "Professional"
                   } status`
