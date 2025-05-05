@@ -162,7 +162,7 @@ export default function Home() {
           {isEnglish ? "Advertisements" : "الاعلانات"}
         </h1>
 
-        <div className="bg-white/3 backdrop-blur-xl mt-8 rounded-lg p-4 lg:h-[400px] w-full ">
+        <div className="bg-white/3 backdrop-blur-xl mt-8 rounded-2xl p-4 lg:h-[400px] w-full ">
           <div className="flex flex-col  items-center justify-center lg:h-[400px] h-[200px] gap-4">
             <Image
               src="/ads.png"
@@ -189,7 +189,7 @@ export default function Home() {
         </h2>
 
         <div className="flex lg:flex-row flex-col lg:gap-14 gap-8 items-center justify-between pt-8">
-          <div className="lg:basis-2/3 w-full bg-white/3 backdrop-blur-xl rounded-lg py-6 sm:py-10 px-3 min-h-[165px] sm:px-4 lg:px-10">
+          <div className="lg:basis-2/3 w-full bg-white/3 backdrop-blur-xl rounded-2xl py-6 sm:py-10 px-3 min-h-[165px] sm:px-4 lg:px-10">
             <div
               dir={isEnglish ? "ltr" : "rtl"}
               className="flex items-center justify-between sm:justify-start sm:gap-5 gap-2 w-full"
@@ -250,7 +250,7 @@ export default function Home() {
           </div>
 
           <div className="lg:basis-1/3 w-full">
-            <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 min-h-[165px] backdrop-blur-xl rounded-lg p-3 sm:p-4">
+            <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 min-h-[165px] backdrop-blur-xl rounded-2xl p-3 sm:p-4">
               <Image src="/ranking.png" alt="progress" width={36} height={36} />
               <p className="text-[#BCC9DB] text-[16px] sm:text-[18px]">
                 {userData?.rank > 0
@@ -329,7 +329,7 @@ export default function Home() {
                   </>
                 )}
               </p>
-              <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110 hover:bg-[#38FFE5]/10 hover:transition-all duration-300 hover:p-1 rounded-lg">
+              <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110 hover:bg-[#38FFE5]/10 hover:transition-all duration-300 hover:p-1 rounded-2xl">
                 <Link href={`/challnge/${challenge.uuid}`}>
                   {isEnglish ? "Start Now" : "ابدأ الآن"}
                 </Link>
@@ -347,11 +347,11 @@ export default function Home() {
         >
           {isEnglish ? "Activity History" : "أحدث الانشطة"}
         </h2>
-        <div className="px-4 lg:px-10 py-6 lg:py-10 bg-[#06373F26] rounded-lg">
+        <div className="px-4 lg:px-10 py-6 lg:py-10 bg-[#06373F26] rounded-2xl">
           <div className="overflow-x-auto">
             <div className="min-w-[768px] w-full">
               {/* Header wrapper div */}
-              <div className="rounded-lg bg-[#38FFE50D] mb-6 lg:mb-10">
+              <div className="rounded-2xl bg-[#38FFE50D] mb-6 lg:mb-10">
                 <table className={`w-full ${isEnglish ? "pl-5" : "pr-5"}`}>
                   <thead>
                     <tr
@@ -417,7 +417,7 @@ export default function Home() {
                   <div
                     key={index}
                     className={`${
-                      index % 2 === 0 ? "bg-[#06373F] rounded-lg" : ""
+                      index % 2 === 0 ? "bg-[#06373F] rounded-2xl" : ""
                     } mb-2`}
                   >
                     <table className="w-full">
