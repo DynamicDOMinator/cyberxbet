@@ -981,7 +981,7 @@ export default function AddChallenge() {
 
         <div
           dir={isEnglish ? "ltr" : "rtl"}
-          className={`flex items-center gap-5 pt-10 ${
+          className={`flex items-center  gap-5 pt-10 ${
             filteredChallenges.length > 3 || challengesLoading
               ? "overflow-x-scroll custom-scrollbar"
               : "flex-wrap"
@@ -992,13 +992,7 @@ export default function AddChallenge() {
             // Loading skeleton
             Array(3)
               .fill()
-              .map((_, index) => (
-                <div
-                  key={index}
-                 
-                >
-               </div>
-              ))
+              .map((_, index) => <div key={index}></div>)
           ) : filteredChallenges.length > 0 ? (
             filteredChallenges.map((challenge) => {
               const difficultyInfo = getDifficultyInfo(challenge.difficulty);
@@ -1007,10 +1001,10 @@ export default function AddChallenge() {
               return (
                 <div
                   key={challenge.id}
-                  className="bg-[#FFFFFF0D] flex-shrink-0 w-full md:w-1/3 mb-5 rounded-lg overflow-hidden flex flex-col h-full"
+                  className="bg-[#FFFFFF0D] flex-shrink-0 w-full md:w-[32.3%] md:min-w-[400px] min-h-[242px] mb-5 rounded-2xl overflow-hidden flex flex-col relative"
                   dir={isEnglish ? "ltr" : "rtl"}
                 >
-                  <div className="p-4 flex flex-col h-full">
+                  <div className="p-4 flex flex-col pb-16">
                     <div
                       dir={isEnglish ? "ltr" : "rtl"}
                       className="flex gap-2 items-center mb-4"
@@ -1018,32 +1012,32 @@ export default function AddChallenge() {
                       <Image
                         src={challenge.category?.icon_url || "/uploaded.png"}
                         alt={challenge.category?.name || "Challenge"}
-                        width={32}
-                        height={32}
+                        width={56}
+                        height={56}
+                        className="min-w-[56px] min-h-[56px]"
                       />
-                      <p className="font-bold text-white">{challenge.name}</p>
+                      <p className="font-bold text-[24px] text-white">{challenge.name}</p>
                     </div>
-                    <p className="text-gray-300 text-sm flex-grow">
+                    <p className="text-gray-300 text-[18px]">
                       {challenge.description}
                     </p>
-                    <div
-                      dir={isEnglish ? "ltr" : "rtl"}
-                      className="flex justify-between items-center mt-4"
-                    >
-                      <div className="flex items-center">
-                        <span className="text-gray-400">
-                          {isEnglish ? "Difficulty level" : "مستوى الصعوبة"}:{" "}
-                        </span>
-                        <span
-                          className={`${difficultyInfo.color} ml-1 rtl:mr-1`}
-                        >
-                          {difficultyInfo.text}
-                        </span>
-                      </div>
-                      <span className={`${statusInfo.color}`}>
-                        {statusInfo.text}
+                  </div>
+
+                  <div
+                    dir={isEnglish ? "ltr" : "rtl"}
+                    className="absolute bottom-0 left-0 right-0 flex justify-between items-center p-4 "
+                  >
+                    <div className="flex items-center">
+                      <span className="text-gray-400">
+                        {isEnglish ? "Difficulty level" : "مستوى الصعوبة"}:{" "}
+                      </span>
+                      <span className={`${difficultyInfo.color} ml-1 rtl:mr-1`}>
+                        {difficultyInfo.text}
                       </span>
                     </div>
+                    <span className={`${statusInfo.color}`}>
+                      {statusInfo.text}
+                    </span>
                   </div>
                 </div>
               );
@@ -1299,7 +1293,7 @@ export default function AddChallenge() {
                         <div
                           key={category.uuid}
                           onClick={() => handleCategorySelect(category.uuid)}
-                          className="px-4 py-2 cursor-pointer text-white hover:bg-gray-500 hover:text-white transition-colors"
+                          className="px-4 py-2 cursor-pointer text-white hover:bg-[#2a2e32] hover:text-white transition-colors"
                         >
                           {category.name}
                         </div>

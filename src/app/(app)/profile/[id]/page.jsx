@@ -20,14 +20,62 @@ import axios from "axios";
 const inter = Inter({ subsets: ["latin"] });
 
 // Function to format date strings
-const formatDate = (dateString) => {
+const formatDate = (dateString, isEnglish) => {
   const date = new Date(dateString);
-  const options = {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  };
-  return date.toLocaleDateString("en-US", options);
+
+  if (isEnglish) {
+    const options = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+    };
+    return date.toLocaleDateString("en-US", options);
+  } else {
+    // Arabic format: ١ مايو ٢٠٢٥ في ٠٧:٤٢ م
+    const day = date.getDate();
+    const month = date.getMonth();
+    const year = date.getFullYear();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+
+    // Convert to Arabic digits
+    const toArabicDigits = (num) => {
+      const arabicDigits = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+      return String(num)
+        .split("")
+        .map((digit) => arabicDigits[parseInt(digit)])
+        .join("");
+    };
+
+    // Arabic month names
+    const arabicMonths = [
+      "يناير",
+      "فبراير",
+      "مارس",
+      "إبريل",
+      "مايو",
+      "يونيو",
+      "يوليو",
+      "أغسطس",
+      "سبتمبر",
+      "أكتوبر",
+      "نوفمبر",
+      "ديسمبر",
+    ];
+
+    // Format time as 12-hour with am/pm
+    const isPM = hours >= 12;
+    const hour12 = hours % 12 || 12;
+    const ampm = isPM ? "م" : "ص";
+
+    return `${toArabicDigits(day)} ${arabicMonths[month]} ${toArabicDigits(
+      year
+    )} في ${toArabicDigits(
+      hour12.toString().padStart(2, "0")
+    )}:${toArabicDigits(minutes.toString().padStart(2, "0"))} ${ampm}`;
+  }
 };
 
 export default function Profile() {
@@ -595,6 +643,338 @@ export default function Profile() {
                     </p>
                   </div>
                 </div>
+
+                <div dir={isEnglish ? "ltr" : "rtl"}>
+                  <div className="flex flex-col sm:flex-row gap-5 sm:gap-10 items-center my-10 ">
+                    <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4 flex gap-4 items-center">
+                      <div>
+                        <Image
+                          src="/blood.png"
+                          alt="profile"
+                          width={36}
+                          height={36}
+                        />
+                      </div>
+                      <div className="w-full">
+                        <h1>{isEnglish ? "First Bytes" : "البايتس الاولي"}</h1>
+                        <p className="font-bold pt-2 min-w-[80px]">
+                          {isEnglish
+                            ? `${userData?.total_firstblood_bytes || 0} bytes`
+                            : `${userData?.total_firstblood_bytes || 0} بايتس`}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4 flex gap-4 items-center">
+                      <div>
+                        <Image
+                          src="/byte.png"
+                          alt="profile"
+                          width={36}
+                          height={36}
+                        />
+                      </div>
+                      <div className="w-full">
+                        <h1>{isEnglish ? "Total Bytes" : "مجموع البايتس"}</h1>
+                        <p className="font-bold pt-2 min-w-[80px]">
+                          {isEnglish
+                            ? `${userData?.total_bytes || 0} bytes`
+                            : `${userData?.total_bytes || 0} بايتس`}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-5 sm:gap-10 items-center my-[80px]">
+                    {lab3Data.solved_by_difficulty.easy > 0 ||
+                    lab3Data.solved_by_difficulty.medium > 0 ||
+                    lab3Data.solved_by_difficulty.hard > 0 ||
+                    lab3Data.solved_by_difficulty.very_hard > 0 ? (
+                      <>
+                        <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4 ">
+                          <div className="flex gap-4 items-center">
+                            <div>
+                              <Image
+                                src="/icon-challnge.png"
+                                alt="challenges"
+                                width={56}
+                                height={56}
+                              />
+                            </div>
+                            <div>
+                              <h1>
+                                {isEnglish
+                                  ? "Challenges Hacked"
+                                  : "التحديات المخترقة"}
+                              </h1>
+                              <p className="font-bold pt-2">
+                                {isEnglish
+                                  ? `${challangesStats?.solved} challenges`
+                                  : `${challangesStats?.solved} التحديات`}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="px-7 pt-10 flex flex-col gap-8">
+                            <div className="flex items-center justify-between">
+                              <p className="min-w-[40px] text-right">
+                                {solvedByDifficulty.easy || 0}
+                              </p>
+                              <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
+                                {isEnglish ? "Easy" : "سهل"}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <p className="min-w-[40px] text-right">
+                                {solvedByDifficulty.medium || 0}
+                              </p>
+                              <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
+                                {isEnglish ? "Medium" : "متوسط"}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <p className="min-w-[40px] text-right">
+                                {solvedByDifficulty.hard || 0}
+                              </p>
+                              <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
+                                {isEnglish ? "Hard" : "صعب"}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <p className="min-w-[40px] text-right">
+                                {solvedByDifficulty.very_hard || 0}
+                              </p>
+                              <p className="text-[#FF1100] font-bold text-base sm:text-lg">
+                                {isEnglish ? "Very Hard" : "صعب جدا"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4">
+                          <div className="flex gap-4 items-center">
+                            <div>
+                              <Image
+                                src="/server.png"
+                                alt="lab3"
+                                width={56}
+                                height={56}
+                              />
+                            </div>
+                            <div>
+                              <h1>
+                                {isEnglish
+                                  ? "Hacked Servers"
+                                  : "الخوادم المخترقة"}
+                              </h1>
+                              <p className="font-bold pt-2">
+                                {isEnglish
+                                  ? `${lab3Data?.solved_challenges || 0}
+                      servers`
+                                  : `${
+                                      lab3Data?.solved_challenges || 0
+                                    } الخوادم`}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="px-7 pt-10 flex flex-col gap-8">
+                            <div className="flex items-center justify-between">
+                              <p className="min-w-[40px] text-right">
+                                {lab3Data.solved_by_difficulty.easy || 0}
+                              </p>
+                              <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
+                                {isEnglish ? "Easy" : "سهل"}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <p className="min-w-[40px] text-right">
+                                {lab3Data.solved_by_difficulty.medium || 0}
+                              </p>
+                              <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
+                                {isEnglish ? "Medium" : "متوسط"}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <p className="min-w-[40px] text-right">
+                                {lab3Data.solved_by_difficulty.hard || 0}
+                              </p>
+                              <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
+                                {isEnglish ? "Hard" : "صعب"}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                              <p className="min-w-[40px] text-right">
+                                {lab3Data.solved_by_difficulty.very_hard || 0}
+                              </p>
+                              <p className="text-[#FF1100] font-bold text-base sm:text-lg">
+                                {isEnglish ? "Very Hard" : "صعب جدا"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-full bg-[#FFFFFF0D] rounded-lg p-4">
+                        <div className="flex gap-4 items-center">
+                          <div>
+                            <Image
+                              src="/icon-challnge.png"
+                              alt="challenges"
+                              width={56}
+                              height={56}
+                            />
+                          </div>
+                          <div>
+                            <h1>
+                              {isEnglish
+                                ? "Challenges Hacked"
+                                : "التحديات المخترقة"}
+                            </h1>
+                            <p className="font-bold pt-2">
+                              {isEnglish
+                                ? `${challangesStats?.solved} challenges`
+                                : `${challangesStats?.solved} التحديات`}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="px-7 pt-10 flex flex-col gap-8">
+                          <div className="flex items-center justify-between">
+                            <p className="min-w-[40px] text-right">
+                              {solvedByDifficulty.easy || 0}
+                            </p>
+                            <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
+                              {isEnglish ? "Easy" : "سهل"}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <p className="min-w-[40px] text-right">
+                              {solvedByDifficulty.medium || 0}
+                            </p>
+                            <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
+                              {isEnglish ? "Medium" : "متوسط"}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <p className="min-w-[40px] text-right">
+                              {solvedByDifficulty.hard || 0}
+                            </p>
+                            <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
+                              {isEnglish ? "Hard" : "صعب"}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <p className="min-w-[40px] text-right">
+                              {solvedByDifficulty.very_hard || 0}
+                            </p>
+                            <p className="text-[#FF1100] font-bold text-base sm:text-lg">
+                              {isEnglish ? "Very Hard" : "صعب جدا"}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="my-10" ref={skillsSectionRef}>
+                    <div className="flex flex-col py-4 sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+                      <h2 className="text-2xl font-semibold">
+                        {isEnglish ? "Skills Proficiency" : "ملخص المهارات"}
+                      </h2>
+
+                      <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <p className="text-white text-sm">
+                            {isEnglish ? "You" : "أنت"}
+                          </p>
+                          <div
+                            className={`h-5 w-5 border ${
+                              youSelected
+                                ? "border-[#38FFE5] bg-transparent"
+                                : "border-white bg-transparent"
+                            } flex items-center justify-center cursor-pointer`}
+                            onClick={handleYouSelected}
+                          >
+                            {youSelected && (
+                              <span className="text-[#38FFE5]">✓</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-white text-sm">
+                            {isEnglish ? "Average Eye Level" : "متوسط اللاعبون"}
+                          </p>
+                          <div
+                            className={`h-5 w-5 border ${
+                              averageEyeLevel
+                                ? "border-[#38FFE5] bg-transparent"
+                                : "border-white bg-transparent"
+                            } flex items-center justify-center cursor-pointer`}
+                            onClick={handleAverageEyeLevel}
+                          >
+                            {averageEyeLevel && (
+                              <span className="text-[#38FFE5]">✓</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-5">
+                      {categories.map((category, index) => (
+                        <div
+                          className="flex items-center flex-row-reverse"
+                          key={category.name}
+                        >
+                          <div className="w-full">
+                            <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out"
+                                style={{
+                                  width: skillsVisible
+                                    ? youSelected
+                                      ? `${category.percentage || 0}%`
+                                      : `${
+                                          allUsersMedian.find(
+                                            (m) => m.name === category.name
+                                          )?.median_percentage || 0
+                                        }%`
+                                    : "0%",
+                                  transitionDelay: `${index * 150}ms`,
+                                }}
+                              ></div>
+                            </div>
+                          </div>
+                          <div
+                            className={`min-w-[170px] ${
+                              isEnglish ? "text-left" : "text-right"
+                            }`}
+                          >
+                            <span className="font-medium text-white">
+                              {category.name}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="my-10">
+                    <ActivityChart
+                      isEnglish={isEnglish}
+                      bytesData={bytesByMonth}
+                    />
+                  </div>
+                </div>
               </TabPanel>
               <TabPanel className="w-full">
                 {userEvents.length > 0 ? (
@@ -662,7 +1042,7 @@ export default function Profile() {
                                 isEnglish ? "text-left" : "text-right"
                               }`}
                             >
-                              {formatDate(event.start_date)}
+                              {formatDate(event.start_date, isEnglish)}
                             </span>
                           </div>
                         </div>
@@ -730,7 +1110,7 @@ export default function Profile() {
                                         isEnglish ? "pl-0" : "pr-0"
                                       }`}
                                     >
-                                      <span className="text-white text-sm lg:text-base min-w-[40px] text-right">
+                                      <span className="text-white text-sm lg:text-base min-w-[40px] text-left">
                                         {item.is_first_blood
                                           ? item.first_blood_bytes
                                           : item.total_bytes}
@@ -761,18 +1141,15 @@ export default function Profile() {
                                           : "pr-2 lg:pr-3"
                                       }`}
                                     >
-                                      <span className="text-sm lg:text-base">
+                                      <span className="text-sm lg:text-base min-w-[25px] text-right">
                                         {index + 1}
                                       </span>
                                       <Image
-                                        src={
-                                          userData.user_profile_image ||
-                                          "/icon1.png"
-                                        }
+                                        src={item.category_icon_url}
                                         alt="user"
                                         width={24}
                                         height={24}
-                                        className="rounded-full lg:w-[32px] lg:h-[32px]"
+                                        className="lg:w-[32px] lg:h-[32px]"
                                       />
                                       <span className="text-white text-sm lg:text-base">
                                         {userData.username || params.id}
@@ -815,298 +1192,6 @@ export default function Profile() {
             </TabPanels>
           </TabGroup>
         </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-5 sm:gap-10 items-center my-10">
-        <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4 flex gap-4 items-center">
-          <div>
-            <Image src="/blood.png" alt="profile" width={36} height={36} />
-          </div>
-          <div className="w-full">
-            <h1>{isEnglish ? "First Bytes" : "البايتس الاولي"}</h1>
-            <p className="font-bold pt-2 min-w-[80px]">
-              {isEnglish
-                ? `${userData?.total_firstblood_bytes || 0} bytes`
-                : `${userData?.total_firstblood_bytes || 0} بايتس`}
-            </p>
-          </div>
-        </div>
-
-        <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4 flex gap-4 items-center">
-          <div>
-            <Image src="/byte.png" alt="profile" width={36} height={36} />
-          </div>
-          <div className="w-full">
-            <h1>{isEnglish ? "Total Bytes" : "مجموع البايتس"}</h1>
-            <p className="font-bold pt-2 min-w-[80px]">
-              {isEnglish
-                ? `${userData?.total_bytes || 0} bytes`
-                : `${userData?.total_bytes || 0} بايتس`}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-5 sm:gap-10 items-center my-[80px]">
-        {lab3Data.solved_by_difficulty.easy > 0 ||
-        lab3Data.solved_by_difficulty.medium > 0 ||
-        lab3Data.solved_by_difficulty.hard > 0 ||
-        lab3Data.solved_by_difficulty.very_hard > 0 ? (
-          <>
-            <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4 ">
-              <div className="flex gap-4 items-center">
-                <div>
-                  <Image
-                    src="/icon-challnge.png"
-                    alt="challenges"
-                    width={56}
-                    height={56}
-                  />
-                </div>
-                <div>
-                  <h1>
-                    {isEnglish ? "Challenges Hacked" : "التحديات المخترقة"}
-                  </h1>
-                  <p className="font-bold pt-2">
-                    {isEnglish
-                      ? `${challangesStats?.solved} challenges`
-                      : `${challangesStats?.solved} التحديات`}
-                  </p>
-                </div>
-              </div>
-
-              <div className="px-7 pt-10 flex flex-col gap-8">
-                <div className="flex items-center justify-between">
-                  <p className="min-w-[40px] text-right">
-                    {solvedByDifficulty.easy || 0}
-                  </p>
-                  <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
-                    {isEnglish ? "Easy" : "سهل"}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <p className="min-w-[40px] text-right">
-                    {solvedByDifficulty.medium || 0}
-                  </p>
-                  <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
-                    {isEnglish ? "Medium" : "متوسط"}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <p className="min-w-[40px] text-right">
-                    {solvedByDifficulty.hard || 0}
-                  </p>
-                  <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
-                    {isEnglish ? "Hard" : "صعب"}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <p className="min-w-[40px] text-right">
-                    {solvedByDifficulty.very_hard || 0}
-                  </p>
-                  <p className="text-[#FF1100] font-bold text-base sm:text-lg">
-                    {isEnglish ? "Very Hard" : "صعب جدا"}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4">
-              <div className="flex gap-4 items-center">
-                <div>
-                  <Image src="/server.png" alt="lab3" width={56} height={56} />
-                </div>
-                <div>
-                  <h1>{isEnglish ? "Hacked Servers" : "الخوادم المخترقة"}</h1>
-                  <p className="font-bold pt-2">
-                    {isEnglish
-                      ? `${lab3Data?.solved_challenges || 0}
-                         servers`
-                      : `${lab3Data?.solved_challenges || 0} الخوادم`}
-                  </p>
-                </div>
-              </div>
-
-              <div className="px-7 pt-10 flex flex-col gap-8">
-                <div className="flex items-center justify-between">
-                  <p className="min-w-[40px] text-right">
-                    {lab3Data.solved_by_difficulty.easy || 0}
-                  </p>
-                  <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
-                    {isEnglish ? "Easy" : "سهل"}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <p className="min-w-[40px] text-right">
-                    {lab3Data.solved_by_difficulty.medium || 0}
-                  </p>
-                  <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
-                    {isEnglish ? "Medium" : "متوسط"}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <p className="min-w-[40px] text-right">
-                    {lab3Data.solved_by_difficulty.hard || 0}
-                  </p>
-                  <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
-                    {isEnglish ? "Hard" : "صعب"}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <p className="min-w-[40px] text-right">
-                    {lab3Data.solved_by_difficulty.very_hard || 0}
-                  </p>
-                  <p className="text-[#FF1100] font-bold text-base sm:text-lg">
-                    {isEnglish ? "Very Hard" : "صعب جدا"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="w-full bg-[#FFFFFF0D] rounded-lg p-4">
-            <div className="flex gap-4 items-center">
-              <div>
-                <Image
-                  src="/icon-challnge.png"
-                  alt="challenges"
-                  width={56}
-                  height={56}
-                />
-              </div>
-              <div>
-                <h1>{isEnglish ? "Challenges Hacked" : "التحديات المخترقة"}</h1>
-                <p className="font-bold pt-2">
-                  {isEnglish
-                    ? `${challangesStats?.solved} challenges`
-                    : `${challangesStats?.solved} التحديات`}
-                </p>
-              </div>
-            </div>
-
-            <div className="px-7 pt-10 flex flex-col gap-8">
-              <div className="flex items-center justify-between">
-                <p className="min-w-[40px] text-right">
-                  {solvedByDifficulty.easy || 0}
-                </p>
-                <p className="text-[#00D0FF] font-bold text-base sm:text-lg">
-                  {isEnglish ? "Easy" : "سهل"}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <p className="min-w-[40px] text-right">
-                  {solvedByDifficulty.medium || 0}
-                </p>
-                <p className="text-[#9DFF00] font-bold text-base sm:text-lg">
-                  {isEnglish ? "Medium" : "متوسط"}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <p className="min-w-[40px] text-right">
-                  {solvedByDifficulty.hard || 0}
-                </p>
-                <p className="text-[#FF5E00] font-bold text-base sm:text-lg">
-                  {isEnglish ? "Hard" : "صعب"}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <p className="min-w-[40px] text-right">
-                  {solvedByDifficulty.very_hard || 0}
-                </p>
-                <p className="text-[#FF1100] font-bold text-base sm:text-lg">
-                  {isEnglish ? "Very Hard" : "صعب جدا"}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="my-10" ref={skillsSectionRef}>
-        <div className="flex flex-col py-4 sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
-          <h2 className="text-2xl font-semibold">
-            {isEnglish ? "Skills Proficiency" : "ملخص المهارات"}
-          </h2>
-
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex items-center gap-2">
-              <p className="text-white text-sm">{isEnglish ? "You" : "أنت"}</p>
-              <div
-                className={`h-5 w-5 border ${
-                  youSelected
-                    ? "border-[#38FFE5] bg-transparent"
-                    : "border-white bg-transparent"
-                } flex items-center justify-center cursor-pointer`}
-                onClick={handleYouSelected}
-              >
-                {youSelected && <span className="text-[#38FFE5]">✓</span>}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <p className="text-white text-sm">
-                {isEnglish ? "Average Eye Level" : "متوسط اللاعبون"}
-              </p>
-              <div
-                className={`h-5 w-5 border ${
-                  averageEyeLevel
-                    ? "border-[#38FFE5] bg-transparent"
-                    : "border-white bg-transparent"
-                } flex items-center justify-center cursor-pointer`}
-                onClick={handleAverageEyeLevel}
-              >
-                {averageEyeLevel && <span className="text-[#38FFE5]">✓</span>}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-5">
-          {categories.map((category, index) => (
-            <div
-              className="flex items-center flex-row-reverse"
-              key={category.name}
-            >
-              <div className="w-full">
-                <div className="h-8 w-full bg-[#032F38] rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#00E2FF] to-[#00F5A0] transition-all duration-1000 ease-out"
-                    style={{
-                      width: skillsVisible
-                        ? youSelected
-                          ? `${category.percentage || 0}%`
-                          : `${
-                              allUsersMedian.find(
-                                (m) => m.name === category.name
-                              )?.median_percentage || 0
-                            }%`
-                        : "0%",
-                      transitionDelay: `${index * 150}ms`,
-                    }}
-                  ></div>
-                </div>
-              </div>
-              <div
-                className={`min-w-[170px] ${
-                  isEnglish ? "text-left" : "text-right"
-                }`}
-              >
-                <span className="font-medium text-white">{category.name}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="my-10">
-        <ActivityChart isEnglish={isEnglish} bytesData={bytesByMonth} />
       </div>
     </div>
   );

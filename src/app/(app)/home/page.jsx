@@ -189,7 +189,7 @@ export default function Home() {
         </h2>
 
         <div className="flex lg:flex-row flex-col lg:gap-14 gap-8 items-center justify-between pt-8">
-          <div className="lg:basis-2/3 w-full bg-white/3 backdrop-blur-xl rounded-lg py-6 sm:py-10 px-3 sm:px-4 lg:px-10">
+          <div className="lg:basis-2/3 w-full bg-white/3 backdrop-blur-xl rounded-lg py-6 sm:py-10 px-3 min-h-[165px] sm:px-4 lg:px-10">
             <div
               dir={isEnglish ? "ltr" : "rtl"}
               className="flex items-center justify-between sm:justify-start sm:gap-5 gap-2 w-full"
@@ -250,7 +250,7 @@ export default function Home() {
           </div>
 
           <div className="lg:basis-1/3 w-full">
-            <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 backdrop-blur-xl rounded-lg p-3 sm:p-4">
+            <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 min-h-[165px] backdrop-blur-xl rounded-lg p-3 sm:p-4">
               <Image src="/ranking.png" alt="progress" width={36} height={36} />
               <p className="text-[#BCC9DB] text-[16px] sm:text-[18px]">
                 {userData?.rank > 0
@@ -442,7 +442,7 @@ export default function Home() {
                                 isEnglish ? "pl-0" : "pr-0"
                               }`}
                             >
-                              <span className="text-white text-sm lg:text-base min-w-[24px] md:min-w-[32px] text-right">
+                              <span className="text-white text-sm lg:text-base min-w-[24px] md:min-w-[32px] text-left">
                                 {activity.total_bytes}
                               </span>
                               <Image

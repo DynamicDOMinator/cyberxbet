@@ -188,7 +188,7 @@ export default function Leaderboard() {
           className="relative bg-[#06373F26] px-2 sm:px-5 py-6 rounded-md overflow-x-auto"
         >
           {/* Table Headers */}
-          <div className="flex justify-between px-[40px] py-4 font-bold text-white text-[18px] bg-[#38FFE50D] rounded-md mb-4 sm:mb-9">
+          <div className="flex justify-between px-[40px] py-4  font-bold text-white text-[18px] bg-[#38FFE50D] rounded-md mb-4 sm:mb-9">
             <div className="w-[260px] flex items-center gap-[96px]">
               <div className="w-[60px]">{isEnglish ? "Rank" : "التصنيف"}</div>
               <div className="w-[200px]">{isEnglish ? "User" : "المستخدم"}</div>
@@ -252,8 +252,8 @@ export default function Leaderboard() {
                 </div>
               </div>
 
-              <div className="w-[100px] flex justify-center">
-                <div className="flex flex-row-reverse items-center gap-1 md:gap-2">
+              <div className={`w-[100px] flex justify-center  ${isEnglish ? "pr-9" : "pl-9"}`}>
+                  <div className="flex flex-row-reverse items-center gap-3">
                   <Image
                     src="/byte.png"
                     alt="flames"
@@ -261,14 +261,14 @@ export default function Leaderboard() {
                     height={20}
                     className="md:w-[25px] md:h-[25px]"
                   />
-                  <span className="text-white text-sm md:text-xl min-w-[24px] md:min-w-[32px] text-right">
+                  <span className="text-white text-sm md:text-xl min-w-[24px] md:min-w-[32px] text-left">
                     {user.flames}
                   </span>
                 </div>
               </div>
 
-              <div className="w-[100px] flex justify-center">
-                <div className="flex flex-row-reverse items-center gap-1 md:gap-2">
+              <div className={`w-[100px] flex justify-center  ${isEnglish ? "pr-12" : "pl-12"}`}>
+                <div className="flex flex-row-reverse items-center  gap-3">
                   <Image
                     src="/icon-challnge.png"
                     alt="droplets"
@@ -276,16 +276,16 @@ export default function Leaderboard() {
                     height={20}
                     className="md:w-[25px] md:h-[25px]"
                   />
-                  <span className="text-white text-sm md:text-xl min-w-[24px] md:min-w-[32px] text-right">
+                  <span className="text-white text-sm md:text-xl min-w-[24px] md:min-w-[32px] text-left">
                     {user.droplets}
                   </span>
                 </div>
               </div>
 
               <div className="w-[100px] flex justify-center">
-                <div className="flex flex-row-reverse items-center">
+                <div className="flex flex-row-reverse items-center gap-3">
                   <Image src="/blood.png" alt="notes" width={20} height={30} />
-                  <span className="text-white text-sm md:text-xl min-w-[24px] md:min-w-[32px] text-right">
+                  <span className="text-white text-sm md:text-xl min-w-[24px] md:min-w-[32px] text-left">
                     {user.notes}
                   </span>
                 </div>

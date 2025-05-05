@@ -216,7 +216,9 @@ const ChallengesPage = () => {
           </div>
         </div>
       </div>
-
+<div>
+  <p dir={isEnglish ? "ltr" : "rtl"} className="text-white text-2xl font-bold pt-10"> {isEnglish ? "Challenges" : "التحديات"}</p>
+</div>
       {/* Challenges Grid */}
       <div
         dir={isEnglish ? "ltr" : "rtl"}
@@ -225,7 +227,7 @@ const ChallengesPage = () => {
         {challenges.map((challenge) => (
           <div
             key={challenge.uuid}
-            className="bg-white/5 rounded-2xl p-6 lg:mt-20 hover:shadow-[0_0_15px_rgba(56,255,229,0.3)] transition-shadow"
+            className="bg-white/5 rounded-2xl p-6 lg:mt-12 hover:shadow-[0_0_15px_rgba(56,255,229,0.3)] transition-shadow"
           >
             <div
               className={`flex ${

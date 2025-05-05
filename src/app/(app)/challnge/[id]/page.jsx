@@ -1328,7 +1328,7 @@ export default function ChallengePage() {
           {isSubmitFlag && (
             <div
               onClick={() => setIsSubmitFlag(false)}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px]"
             >
               <ConfettiAnimation />
               <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">

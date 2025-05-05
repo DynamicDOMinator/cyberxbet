@@ -1269,7 +1269,7 @@ export default function EventPage() {
         )}
 
         {eventHasEnded && (
-          <div className="absolute flex flex-col items-center justify-center w-full h-full bg-black/80">
+          <div className="absolute flex flex-col items-center justify-center w-full h-full bg-black/80 rounded-xl">
             <div>
               <p className="text-xl sm:text-2xl font-bold flex items-center gap-4">
                 تم انتهاء الفاعليه
