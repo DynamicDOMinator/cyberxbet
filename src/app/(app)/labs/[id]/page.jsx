@@ -176,7 +176,7 @@ export default function TrainingChallenges() {
         {categoryData?.data?.map((category, index) => (
           <Link key={index} href={`/challnges/${category.uuid}`}>
             <div
-              className="bg-white/1 cursor-pointer rounded-lg p-6 flex items-center justify-center flex-col lg:min-h-[400px]"
+              className="bg-white/1 cursor-pointer rounded-2xl p-6 flex items-center justify-center flex-col lg:min-h-[400px]"
               style={{ boxShadow: "0px -5px 20px 0px #38FFE5 inset" }}
             >
               <div className="flex  flex-col  justify-center gap-4 items-center mb-4">
