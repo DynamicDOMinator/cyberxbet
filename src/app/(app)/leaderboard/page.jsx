@@ -185,10 +185,10 @@ export default function Leaderboard() {
 
         <div
           dir={isEnglish ? "ltr" : "rtl"}
-          className="relative bg-[#06373F26] px-2 sm:px-5 py-6 rounded-md overflow-x-auto"
+          className="relative bg-[#06373F26] px-2 sm:px-5 py-6 rounded-2xl overflow-x-auto"
         >
           {/* Table Headers */}
-          <div className="flex justify-between px-[40px] py-4  font-bold text-white text-[18px] bg-[#38FFE50D] rounded-md mb-4 sm:mb-9">
+          <div className="flex justify-between px-[40px] py-4  font-bold text-white text-[18px] bg-[#38FFE50D] rounded-2xl mb-4 sm:mb-9">
             <div className="w-[260px] flex items-center gap-[96px]">
               <div className="w-[60px]">{isEnglish ? "Rank" : "التصنيف"}</div>
               <div className="w-[200px]">{isEnglish ? "User" : "المستخدم"}</div>
@@ -208,7 +208,7 @@ export default function Leaderboard() {
           {filteredData.map((user, index) => (
             <div
               key={index}
-              className={`flex justify-between px-[40px] py-4 mb-3 rounded-lg ${
+              className={`flex justify-between px-[40px] py-4 mb-3 rounded-2xl ${
                 index % 2 === 0 ? "bg-[#06373F]" : "bg-transparent"
               }`}
             >
@@ -253,7 +253,7 @@ export default function Leaderboard() {
               </div>
 
               <div className={`w-[100px] flex justify-center  ${isEnglish ? "pr-9" : "pl-9"}`}>
-                  <div className="flex flex-row-reverse items-center gap-3">
+                  <div className="flex flex-row-reverse items-center gap-5">
                   <Image
                     src="/byte.png"
                     alt="flames"
