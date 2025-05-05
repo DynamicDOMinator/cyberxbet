@@ -1384,7 +1384,11 @@ export default function ProfileSettings() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:gap-x-[238px] lg:gap-y-[56px] md:gap-10 ">
               <div className="flex flex-col">
-                <label className="text-right mb-2">
+                <label
+                  className={` ${
+                    isEnglish ? "text-left" : "text-right"
+                  } mb-2`}
+                >
                   {isEnglish ? "Username" : "اسم المستخدم"}
                 </label>
                 <input
@@ -1399,7 +1403,11 @@ export default function ProfileSettings() {
               </div>
 
               <div className="flex flex-col">
-                <label className="text-right mb-2">
+                <label
+                  className={` ${
+                    isEnglish ? "text-left" : "text-right"
+                  } mb-2`}
+                >
                   {isEnglish ? "Email" : "البريد الإلكتروني"}
                 </label>
                 <div className="relative w-full">
@@ -1464,7 +1472,11 @@ export default function ProfileSettings() {
               </div>
 
               <div className="flex flex-col">
-                <label className="text-right mb-2">
+                <label
+                  className={` ${
+                    isEnglish ? "text-left" : "text-right"
+                  } mb-2`}
+                >
                   {isEnglish ? "Country" : "البلد"}
                 </label>
                 <CountrySelect
@@ -1477,7 +1489,11 @@ export default function ProfileSettings() {
               </div>
 
               <div className="flex flex-col">
-                <label className="text-right mb-2">
+                <label
+                  className={` ${
+                    isEnglish ? "text-left" : "text-right"
+                  } mb-2`}
+                >
                   {isEnglish ? "Timezone" : "المنطقة الزمنية"}
                 </label>
                 <Select
@@ -2274,7 +2290,11 @@ export default function ProfileSettings() {
 
           {/* Password Change Section */}
           <div className="bg-[#131619] rounded-xl p-[64px] mt-[64px]">
-            <h2 className="text-2xl font-semibold mb-6 text-right">
+            <h2
+              className={`text-2xl font-semibold mb-6 ${
+                isEnglish ? "text-left" : "text-right"
+              }`}
+            >
               {isEnglish ? "Change Password" : "تغيير كلمة المرور"}
             </h2>
 
@@ -2282,7 +2302,11 @@ export default function ProfileSettings() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:gap-x-[238px] gap-10 ">
                 {/* Current Password */}
                 <div className="flex flex-col">
-                  <label className="text-right mb-2">
+                  <label
+                    className={` ${
+                      isEnglish ? "text-left" : "text-right"
+                    } mb-2`}
+                  >
                     {isEnglish ? "Current Password" : "كلمة المرور الحالية"}
                   </label>
                   <div className="relative">
@@ -2348,7 +2372,11 @@ export default function ProfileSettings() {
 
                 {/* New Password */}
                 <div className="flex flex-col">
-                  <label className="text-right mb-2">
+                  <label
+                    className={` ${
+                      isEnglish ? "text-left" : "text-right"
+                    } mb-2`}
+                  >
                     {isEnglish ? "New Password" : "كلمة المرور الجديدة"}
                   </label>
                   <div className="relative">
