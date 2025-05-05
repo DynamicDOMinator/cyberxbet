@@ -261,7 +261,7 @@ export default function Leaderboard() {
                     height={20}
                     className="md:w-[25px] md:h-[25px]"
                   />
-                  <span className="text-white text-sm md:text-xl min-w-[24px] md:min-w-[32px] text-left">
+                  <span className="text-white text-sm md:text-xl min-w-[50px] md:min-w-[40px] text-left">
                     {user.flames}
                   </span>
                 </div>
