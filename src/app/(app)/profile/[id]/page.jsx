@@ -540,7 +540,7 @@ export default function Profile() {
               >
                 <div
                   dir={isEnglish ? "ltr" : "rtl"}
-                  className="flex items-center gap-4 bg-white/3 py-10 my-[80px] px-4 rounded-lg"
+                  className="flex items-center gap-4 bg-white/3 py-10 my-[80px] px-4 rounded-2xl "
                 >
                   <Image src="/fire 6.png" alt="byte" width={52} height={52} />
                   <div>
@@ -558,7 +558,7 @@ export default function Profile() {
                   className="flex lg:flex-row flex-col  lg:gap-14 gap-8 items-center  "
                 >
                   <div className="lg:basis-1/3 w-full">
-                    <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 backdrop-blur-xl rounded-lg p-3 sm:p-4">
+                    <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 backdrop-blur-xl rounded-2xl p-3 sm:p-4 min-h-[165px] ">
                       <Image
                         src="/ranking.png"
                         alt="progress"
@@ -577,7 +577,7 @@ export default function Profile() {
                       </p>
                     </div>
                   </div>
-                  <div className="lg:basis-2/3 w-full bg-white/3 backdrop-blur-xl rounded-lg py-6 sm:py-10 px-3 sm:px-4 lg:px-10">
+                  <div className="lg:basis-2/3 w-full bg-white/3 backdrop-blur-xl rounded-2xl py-6 sm:py-10 px-3 sm:px-4 lg:px-10 min-h-[165px]">
                     <div
                       dir={isEnglish ? "ltr" : "rtl"}
                       className="flex items-center justify-between sm:justify-start sm:gap-5 gap-2 w-full"
@@ -646,7 +646,7 @@ export default function Profile() {
 
                 <div dir={isEnglish ? "ltr" : "rtl"}>
                   <div className="flex flex-col sm:flex-row gap-5 sm:gap-10 items-center my-10 ">
-                    <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4 flex gap-4 items-center">
+                    <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-2xl p-4 flex gap-4 items-center">
                       <div>
                         <Image
                           src="/blood.png"
@@ -665,7 +665,7 @@ export default function Profile() {
                       </div>
                     </div>
 
-                    <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4 flex gap-4 items-center">
+                    <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-2xl p-4 flex gap-4 items-center">
                       <div>
                         <Image
                           src="/byte.png"
@@ -691,7 +691,7 @@ export default function Profile() {
                     lab3Data.solved_by_difficulty.hard > 0 ||
                     lab3Data.solved_by_difficulty.very_hard > 0 ? (
                       <>
-                        <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4 ">
+                        <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-2xl p-4 ">
                           <div className="flex gap-4 items-center">
                             <div>
                               <Image
@@ -754,7 +754,7 @@ export default function Profile() {
                           </div>
                         </div>
 
-                        <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-lg p-4">
+                        <div className="w-full sm:basis-1/2 bg-[#FFFFFF0D] rounded-2xl p-4">
                           <div className="flex gap-4 items-center">
                             <div>
                               <Image
@@ -821,7 +821,7 @@ export default function Profile() {
                         </div>
                       </>
                     ) : (
-                      <div className="w-full bg-[#FFFFFF0D] rounded-lg p-4">
+                      <div className="w-full bg-[#FFFFFF0D] rounded-2xl p-4">
                         <div className="flex gap-4 items-center">
                           <div>
                             <Image
@@ -986,7 +986,7 @@ export default function Profile() {
                       <div
                         onClick={() => router.push(`/events/${event.uuid}`)}
                         key={event.uuid}
-                        className="bg-white/1 cursor-pointer h-[320px] relative rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-white/1 cursor-pointer h-[320px] relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
                       >
                         <div className="relative h-1/2 w-full">
                           <Image
@@ -1068,7 +1068,7 @@ export default function Profile() {
                 <div
                   className={`px-4 lg:px-10 py-6 lg:py-10 ${
                     activity.length > 0 ? "bg-[#06373F26]" : "bg-transparent"
-                  } rounded-lg`}
+                  } rounded-2xl`}
                 >
                   {activity.length > 0 ? (
                     <div className="overflow-x-auto">
@@ -1078,7 +1078,7 @@ export default function Profile() {
                           <div
                             key={index}
                             className={`${
-                              index % 2 === 0 ? "bg-[#06373F] rounded-lg" : ""
+                              index % 2 === 0 ? "bg-[#06373F] rounded-2xl" : ""
                             } mb-2`}
                           >
                             <table
