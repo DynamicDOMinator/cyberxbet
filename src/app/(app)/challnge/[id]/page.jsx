@@ -1298,10 +1298,10 @@ export default function ChallengePage() {
           {/* ============================================================================== */}
           {/* firt blood animation card  */}
           {isFirstBlood && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[2px]">
+            <div className="fixed inset-0 z-50  flex items-center justify-center backdrop-blur-[2px]">
               <div
                 onClick={() => setIsFirstBlood(false)}
-                className="bg-[url('/blooda.png')] flex items-center m-48 justify-center w-full h-full bg-cover bg-center bg-no-repeat"
+                className="bg-[url('/blooda.png')] flex items-center w-[600px] h-[600px] justify-center  bg-cover bg-center bg-no-repeat"
               >
                 <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-lg p-4">
                   <div>
@@ -1340,7 +1340,7 @@ export default function ChallengePage() {
                 </div>
               </div>
             </div>
-          )}
+           )} 
           {/* ================================================================================== */}
           {/* anther aimation for submit flag  */}
           {isSubmitFlag && (
