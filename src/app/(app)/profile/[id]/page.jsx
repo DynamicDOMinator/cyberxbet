@@ -558,7 +558,7 @@ export default function Profile() {
                   className="flex lg:flex-row flex-col  lg:gap-14 gap-8 items-center  "
                 >
                   <div className="lg:basis-1/3 w-full">
-                    <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 backdrop-blur-xl rounded-2xl p-3 sm:p-4 min-h-[165px] ">
+                    <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 backdrop-blur-xl rounded-2xl p-3 sm:p-4 h-[165px] ">
                       <Image
                         src="/ranking.png"
                         alt="progress"
@@ -577,7 +577,7 @@ export default function Profile() {
                       </p>
                     </div>
                   </div>
-                  <div className="lg:basis-2/3 w-full bg-white/3 backdrop-blur-xl rounded-2xl py-6 sm:py-10 px-3 sm:px-4 lg:px-10 min-h-[165px]">
+                  <div className="lg:basis-2/3 w-full bg-white/3 backdrop-blur-xl rounded-2xl py-6 sm:py-10 px-3 sm:px-4 lg:px-10 h-[165px]">
                     <div
                       dir={isEnglish ? "ltr" : "rtl"}
                       className="flex items-center justify-between sm:justify-start sm:gap-5 gap-2 w-full"

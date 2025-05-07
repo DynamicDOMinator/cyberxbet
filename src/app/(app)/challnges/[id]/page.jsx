@@ -36,6 +36,22 @@ const ChallengesPage = () => {
     }
   };
 
+  // Function to translate Arabic difficulty to English
+  const translateDifficultyToEnglish = (difficulty) => {
+    switch (difficulty) {
+      case "صعب":
+        return "Hard";
+      case "صعب جدا":
+        return "Very Hard";
+      case "متوسط":
+        return "Medium";
+      case "سهل":
+        return "Easy";
+      default:
+        return "Easy";
+    }
+  };
+
   useEffect(() => {
     const fetchChallenges = async () => {
       try {
@@ -216,9 +232,15 @@ const ChallengesPage = () => {
           </div>
         </div>
       </div>
-<div>
-  <p dir={isEnglish ? "ltr" : "rtl"} className="text-white text-2xl font-bold pt-10"> {isEnglish ? "Challenges" : "التحديات"}</p>
-</div>
+      <div>
+        <p
+          dir={isEnglish ? "ltr" : "rtl"}
+          className="text-white text-2xl font-bold pt-10"
+        >
+          {" "}
+          {isEnglish ? "Challenges" : "التحديات"}
+        </p>
+      </div>
       {/* Challenges Grid */}
       <div
         dir={isEnglish ? "ltr" : "rtl"}
@@ -289,7 +311,9 @@ const ChallengesPage = () => {
                     challenge.difficulty
                   )}`}
                 >
-                  {challenge.difficulty}
+                  {isEnglish
+                    ? translateDifficultyToEnglish(challenge.difficulty)
+                    : challenge.difficulty}
                 </span>
               </div>
               <Link

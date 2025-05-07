@@ -598,7 +598,7 @@ export default function AddChallenge() {
         };
       case "pending":
       default:
-        return { text: isEnglish ? "Pending" : "معلق", color: "text-gray-400" };
+        return { text: isEnglish ? "Pending" : "معلق", color: "text-[#BCC9DB]" };
     }
   };
 
@@ -606,7 +606,7 @@ export default function AddChallenge() {
   const labelStyle = `text-[#BCC9DB] font-medium `;
 
   const inputStyle =
-    "w-full bg-[#0B0D0F] rounded-md mt-4 px-4 py-3 text-white  focus:outline-none focus:ring-1 focus:ring-[#38FFE5]";
+    "w-full bg-[#0B0D0F] rounded-md mt-4 px-4 py-3 text-[#BCC9DB]  focus:outline-none focus:ring-1 focus:ring-[#38FFE5]";
 
   // Helper function to render the file upload area
   const renderFileUpload = (
@@ -625,7 +625,7 @@ export default function AddChallenge() {
         dir={isEnglish ? "ltr" : "rtl"}
         className="flex justify-between items-center mb-4"
       >
-        <h3 className="text-white text-lg">
+        <h3 className="text-[#BCC9DB] text-lg">
           {isEnglish
             ? title
             : title === "Challenge File"
@@ -656,7 +656,7 @@ export default function AddChallenge() {
             dir={isEnglish ? "ltr" : "rtl"}
             className="text-center bg-[#0B0D0F] py-12 rounded-lg gap-2 flex justify-center items-center "
           >
-            <p className="mt-2 text-sm text-gray-400">
+            <p className="mt-2 text-sm text-[#BCC9DB]">
               {isEnglish
                 ? "Drag and drop your file here, or"
                 : "اسحب وأفلت الملف هنا، أو"}
@@ -679,14 +679,14 @@ export default function AddChallenge() {
                   ) : isScanComplete ? (
                     <BsFillFileEarmarkCheckFill className="text-[#38FFE5] h-6 w-6" />
                   ) : (
-                    <FaFileAlt className="text-gray-400 h-6 w-6" />
+                    <FaFileAlt className="text-[#BCC9DB] h-6 w-6" />
                   )}
                 </div>
                 <div>
-                  <p className="text-white text-sm font-medium truncate max-w-xs">
+                  <p className="text-[#BCC9DB] text-sm font-medium truncate max-w-xs">
                     {file.name}
                   </p>
-                  <p className="text-gray-400  ">
+                  <p className="text-[#BCC9DB]  ">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
@@ -695,7 +695,7 @@ export default function AddChallenge() {
                 {isScanning ? (
                   <p
                     dir={isEnglish ? "ltr" : "rtl"}
-                    className="text-gray-400 text-sm"
+                    className="text-[#BCC9DB] text-sm"
                   >
                     {isEnglish ? "Uploading..." : "جاري التحميل..."}
                   </p>
@@ -731,7 +731,7 @@ export default function AddChallenge() {
       <div className="bg-[#0B0D0F] px-4 py-6 rounded-lg mb-8">
         <h2
           dir={isEnglish ? "ltr" : "rtl"}
-          className="text-white mb-6 font-bold text-xl"
+          className="text-[#BCC9DB] mb-6 font-bold text-xl"
         >
           {isEnglish ? "Your Challenges" : "تحدياتك"}
         </h2>
@@ -749,12 +749,12 @@ export default function AddChallenge() {
                 width={24}
                 height={24}
               />
-              <h3 className="text-gray-400 text-sm mb-2">
+              <h3 className="text-[#BCC9DB] text-sm mb-2">
                 {isEnglish ? "Total Challenges" : "جميع التحديات"}
               </h3>
             </div>
 
-            <p className="text-white text-center text-4xl font-bold">
+            <p className="text-[#BCC9DB] text-center text-4xl font-bold">
               {statisticsLoading ? "..." : statistics.total}
             </p>
             <p className="text-[#41C300] text-center   mt-2">
@@ -773,12 +773,12 @@ export default function AddChallenge() {
                 width={24}
                 height={24}
               />
-              <h3 className="text-gray-400 text-sm mb-2">
+              <h3 className="text-[#BCC9DB] text-sm mb-2">
                 {isEnglish ? "Under Review" : "تحت المراجعة"}
               </h3>
             </div>
 
-            <p className="text-white text-center text-4xl font-bold">
+            <p className="text-[#BCC9DB] text-center text-4xl font-bold">
               {statisticsLoading ? "..." : statistics.under_review}
             </p>
             <p className="text-[#0081D9] text-center   mt-2">
@@ -795,12 +795,12 @@ export default function AddChallenge() {
                 width={24}
                 height={24}
               />
-              <h3 className="text-gray-400 text-sm mb-2">
+              <h3 className="text-[#BCC9DB] text-sm mb-2">
                 {isEnglish ? "Approved Challenges" : "التحديات المعتمدة"}
               </h3>
             </div>
 
-            <p className="text-white text-center text-4xl font-bold">
+            <p className="text-[#BCC9DB] text-center text-4xl font-bold">
               {statisticsLoading ? "..." : statistics.approved}
             </p>
             <p className="text-[#EC007E] text-center   mt-2">
@@ -817,12 +817,12 @@ export default function AddChallenge() {
                 width={24}
                 height={24}
               />
-              <h3 className="text-gray-400 text-sm mb-2">
+              <h3 className="text-[#BCC9DB] text-sm mb-2">
                 {isEnglish ? "Rejected Challenges" : "التحديات المرفوضة"}
               </h3>
             </div>
 
-            <p className="text-white text-center text-4xl font-bold">
+            <p className="text-[#BCC9DB] text-center text-4xl font-bold">
               {statisticsLoading ? "..." : statistics.declined}
             </p>
             <p className="text-[#D30E00] text-center   mt-2">
@@ -844,7 +844,7 @@ export default function AddChallenge() {
             <div className="flex flex-wrap items-center gap-5">
               <button
                 onClick={() => handleFilterChange("all")}
-                className={`text-white ${
+                className={`text-[#BCC9DB] ${
                   challengeFilter === "all" ? "border-b-2 border-[#38FFE5]" : ""
                 } py-1 whitespace-nowrap`}
               >
@@ -852,7 +852,7 @@ export default function AddChallenge() {
               </button>
               <button
                 onClick={() => handleFilterChange("pending")}
-                className={`text-white ${
+                className={`text-[#BCC9DB] ${
                   challengeFilter === "pending"
                     ? "border-b-2 border-[#38FFE5]"
                     : ""
@@ -862,7 +862,7 @@ export default function AddChallenge() {
               </button>
               <button
                 onClick={() => handleFilterChange("under_review")}
-                className={`text-white ${
+                className={`text-[#BCC9DB] ${
                   challengeFilter === "under_review"
                     ? "border-b-2 border-[#38FFE5]"
                     : ""
@@ -872,7 +872,7 @@ export default function AddChallenge() {
               </button>
               <button
                 onClick={() => handleFilterChange("approved")}
-                className={`text-white ${
+                className={`text-[#BCC9DB] ${
                   challengeFilter === "approved"
                     ? "border-b-2 border-[#38FFE5]"
                     : ""
@@ -882,7 +882,7 @@ export default function AddChallenge() {
               </button>
               <button
                 onClick={() => handleFilterChange("declined")}
-                className={`text-white ${
+                className={`text-[#BCC9DB] ${
                   challengeFilter === "declined"
                     ? "border-b-2 border-[#38FFE5]"
                     : ""
@@ -894,7 +894,7 @@ export default function AddChallenge() {
               <button
                 onClick={fetchTerms}
                 disabled={docsLoading}
-                className="flex items-center cursor-pointer gap-1 bg-[#131619] hover:bg-[#1c2025] text-white px-3 py-2 rounded-md transition-colors"
+                className="flex items-center cursor-pointer gap-1 bg-[#131619] hover:bg-[#1c2025] text-[#BCC9DB] px-3 py-2 rounded-md transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -921,7 +921,7 @@ export default function AddChallenge() {
               <button
                 onClick={fetchPrivacy}
                 disabled={docsLoading}
-                className="flex items-center cursor-pointer gap-1 bg-[#131619] hover:bg-[#1c2025] text-white px-3 py-2 rounded-md transition-colors"
+                className="flex items-center cursor-pointer gap-1 bg-[#131619] hover:bg-[#1c2025] text-[#BCC9DB] px-3 py-2 rounded-md transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -954,7 +954,7 @@ export default function AddChallenge() {
               placeholder={isEnglish ? "Challenge name" : "اسم التحدي"}
               value={searchTerm}
               onChange={handleSearchChange}
-              className="bg-transparent text-white px-4 py-2 rounded-md pr-10 rtl:pl-10 w-full focus:outline-none focus:ring-1 focus:ring-[#38FFE5]"
+              className="bg-transparent text-[#BCC9DB] px-4 py-2 rounded-md pr-10 rtl:pl-10 w-full focus:outline-none focus:ring-1 focus:ring-[#38FFE5]"
               dir={isEnglish ? "ltr" : "rtl"}
             />
             <div
@@ -967,7 +967,7 @@ export default function AddChallenge() {
                 viewBox="0 0 24 24"
                 strokeWidth={1.5}
                 stroke="currentColor"
-                className="w-5 h-5 text-gray-400"
+                className="w-5 h-5 text-[#BCC9DB]"
               >
                 <path
                   strokeLinecap="round"
@@ -1016,7 +1016,7 @@ export default function AddChallenge() {
                         height={56}
                         className="min-w-[56px] min-h-[56px]"
                       />
-                      <p className="font-bold text-[24px] text-white">{challenge.name}</p>
+                      <p className="font-bold text-[24px] text-[#BCC9DB]">{challenge.name}</p>
                     </div>
                     <p className="text-gray-300 text-[18px]">
                       {challenge.description}
@@ -1028,7 +1028,7 @@ export default function AddChallenge() {
                     className="absolute bottom-0 left-0 right-0 flex justify-between items-center p-4 "
                   >
                     <div className="flex items-center">
-                      <span className="text-gray-400">
+                      <span className="text-[#BCC9DB]">
                         {isEnglish ? "Difficulty level" : "مستوى الصعوبة"}:{" "}
                       </span>
                       <span className={`${difficultyInfo.color} ml-1 rtl:mr-1`}>
@@ -1056,7 +1056,7 @@ export default function AddChallenge() {
                   height={194}
                   className="mb-4"
                 />
-                <p className="text-gray-400 text-lg">
+                <p className="text-[#BCC9DB] text-lg">
                   {isEnglish
                     ? "No challenges found"
                     : "لم يتم العثور على تحديات"}
@@ -1069,7 +1069,7 @@ export default function AddChallenge() {
 
       <div className="px-4 py-8 text-right">
         <h1
-          className={`text-white text-xl mb-6 font-bold ${
+          className={`text-[#BCC9DB] text-xl mb-6 font-bold ${
             isEnglish ? "text-left" : "text-right"
           }`}
         >
@@ -1085,7 +1085,7 @@ export default function AddChallenge() {
                   <div className="flex items-center gap-3">
                     <div>
                       <h3
-                        className="text-white text-lg font-semibold"
+                        className="text-[#BCC9DB] text-lg font-semibold"
                         dir={isEnglish ? "ltr" : "rtl"}
                       >
                         {errorMessage}
@@ -1121,7 +1121,7 @@ export default function AddChallenge() {
                   <div className="flex items-center gap-3">
                     <div>
                       <h3
-                        className="text-white text-lg font-semibold"
+                        className="text-[#BCC9DB] text-lg font-semibold"
                         dir={isEnglish ? "ltr" : "rtl"}
                       >
                         {successMessage}
@@ -1231,7 +1231,7 @@ export default function AddChallenge() {
                 name="description"
                 value={challengeData.description}
                 onChange={handleInputChange}
-                className="w-full bg-[#0B0D0F] rounded-md px-4 py-3 text-white mt-4 focus:outline-none focus:ring-1 focus:ring-[#38FFE5] min-h-[120px]"
+                className="w-full bg-[#0B0D0F] rounded-md px-4 py-3 text-[#BCC9DB] mt-4 focus:outline-none focus:ring-1 focus:ring-[#38FFE5] min-h-[120px]"
                 dir={isEnglish ? "ltr" : "rtl"}
                 placeholder={isEnglish ? "Enter description" : "أدخل الوصف"}
               />
@@ -1258,7 +1258,7 @@ export default function AddChallenge() {
                 >
                   <span
                     className={
-                      categoriesLoading ? "text-gray-500" : "text-white"
+                      categoriesLoading ? "text-gray-500" : "text-[#BCC9DB]"
                     }
                   >
                     {categoriesLoading
@@ -1274,7 +1274,7 @@ export default function AddChallenge() {
                         )?.name || ""}
                   </span>
                   <svg
-                    className="h-4 w-4 text-gray-400"
+                    className="h-4 w-4 text-[#BCC9DB]"
                     fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -1293,13 +1293,13 @@ export default function AddChallenge() {
                         <div
                           key={category.uuid}
                           onClick={() => handleCategorySelect(category.uuid)}
-                          className="px-4 py-2 cursor-pointer text-white hover:bg-[#2a2e32] hover:text-white transition-colors"
+                          className="px-4 py-2 cursor-pointer text-[#BCC9DB] hover:bg-[#2a2e32] hover:text-[#BCC9DB] transition-colors"
                         >
                           {category.name}
                         </div>
                       ))
                     ) : (
-                      <div className="px-4 py-2 text-gray-400">
+                      <div className="px-4 py-2 text-[#BCC9DB]">
                         {isEnglish
                           ? "No categories available"
                           : "لا توجد تصنيفات متاحة"}
@@ -1315,7 +1315,7 @@ export default function AddChallenge() {
               dir={isEnglish ? "ltr" : "rtl"}
               className="mb-2 pt-4 flex justify-between items-center"
             >
-              <h3 className="text-white text-lg">
+              <h3 className="text-[#BCC9DB] text-lg">
                 {isEnglish ? "Difficulty" : "الصعوبة"}
               </h3>
             </div>
@@ -1428,7 +1428,7 @@ export default function AddChallenge() {
               dir={isEnglish ? "ltr" : "rtl"}
               className="flex justify-between items-center mb-4"
             >
-              <h3 className="text-white text-lg">
+              <h3 className="text-[#BCC9DB] text-lg">
                 {isEnglish ? "Flags" : "الأعلام"}
               </h3>
             </div>
@@ -1503,7 +1503,7 @@ export default function AddChallenge() {
               name="notes"
               value={challengeData.notes || ""}
               onChange={handleInputChange}
-              className="w-full bg-[#0B0D0F] rounded-md px-4 py-3 text-white mt-4 focus:outline-none focus:ring-1 focus:ring-[#38FFE5] min-h-[120px]"
+              className="w-full bg-[#0B0D0F] rounded-md px-4 py-3 text-[#BCC9DB] mt-4 focus:outline-none focus:ring-1 focus:ring-[#38FFE5] min-h-[120px]"
               dir={isEnglish ? "ltr" : "rtl"}
               placeholder={
                 isEnglish

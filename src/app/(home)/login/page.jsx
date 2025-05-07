@@ -21,7 +21,7 @@ export default function Login() {
   });
   const { isEnglish, setIsEnglish } = useLanguage();
   const [isLoaded, setIsLoaded] = useState(false);
-   
+
   const {
     login: authLogin,
     loading: authLoading,
@@ -162,12 +162,11 @@ export default function Login() {
     }
   };
 
-  return (
-    isLoaded ? (
-    <div className="bg-[#0B0D0F] relative pb-20 min-h-screen">
-      <div className="flex items-center flex-col lg:flex-row-reverse justify-between">
+  return isLoaded ? (
+    <div className="bg-[#0B0D0F] h-screen flex flex-col">
+      <div className="flex items-center flex-col lg:flex-row-reverse justify-between py-4">
         <Logo />
-        <div className="flex items-center mt-8 lg:ml-16 gap-8 px-4">
+        <div className="flex items-center mt-2 lg:mt-0 lg:ml-16 gap-8 px-6">
           <Link href="/login">
             <button className="text-white cursor-pointer hover:bg-[#38FFE5] transition-all duration-400 hover:text-black border-2 border-white font-medium py-2 px-4 rounded">
               {isEnglish ? "Login" : "تسجيل الدخول"}
@@ -182,21 +181,21 @@ export default function Login() {
         </div>
       </div>
 
-      <div className="min-h-screen pt-10 flex items-center justify-center px-4 sm:px-6 md:px-8">
-        <div className="bg-[#131619] px-6 sm:px-12 md:px-20 lg:px-28 rounded-2xl flex flex-col gap-4 w-full max-w-[720px] mx-auto">
-          <h1 className="text-white text-2xl sm:text-3xl md:text-[36px] lg:text-[40px] pt-8 sm:pt-12 lg:pt-16 font-extrabold font-Tajawal text-center">
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-6 md:px-8 ">
+        <div className="bg-[#131619] px-6 sm:px-10 md:px-14 lg:px-20 rounded-2xl flex flex-col w-full max-w-[650px] mx-auto py-8">
+          <h1 className="text-white text-2xl sm:text-3xl md:text-[34px] font-extrabold font-Tajawal text-center">
             {isEnglish ? "Login to Your Account" : "تسجيل الدخول إلي حسابك"}
           </h1>
           <form
             dir={isEnglish ? "ltr" : "rtl"}
-            className="flex flex-col gap-8 sm:gap-10 lg:gap-14 mt-10 sm:mt-14 lg:mt-20"
+            className="flex flex-col gap-6 mt-8"
             onSubmit={(e) => {
               e.preventDefault();
               login();
             }}
           >
-            <div className="flex flex-col gap-1">
-              <label className="text-white text-sm pb-4 sm:text-base font-normal">
+            <div className="flex flex-col gap-2">
+              <label className="text-white text-sm sm:text-base pb-2 font-normal">
                 {isEnglish
                   ? "Email or Username"
                   : "البريد الإلكتروني أو اسم المستخدم"}
@@ -207,7 +206,7 @@ export default function Login() {
                   setValidationErrors((prev) => ({ ...prev, email: "" }));
                 }}
                 value={email}
-                className={`bg-[#0B0D0F] py-2.5 sm:py-4 hover:border-2 hover:border-gray-500 ${
+                className={`bg-[#0B0D0F] py-3 hover:border-2 hover:border-gray-500 ${
                   validationErrors.email
                     ? "border-red-500"
                     : "border-transparent"
@@ -221,8 +220,8 @@ export default function Login() {
               )}
             </div>
 
-            <div className="flex flex-col gap-1">
-              <label className="text-white text-sm pb-4 sm:text-base font-normal">
+            <div className="flex flex-col gap-2">
+              <label className="text-white text-sm sm:text-base pb-2 font-normal">
                 {isEnglish ? "Password" : "كلمة المرور"}
               </label>
               <div className="relative">
@@ -233,7 +232,7 @@ export default function Login() {
                     setValidationErrors((prev) => ({ ...prev, password: "" }));
                   }}
                   value={password}
-                  className={`bg-[#0B0D0F] w-full py-2.5 sm:py-4 hover:border-2 hover:border-gray-500 ${
+                  className={`bg-[#0B0D0F] w-full py-3 hover:border-2 hover:border-gray-500 ${
                     validationErrors.password
                       ? "border-red-500"
                       : "border-transparent"
@@ -263,7 +262,7 @@ export default function Login() {
 
             {error && (
               <div
-                className="text-red-500 text-sm sm:text-base text-center mt-2 sm:mt-4"
+                className="text-red-500 text-sm sm:text-base text-center"
                 dir="rtl"
               >
                 {error}
@@ -273,15 +272,15 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading || !recaptchaLoaded}
-              className={`bg-[#38FFE5] py-3 sm:py-4 w-full sm:w-2/3 rounded-xl mx-auto text-black text-xl sm:text-2xl font-bold hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300 ${
+              className={`bg-[#38FFE5] py-3 w-full sm:w-2/3 rounded-xl mx-auto text-black text-lg sm:text-xl font-bold hover:shadow-[0_0_15px_15px_rgba(56,255,229,0.3)] transition-all duration-300 ${
                 loading || !recaptchaLoaded
                   ? "opacity-70 cursor-not-allowed"
                   : ""
-              } flex items-center justify-center gap-2`}
+              } flex items-center justify-center gap-2 mt-3`}
             >
               {loading ? (
                 <>
-                  <BiLoaderAlt className="animate-spin text-xl sm:text-2xl" />
+                  <BiLoaderAlt className="animate-spin text-xl" />
                   <span>
                     {isEnglish ? "Logging in..." : "جاري تسجيل الدخول..."}
                   </span>
@@ -300,7 +299,7 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-white text-center font-bold text-xl sm:text-2xl mt-8 sm:mt-12 lg:mt-16">
+          <p className="text-white text-center font-bold text-lg sm:text-xl mt-7">
             {isEnglish ? "Don't have an account?" : "ليس لديك حساب؟"}{" "}
             <Link href="/signup">
               <span className="text-[#38FFE5] cursor-pointer">
@@ -309,14 +308,14 @@ export default function Login() {
             </Link>
           </p>
           <Link href="/forgot-password">
-            <p className="text-[#38FFE5] text-center font-bold text-xl sm:text-2xl cursor-pointer">
+            <p className="text-[#38FFE5] text-center font-bold text-lg sm:text-xl cursor-pointer mt-2">
               {isEnglish ? "Forgot password" : "نسيت كلمة المرور"}
             </p>
           </Link>
 
           <p
             dir="rtl"
-            className="text-white text-center text-sm sm:text-base mt-12 sm:mt-16 lg:mt-20 mb-4"
+            className="text-white text-center text-xs sm:text-sm mt-6"
           >
             {isEnglish
               ? "This site is protected by reCAPTCHA and the Google"
@@ -331,9 +330,8 @@ export default function Login() {
           </p>
         </div>
       </div>
-      </div>
-    ) : (
-      <LoadingPage />
-    )
+    </div>
+  ) : (
+    <LoadingPage />
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import Image from "next/image";
@@ -10,7 +10,8 @@ import LoadingPage from "../../../components/LoadingPage";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useRouter } from "next/navigation";
 import { useUserProfile } from "@/app/context/UserProfileContext";
-import { createSocket } from "@/lib/socket-client";
+import { createSocket, disconnectSocket } from "@/lib/socket-client";
+import React from "react";
 
 export default function ChallengePage() {
   const [challenge, setChallenge] = useState(null);
@@ -31,6 +32,8 @@ export default function ChallengePage() {
   const [isLocked, setIsLocked] = useState(false);
   const [isAvailable, setIsAvailable] = useState(true);
   const [socket, setSocket] = useState(null);
+  const [socketConnected, setSocketConnected] = useState(false);
+  const [socketEvents, setSocketEvents] = useState([]);
   const [userData, setUserData] = useState(null);
   const [labData, setLabData] = useState(null);
   const [labCategoryData, setLabCategoryData] = useState(null);
@@ -52,10 +55,13 @@ export default function ChallengePage() {
     const minutes = Math.floor((diffInSeconds % 3600) / 60);
     const seconds = diffInSeconds % 60;
 
-    return `${hours}س ${minutes}د ${seconds}ث`;
+    return isEnglish
+      ? `${hours}h ${minutes}m ${seconds}s`
+      : `${hours}س ${minutes}د ${seconds}ث`;
   };
 
-  const fetchInitialData = async () => {
+  // Memorize key functions to prevent unnecessary re-renders and dependency issues
+  const fetchInitialData = useCallback(async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = Cookies.get("token");
@@ -153,73 +159,283 @@ export default function ChallengePage() {
     } finally {
       setLoadingPage(false);
     }
-  };
+  }, [id, router]);
 
-  // Initialize socket connection
-  useEffect(() => {
-    // Use a consistent ID if possible
-    const socketUserId = userData?.user_name || "challenge_user";
-    const socket = createSocket(socketUserId);
-    setSocket(socket);
+  const fetchActivitiesData = useCallback(async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
 
-    // Join the challenge room
-    socket.emit("joinChallengeRoom", id);
+      // Add retry logic with exponential backoff
+      const maxRetries = 2;
+      let retryCount = 0;
+      let success = false;
+      let response;
 
-    // Setup socket event listeners
-    socket.on("newSolve", (data) => {
-      // When someone else submits a flag, refresh the leaderboard
-      fetchActivitiesData();
-    });
+      while (!success && retryCount <= maxRetries) {
+        try {
+          response = await axios.get(`${apiUrl}/challenges/${id}/leaderboard`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            timeout: 8000, // 8 second timeout
+          });
 
-    socket.on("firstBlood", (data) => {
-      // When someone gets first blood, refresh the leaderboard
-      fetchActivitiesData();
-    });
+          success = true;
+        } catch (error) {
+          retryCount++;
+          console.log(
+            `Challenge leaderboard API call failed (attempt ${retryCount}/${maxRetries})`
+          );
 
-    // Handle unexpected online counts - if we see more than 5 users when we expect 1-3,
-    // reset the connection tracking by forcing a page refresh once
-    socket.on("onlineCount", (count) => {
-      if (count > 5) {
-        // Store a timestamp to prevent multiple refreshes
-        const lastReset = sessionStorage.getItem("lastSocketReset");
-        const now = Date.now();
+          // Only retry on server errors (500s) or timeouts
+          if (
+            error.response &&
+            error.response.status < 500 &&
+            error.code !== "ECONNABORTED"
+          ) {
+            throw error; // Don't retry client errors (400s)
+          }
 
-        if (!lastReset || now - parseInt(lastReset) > 5 * 60 * 1000) {
-          // Only reset once every 5 minutes
-          console.log("Abnormal user count detected:", count);
-          sessionStorage.setItem("lastSocketReset", now.toString());
-
-          // Try to reset socket state
-          if (socket.reset && typeof socket.reset === "function") {
-            socket.reset();
+          if (retryCount <= maxRetries) {
+            // Wait before retrying (exponential backoff)
+            await new Promise((resolve) =>
+              setTimeout(resolve, 1000 * Math.pow(2, retryCount - 1))
+            );
+          } else {
+            throw error; // Max retries exceeded
           }
         }
       }
-    });
 
-    // Setup heartbeat to keep the connection alive
-    const heartbeatInterval = setInterval(() => {
-      if (socket) {
-        socket.emit("heartbeat");
+      if (response && response.data.status === "success") {
+        setActivitiesData(response.data.data);
+      } else {
+        console.error("API returned non-success status:", response?.data);
+        // Set empty array as fallback
+        setActivitiesData([]);
       }
-    }, 60000); // Send heartbeat every minute
+    } catch (error) {
+      console.error(
+        "Error fetching activities:",
+        error.response?.data || error.message
+      );
+      // Set empty array on error to prevent UI issues
+      setActivitiesData([]);
+    }
+  }, [id]);
 
-    // Cleanup on unmount
-    return () => {
-      clearInterval(heartbeatInterval);
-      if (socket) {
-        // Leave the challenge room but don't disconnect the socket
-        socket.emit("leaveChallengeRoom", id);
-        socket.off("newSolve");
-        socket.off("firstBlood");
-        socket.off("onlineCount");
+  // Function to handle real-time activity updates
+  const handleActivityUpdate = useCallback((userData) => {
+    if (!userData || !userData.user_name) return;
+
+    console.log("Handling activity update for user:", userData.user_name);
+
+    setActivitiesData((prevData) => {
+      // Check if we already have this user in our activities list
+      const existingUserIndex = prevData.findIndex(
+        (user) => user.user_name === userData.user_name
+      );
+
+      // Create a new activities array to update state
+      let updatedActivities = [...prevData];
+
+      if (existingUserIndex !== -1) {
+        // Update the existing user's solved_at timestamp
+        updatedActivities[existingUserIndex] = {
+          ...updatedActivities[existingUserIndex],
+          solved_at: new Date().toISOString(),
+        };
+      } else {
+        // Add the new user to our activities
+        updatedActivities.unshift({
+          user_name: userData.user_name,
+          profile_image: userData.profile_image || "/icon1.png",
+          solved_at: new Date().toISOString(),
+        });
+      }
+
+      return updatedActivities;
+    });
+  }, []);
+
+  // Fetch user data when component mounts
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = Cookies.get("token");
+
+        if (!token) {
+          console.log("No token found, skipping user data fetch");
+          return;
+        }
+
+        const response = await axios.get(`${apiUrl}/user/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          timeout: 5000, // 5 second timeout
+        });
+
+        if (response.data && response.data.user) {
+          setUserData(response.data.user);
+          console.log("User data loaded:", response.data.user.user_name);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
       }
     };
-  }, [id, userData]);
 
+    fetchUserData();
+  }, []);
+
+  // Ensure socket is cleaned up on component unmount
+  useEffect(() => {
+    return () => {
+      // Cleanup function - disconnect socket when component unmounts
+      if (socket) {
+        console.log("Cleaning up socket connection");
+        // First leave the challenge room
+        socket.emit("leaveChallengeRoom", id);
+        // Then disconnect the socket
+        disconnectSocket();
+      }
+    };
+  }, [id, socket]);
+
+  // Ensure socket is never created multiple times
+  useEffect(() => {
+    // Only create socket once
+    if (!socket) {
+      // Create socket with best available user identifier
+      const socketId =
+        userData?.user_name ||
+        `challenge_visitor_${Math.random().toString(36).substring(2, 10)}`;
+      console.log(`Creating new socket connection with ID: ${socketId}`);
+      const newSocket = createSocket(socketId);
+
+      // Join the challenge room
+      newSocket.emit("joinChallengeRoom", id);
+      console.log(`Joined challenge room: ${id}`);
+
+      // Store the socket
+      setSocket(newSocket);
+
+      // Set up listeners
+      newSocket.on("connect", () => {
+        console.log("Socket connected successfully");
+        setSocketConnected(true);
+      });
+
+      newSocket.on("disconnect", () => {
+        console.log("Socket disconnected");
+        setSocketConnected(false);
+      });
+
+      newSocket.on("connect_error", (error) => {
+        console.error("Socket connection error:", error);
+        setSocketConnected(false);
+      });
+
+      // Initial connection status
+      setSocketConnected(newSocket.connected || false);
+
+      // Setup heartbeat
+      const heartbeatInterval = setInterval(() => {
+        if (newSocket.connected) {
+          newSocket.emit("heartbeat");
+          console.log("Heartbeat sent");
+          setSocketConnected(true);
+        } else {
+          setSocketConnected(false);
+        }
+      }, 30000);
+
+      // Clean up on unmount
+      return () => {
+        clearInterval(heartbeatInterval);
+        newSocket.off("connect");
+        newSocket.off("disconnect");
+        newSocket.off("connect_error");
+      };
+    }
+  }, [id, socket, userData]);
+
+  // Set up socket event listeners
+  useEffect(() => {
+    if (!socket) return;
+
+    // Event listener for new solves
+    const onNewSolve = (data) => {
+      console.log("New solve event received:", data);
+      // Log event for debugging
+      setSocketEvents((prev) => [
+        { type: "newSolve", data, time: new Date().toLocaleTimeString() },
+        ...prev.slice(0, 4),
+      ]);
+
+      // Update UI immediately for better real-time experience
+      if (data.user_name && data.user_name !== userData?.user_name) {
+        handleActivityUpdate(data);
+      }
+      // Then fetch fresh data from server for consistency
+      fetchActivitiesData();
+    };
+
+    // Event listener for first blood
+    const onFirstBlood = (data) => {
+      console.log("First blood event received:", data);
+      // Log event for debugging
+      setSocketEvents((prev) => [
+        { type: "firstBlood", data, time: new Date().toLocaleTimeString() },
+        ...prev.slice(0, 4),
+      ]);
+
+      // Update UI immediately
+      if (data.user_name && data.user_name !== userData?.user_name) {
+        handleActivityUpdate(data);
+      }
+      // Refresh challenge data for first blood information
+      fetchInitialData();
+      // Then fetch fresh activities data
+      fetchActivitiesData();
+    };
+
+    // Set up event listeners
+    socket.on("newSolve", onNewSolve);
+    socket.on("firstBlood", onFirstBlood);
+
+    // Clean up event listeners when component unmounts
+    return () => {
+      socket.off("newSolve", onNewSolve);
+      socket.off("firstBlood", onFirstBlood);
+    };
+  }, [
+    id,
+    socket,
+    userData,
+    handleActivityUpdate,
+    fetchActivitiesData,
+    fetchInitialData,
+  ]);
+
+  // Initial data fetching
   useEffect(() => {
     fetchInitialData();
-  }, [id]);
+  }, [fetchInitialData]);
+
+  // Initial fetch of activities data
+  useEffect(() => {
+    fetchActivitiesData();
+  }, [fetchActivitiesData]);
+
+  // Effect for when activities tab is selected
+  useEffect(() => {
+    if (activities) {
+      fetchActivitiesData();
+    }
+  }, [activities, fetchActivitiesData]);
 
   const checkSolvedFlags = async () => {
     try {
@@ -272,6 +488,8 @@ export default function ChallengePage() {
         }
       );
 
+      console.log("Flag submission response:", response.data);
+
       if (response.data.status === "error") {
         setError(response.data.message);
         return;
@@ -308,19 +526,28 @@ export default function ChallengePage() {
           // Notify others via socket for first blood
           if (socket) {
             try {
+              console.log("Emitting first blood event:", {
+                challenge_id: id,
+                user_name: userData?.user_name || "anonymous",
+              });
+
               socket.emit("flagFirstBlood", {
                 challenge_id: id,
                 user_name: userData?.user_name || "anonymous",
                 profile_image:
                   userData?.profile_image ||
                   response.data.data.profile_image ||
-                  "",
+                  "/icon1.png",
                 points: response.data.data.first_blood_points || 0,
               });
+
+              console.log("First blood event emitted successfully");
             } catch (socketError) {
               console.error("Socket first blood error:", socketError);
               // Continue even if socket emission fails
             }
+          } else {
+            console.warn("Socket not available for first blood emission");
           }
         } else if (response.data.data.is_first_blood === false) {
           setIsSubmitFlag(true);
@@ -329,19 +556,28 @@ export default function ChallengePage() {
           // Notify others via socket for regular flag submission
           if (socket) {
             try {
+              console.log("Emitting flag submitted event:", {
+                challenge_id: id,
+                user_name: userData?.user_name || "anonymous",
+              });
+
               socket.emit("flagSubmitted", {
                 challenge_id: id,
                 user_name: userData?.user_name || "anonymous",
                 profile_image:
                   userData?.profile_image ||
                   response.data.data.profile_image ||
-                  "",
+                  "/icon1.png",
                 points: response.data.data.points || 0,
               });
+
+              console.log("Flag submitted event emitted successfully");
             } catch (socketError) {
               console.error("Socket flag submitted error:", socketError);
               // Continue even if socket emission fails
             }
+          } else {
+            console.warn("Socket not available for flag submission emission");
           }
         }
       }
@@ -421,81 +657,139 @@ export default function ChallengePage() {
     solvedFlags();
   }, [id]);
 
-  const fetchActivitiesData = async () => {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const token = Cookies.get("token");
+  // Memoize functions to prevent recreation on every render
+  const memoizedFetchActivities = React.useCallback(fetchActivitiesData, [
+    fetchActivitiesData,
+  ]);
+  const memoizedFetchInitial = React.useCallback(fetchInitialData, [
+    fetchInitialData,
+  ]);
 
-      // Add retry logic with exponential backoff
-      const maxRetries = 2;
-      let retryCount = 0;
-      let success = false;
-      let response;
+  // Update the activities section to show real-time updates
+  const renderActivityList = () => {
+    if (!activitiesData || activitiesData.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-10">
+          <Image
+            src="/notfound.png"
+            alt="No activities"
+            width={64}
+            height={64}
+            className="mb-4"
+          />
+          <p className="text-[#BCC9DB] text-[18px]">
+            {isEnglish ? "No activities yet" : "لاتوجد أنشطة حتي الآن"}
+          </p>
+        </div>
+      );
+    }
 
-      while (!success && retryCount <= maxRetries) {
+    return activitiesData.map((user, index) => {
+      // Get the most recent solved_at time
+      const latestSolvedAt = user.solved_at ? user.solved_at : null;
+
+      // Format the time difference
+      const formatTimeAgo = (date) => {
+        if (!date) return isEnglish ? "Unknown time" : "وقت غير معروف";
+
         try {
-          response = await axios.get(`${apiUrl}/challenges/${id}/leaderboard`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-            timeout: 8000, // 8 second timeout
-          });
+          // Parse the date from the API response
+          const apiDate = new Date(date);
+          const now = new Date();
 
-          success = true;
-        } catch (error) {
-          retryCount++;
-          console.log(
-            `Challenge leaderboard API call failed (attempt ${retryCount}/${maxRetries})`
+          // Directly calculate time difference ignoring the year
+          // by setting today's date with the time from the API
+          const todayWithApiTime = new Date();
+          todayWithApiTime.setHours(
+            apiDate.getHours(),
+            apiDate.getMinutes(),
+            apiDate.getSeconds()
           );
 
-          // Only retry on server errors (500s) or timeouts
-          if (
-            error.response &&
-            error.response.status < 500 &&
-            error.code !== "ECONNABORTED"
-          ) {
-            throw error; // Don't retry client errors (400s)
+          // Adjust for Cairo timezone (UTC+2)
+          // The time difference should be calculated based on the local time
+          let diffInSeconds = Math.floor((now - todayWithApiTime) / 1000);
+
+          // If it's negative (future time today), add 24 hours
+          if (diffInSeconds < 0) {
+            diffInSeconds += 86400; // 24 hours in seconds
           }
 
-          if (retryCount <= maxRetries) {
-            // Wait before retrying (exponential backoff)
-            await new Promise((resolve) =>
-              setTimeout(resolve, 1000 * Math.pow(2, retryCount - 1))
-            );
-          } else {
-            throw error; // Max retries exceeded
+          if (diffInSeconds < 60) return isEnglish ? "Just now" : "الآن";
+          if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            return isEnglish
+              ? `${minutes} ${minutes === 1 ? "minute" : "minutes"} ago`
+              : `منذ ${minutes} ${minutes === 1 ? "دقيقة" : "دقائق"}`;
           }
+          if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            return isEnglish
+              ? `${hours} ${hours === 1 ? "hour" : "hours"} ago`
+              : `منذ ${hours} ${hours === 1 ? "ساعة" : "ساعات"}`;
+          }
+          const days = Math.floor(diffInSeconds / 86400);
+          return isEnglish
+            ? `${days} ${days === 1 ? "day" : "days"} ago`
+            : `منذ ${days} ${days === 1 ? "يوم" : "أيام"}`;
+        } catch (error) {
+          console.error("Error formatting time ago:", error);
+          return isEnglish ? "Unknown time" : "وقت غير معروف";
         }
-      }
+      };
 
-      if (response && response.data.status === "success") {
-        setActivitiesData(response.data.data);
-      } else {
-        console.error("API returned non-success status:", response?.data);
-        // Set empty array as fallback
-        setActivitiesData([]);
-      }
-    } catch (error) {
-      console.error(
-        "Error fetching activities:",
-        error.response?.data || error.message
+      return (
+        <div
+          key={index}
+          className={`flex items-center justify-between flex-wrap py-5 rounded-lg px-5 ${
+            index % 2 === 0 ? "bg-transparent" : "bg-[#06373F]"
+          }`}
+        >
+          <div className="flex items-center gap-8">
+            <div>
+              <Image
+                src={index === 0 ? "/blood.png" : "/flag.png"}
+                alt="flag"
+                width={32}
+                height={32}
+              />
+            </div>
+            <div className="flex items-center gap-4">
+              <Image
+                src={user.profile_image || "/icon1.png"}
+                alt="profile"
+                width={32}
+                height={32}
+              />
+              <p
+                onClick={() => router.push(`/profile/${user.user_name}`)}
+                className="text-xl flex items-center gap-2 font-semibold cursor-pointer"
+              >
+                {user.user_name}
+                {index === 0 && (
+                  <span className="text-sm text-red-500">
+                    {calculateTimeDifference(
+                      challenge?.created_at,
+                      user.solved_at
+                    )}
+                  </span>
+                )}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <p className="text-[#BCC9DB] py-2 md:py-0 text-[18px]">
+              {latestSolvedAt
+                ? formatTimeAgo(latestSolvedAt)
+                : isEnglish
+                ? "Not solved yet"
+                : "لم يتم الحل بعد"}
+            </p>
+          </div>
+        </div>
       );
-      // Set empty array on error to prevent UI issues
-      setActivitiesData([]);
-    }
+    });
   };
-
-  // Initial fetch of activities data
-  useEffect(() => {
-    fetchActivitiesData();
-  }, [id]);
-
-  // Effect for when activities tab is selected
-  useEffect(() => {
-    if (activities) {
-      fetchActivitiesData();
-    }
-  }, [activities]);
 
   return (
     <>
@@ -544,6 +838,7 @@ export default function ChallengePage() {
                         alt="First Blood"
                         width={32}
                         height={32}
+                        className="md:w-[32px] md:h-[38px]"
                       />
                     </div>
                     <div>
@@ -580,6 +875,7 @@ export default function ChallengePage() {
                         alt="Challenge Bytes"
                         width={32}
                         height={32}
+                        className="md:w-[32px] md:h-[38px]"
                       />
                     </div>
                     <div>
@@ -626,7 +922,7 @@ export default function ChallengePage() {
                       alt="First Blood"
                       width={32}
                       height={32}
-                      className="md:w-[32px] md:h-[38px]"
+                      className="md:w-[32px] md:h-[40px]"
                     />
                   </div>
                   <div>
@@ -687,7 +983,7 @@ export default function ChallengePage() {
                       alt="Hacks"
                       width={32}
                       height={32}
-                      className="md:w-[32px] md:h-[38px]"
+                      className="md:w-[32px] md:h-[40px]"
                     />
                   </div>
                   <div>
@@ -941,7 +1237,7 @@ export default function ChallengePage() {
                     {challenge?.link && (
                       <div
                         dir={isEnglish ? "ltr" : "rtl"}
-                        className="bg-[#FFFFFF0D] rounded-lg p-6 flex flex-col min-h-[250px]"
+                        className="bg-[#FFFFFF0D] rounded-2xl p-6 flex flex-col min-h-[250px]"
                       >
                         <div className="flex items-center gap-4 mb-6">
                           <Image
@@ -995,155 +1291,7 @@ export default function ChallengePage() {
                       dir={isEnglish ? "ltr" : "rtl"}
                       className="mb-5 pb-5 mt-10 bg-[#06373F26] px-5"
                     >
-                      {activitiesData?.length > 0 ? (
-                        activitiesData.map((user, index) => {
-                          // Get the most recent solved_at time
-                          const latestSolvedAt = user.solved_at
-                            ? user.solved_at
-                            : null;
-
-                          // Format the time difference
-                          const formatTimeAgo = (date) => {
-                            if (!date)
-                              return isEnglish
-                                ? "Unknown time"
-                                : "وقت غير معروف";
-
-                            try {
-                              // Parse the date from the API response
-                              const apiDate = new Date(date);
-                              const now = new Date();
-
-                              // Directly calculate time difference ignoring the year
-                              // by setting today's date with the time from the API
-                              const todayWithApiTime = new Date();
-                              todayWithApiTime.setHours(
-                                apiDate.getHours(),
-                                apiDate.getMinutes(),
-                                apiDate.getSeconds()
-                              );
-
-                              // Adjust for Cairo timezone (UTC+2)
-                              // The time difference should be calculated based on the local time
-                              let diffInSeconds = Math.floor(
-                                (now - todayWithApiTime) / 1000
-                              );
-
-                              // If it's negative (future time today), add 24 hours
-                              if (diffInSeconds < 0) {
-                                diffInSeconds += 86400; // 24 hours in seconds
-                              }
-
-                              if (diffInSeconds < 60)
-                                return isEnglish ? "Just now" : "الآن";
-                              if (diffInSeconds < 3600) {
-                                const minutes = Math.floor(diffInSeconds / 60);
-                                return isEnglish
-                                  ? `${minutes} ${
-                                      minutes === 1 ? "minute" : "minutes"
-                                    } ago`
-                                  : `منذ ${minutes} ${
-                                      minutes === 1 ? "دقيقة" : "دقائق"
-                                    }`;
-                              }
-                              if (diffInSeconds < 86400) {
-                                const hours = Math.floor(diffInSeconds / 3600);
-                                return isEnglish
-                                  ? `${hours} ${
-                                      hours === 1 ? "hour" : "hours"
-                                    } ago`
-                                  : `منذ ${hours} ${
-                                      hours === 1 ? "ساعة" : "ساعات"
-                                    }`;
-                              }
-                              const days = Math.floor(diffInSeconds / 86400);
-                              return isEnglish
-                                ? `${days} ${days === 1 ? "day" : "days"} ago`
-                                : `منذ ${days} ${days === 1 ? "يوم" : "أيام"}`;
-                            } catch (error) {
-                              console.error(
-                                "Error formatting time ago:",
-                                error
-                              );
-                              return isEnglish
-                                ? "Unknown time"
-                                : "وقت غير معروف";
-                            }
-                          };
-
-                          return (
-                            <div
-                              key={index}
-                              className={`flex items-center justify-between flex-wrap py-5 rounded-lg px-5 ${
-                                index % 2 === 0
-                                  ? "bg-transparent"
-                                  : "bg-[#06373F]"
-                              }`}
-                            >
-                              <div className="flex items-center gap-8">
-                                <div>
-                                  <Image
-                                    src={
-                                      index === 0 ? "/blood.png" : "/flag.png"
-                                    }
-                                    alt="flag"
-                                    width={32}
-                                    height={32}
-                                  />
-                                </div>
-                                <div className="flex items-center gap-4">
-                                  <Image
-                                    src={user.profile_image || "/icon1.png"}
-                                    alt="profile"
-                                    width={32}
-                                    height={32}
-                                  />
-                                  <p
-                                    onClick={() =>
-                                      router.push(`/profile/${user.user_name}`)
-                                    }
-                                    className="text-xl flex items-center gap-2 font-semibold cursor-pointer"
-                                  >
-                                    {user.user_name}
-                                    {index === 0 && (
-                                      <span className="text-sm text-red-500">
-                                        {calculateTimeDifference(
-                                          challenge?.created_at,
-                                          user.solved_at
-                                        )}
-                                      </span>
-                                    )}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <p className="text-[#BCC9DB] py-2 md:py-0 text-[18px]">
-                                  {latestSolvedAt
-                                    ? formatTimeAgo(latestSolvedAt)
-                                    : isEnglish
-                                    ? "Not solved yet"
-                                    : "لم يتم الحل بعد"}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-10">
-                          <Image
-                            src="/notfound.png"
-                            alt="No activities"
-                            width={64}
-                            height={64}
-                            className="mb-4"
-                          />
-                          <p className="text-[#BCC9DB] text-[18px]">
-                            {isEnglish
-                              ? "No activities yet"
-                              : "لاتوجد أنشطة حتي الآن"}
-                          </p>
-                        </div>
-                      )}
+                      {renderActivityList()}
                     </div>
                   </div>
                 )}

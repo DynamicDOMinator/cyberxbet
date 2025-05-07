@@ -150,6 +150,22 @@ export default function Home() {
     }
   };
 
+  // Function to translate Arabic difficulty to English
+  const translateDifficultyToEnglish = (difficulty) => {
+    switch (difficulty) {
+      case "صعب":
+        return "Hard";
+      case "صعب جدا":
+        return "Very Hard";
+      case "متوسط":
+        return "Medium";
+      case "سهل":
+        return "Easy";
+      default:
+        return "Easy";
+    }
+  };
+
   return isLoaded ? (
     <div className="max-w-[2000px] mx-auto pb-10 mt-20">
       {/* ads section  */}
@@ -189,7 +205,7 @@ export default function Home() {
         </h2>
 
         <div className="flex lg:flex-row flex-col lg:gap-14 gap-8 items-center justify-between pt-8">
-          <div className="lg:basis-2/3 w-full bg-white/3 backdrop-blur-xl rounded-2xl py-6 sm:py-10 px-3 min-h-[165px] sm:px-4 lg:px-10">
+          <div className="lg:basis-2/3 w-full bg-white/3 backdrop-blur-xl rounded-2xl py-6 sm:py-10 px-3 h-[165px] sm:px-4 lg:px-10">
             <div
               dir={isEnglish ? "ltr" : "rtl"}
               className="flex items-center justify-between sm:justify-start sm:gap-5 gap-2 w-full"
@@ -252,7 +268,7 @@ export default function Home() {
           </div>
 
           <div className="lg:basis-1/3 w-full">
-            <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 min-h-[165px] backdrop-blur-xl rounded-2xl p-3 sm:p-4">
+            <div className="flex flex-col items-center gap-3 sm:gap-4 bg-white/3 h-[165px] backdrop-blur-xl rounded-2xl p-3 sm:p-4">
               <Image src="/ranking.png" alt="progress" width={56} height={56} />
               <p className="text-[#BCC9DB] text-[16px] sm:text-[18px]">
                 {userData?.rank > 0
@@ -319,7 +335,7 @@ export default function Home() {
                   <>
                     Difficulty Level:{" "}
                     <span className={getDifficultyColor(challenge.difficulty)}>
-                      {challenge.difficulty}
+                      {translateDifficultyToEnglish(challenge.difficulty)}
                     </span>
                   </>
                 ) : (
@@ -331,7 +347,7 @@ export default function Home() {
                   </>
                 )}
               </p>
-              <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110 hover:bg-[#38FFE5]/10 hover:transition-all duration-300 hover:p-1 rounded-2xl">
+              <p className="text-[#38FFE5] text-[18px] font-semibold cursor-pointer hover:brightness-110 hover:bg-[#38FFE5]/10 hover:transition-all duration-300 hover:p-1 rounded-lg ">
                 <Link href={`/challnge/${challenge.uuid}`}>
                   {isEnglish ? "Start Now" : "ابدأ الآن"}
                 </Link>

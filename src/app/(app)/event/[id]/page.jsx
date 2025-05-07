@@ -1,6 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import Image from "next/image";
@@ -9,13 +9,13 @@ import LoadingPage from "../../../components/LoadingPage";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useUserProfile } from "@/app/context/UserProfileContext";
 import { useRouter } from "next/navigation";
-import { createSocket } from "@/lib/socket-client";
+import { createSocket, disconnectSocket } from "@/lib/socket-client";
 
 export default function ChallengePage() {
   const [challenge, setChallenge] = useState(null);
   const [flags, setflags] = useState(false);
   const [flagInput, setFlagInput] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFirstBlood, setIsFirstBlood] = useState(false);
   const [isSubmitFlag, setIsSubmitFlag] = useState(false);
@@ -26,18 +26,382 @@ export default function ChallengePage() {
   const [loadingPage, setLoadingPage] = useState(true);
   const [activities, setActivities] = useState(false);
   const [details, setDetails] = useState(true);
-  const [activitiesData, setActivitiesData] = useState("");
+  const [activitiesData, setActivitiesData] = useState([]);
   const [isLocked, setIsLocked] = useState(false);
   const [teamData, setTeamData] = useState(null);
   const [showEmptyState, setShowEmptyState] = useState(false);
   const [socket, setSocket] = useState(null);
+  const [socketConnected, setSocketConnected] = useState(false);
   const [pendingActivitiesCount, setPendingActivitiesCount] = useState(0);
+  const [userData, setUserData] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const { id } = useParams();
   const { isEnglish } = useLanguage();
   const { convertToUserTimezone, getCurrentDateInUserTimezone } =
     useUserProfile();
   const router = useRouter();
+
+  // Fetch user data when component mounts
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = Cookies.get("token");
+
+        if (!token) {
+          console.log("No token found, skipping user data fetch");
+          return;
+        }
+
+        const response = await axios.get(`${apiUrl}/user/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          timeout: 5000, // 5 second timeout
+        });
+
+        if (response.data && response.data.user) {
+          setUserData(response.data.user);
+          console.log("User data loaded:", response.data.user.user_name);
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
+
+  // Ensure socket is cleaned up on component unmount
+  useEffect(() => {
+    return () => {
+      // Cleanup function - disconnect socket when component unmounts
+      if (socket) {
+        console.log("Cleaning up socket connection");
+        // First leave the challenge room
+        socket.emit("leaveChallengeRoom", id);
+        // If there's event data with event UUID, also leave the team room
+        if (challenge?.event_uuid) {
+          socket.emit("leaveTeamRoom", challenge.event_uuid);
+          console.log(`Left team room: ${challenge.event_uuid}`);
+        }
+        // Then disconnect the socket
+        disconnectSocket();
+      }
+    };
+  }, [id, socket, challenge]);
+
+  // Initialize socket connection
+  useEffect(() => {
+    // Only create socket once and when we have user data
+    if (!socket && userData) {
+      // Create socket with best available user identifier
+      const socketId =
+        userData.user_name ||
+        `event_visitor_${Math.random().toString(36).substring(2, 10)}`;
+      console.log(`Creating new socket connection with ID: ${socketId}`);
+      const newSocket = createSocket(socketId);
+
+      // Join the challenge room
+      newSocket.emit("joinChallengeRoom", id);
+      console.log(`Joined challenge room: ${id}`);
+
+      // Store the socket
+      setSocket(newSocket);
+
+      // Set up listeners
+      newSocket.on("connect", () => {
+        console.log("Socket connected successfully");
+        setSocketConnected(true);
+      });
+
+      newSocket.on("disconnect", () => {
+        console.log("Socket disconnected");
+        setSocketConnected(false);
+      });
+
+      newSocket.on("connect_error", (error) => {
+        console.error("Socket connection error:", error);
+        setSocketConnected(false);
+      });
+
+      // Initial connection status
+      setSocketConnected(newSocket.connected || false);
+
+      // Setup heartbeat
+      const heartbeatInterval = setInterval(() => {
+        if (newSocket.connected) {
+          newSocket.emit("heartbeat");
+          setSocketConnected(true);
+        } else {
+          setSocketConnected(false);
+        }
+      }, 30000);
+
+      // Clean up on unmount
+      return () => {
+        clearInterval(heartbeatInterval);
+        newSocket.off("connect");
+        newSocket.off("disconnect");
+        newSocket.off("connect_error");
+      };
+    }
+  }, [id, socket, userData]);
+
+  // Set up socket event listeners for real-time updates
+  useEffect(() => {
+    if (!socket) return;
+
+    // Event listener for new solves
+    const onNewSolve = async (data) => {
+      console.log("New solve event received:", data);
+
+      // Show toast notification if user is not on activities tab
+      if (
+        !activities &&
+        data.user_name &&
+        data.user_name !== userData?.user_name
+      ) {
+        setToast({
+          type: "solve",
+          user: data.user_name,
+          profileImage: data.profile_image || "/icon1.png",
+          timestamp: new Date(),
+        });
+
+        // Auto-dismiss toast after 5 seconds
+        setTimeout(() => setToast(null), 5000);
+      }
+
+      // Update the activities data immediately with the new solve
+      if (data.user_name && data.user_name !== userData?.user_name) {
+        // Create a solver entry for the user who just solved
+        const newSolver = {
+          username: data.user_name,
+          user_name: data.user_name,
+          userName: data.user_name,
+          profile_image: data.profile_image || "/icon1.png",
+          is_first_blood: false,
+          solved_at: new Date().toISOString(),
+        };
+
+        // Update activities data to include this submission
+        setActivitiesData((prev) => {
+          // Check if this user is already in the list
+          const userExists =
+            prev &&
+            Array.isArray(prev) &&
+            prev.some(
+              (user) =>
+                (user.username &&
+                  user.username.toLowerCase() ===
+                    data.user_name.toLowerCase()) ||
+                (user.user_name &&
+                  user.user_name.toLowerCase() ===
+                    data.user_name.toLowerCase()) ||
+                (user.userName &&
+                  user.userName.toLowerCase() === data.user_name.toLowerCase())
+            );
+
+          if (userExists) {
+            // Update the existing entry
+            return prev.map((user) => {
+              const userMatches =
+                (user.username &&
+                  user.username.toLowerCase() ===
+                    data.user_name.toLowerCase()) ||
+                (user.user_name &&
+                  user.user_name.toLowerCase() ===
+                    data.user_name.toLowerCase()) ||
+                (user.userName &&
+                  user.userName.toLowerCase() === data.user_name.toLowerCase());
+
+              return userMatches
+                ? {
+                    ...user,
+                    solved_at: new Date().toISOString(),
+                  }
+                : user;
+            });
+          } else {
+            // Add the new solver to the beginning of the array
+            return Array.isArray(prev) ? [newSolver, ...prev] : [newSolver];
+          }
+        });
+      }
+
+      if (activities) {
+        // Reset counter since we're on the activities tab and updating in real-time
+        setPendingActivitiesCount(0);
+      } else {
+        // We're not on the activities tab, increment the counter
+        setPendingActivitiesCount((prev) => prev + 1);
+      }
+
+      // Refresh challenge data to update solve count
+      if (challenge?.solved_count !== undefined) {
+        setChallenge((prev) => ({
+          ...prev,
+          solved_count: (prev.solved_count || 0) + 1,
+        }));
+      }
+    };
+
+    // Event listener for first blood
+    const onFirstBlood = async (data) => {
+      console.log("First blood event received:", data);
+
+      // Show toast notification if user is not on activities tab
+      if (
+        !activities &&
+        data.user_name &&
+        data.user_name !== userData?.user_name
+      ) {
+        setToast({
+          type: "firstBlood",
+          user: data.user_name,
+          profileImage: data.profile_image || "/icon1.png",
+          timestamp: new Date(),
+        });
+
+        // Auto-dismiss toast after 5 seconds
+        setTimeout(() => setToast(null), 5000);
+      }
+
+      // Update first blood information immediately
+      if (challenge?.flags_data && challenge.flags_data.length > 0) {
+        setChallenge((prev) => {
+          const updatedFlags = [...prev.flags_data];
+          if (updatedFlags[0]) {
+            updatedFlags[0] = {
+              ...updatedFlags[0],
+              first_blood: {
+                user_name: data.user_name,
+                profile_image: data.profile_image || "/icon1.png",
+              },
+            };
+          }
+          return {
+            ...prev,
+            flags_data: updatedFlags,
+          };
+        });
+      }
+
+      // Update the activities data immediately with the first blood
+      if (data.user_name && data.user_name !== userData?.user_name) {
+        // Create a solver entry for the user who just got first blood
+        const firstBloodSolver = {
+          username: data.user_name,
+          user_name: data.user_name,
+          userName: data.user_name,
+          profile_image: data.profile_image || "/icon1.png",
+          is_first_blood: true,
+          solved_at: new Date().toISOString(),
+        };
+
+        // Update activities data to include this submission
+        setActivitiesData((prev) => {
+          // Check if this user is already in the list
+          const userExists =
+            prev &&
+            Array.isArray(prev) &&
+            prev.some(
+              (user) =>
+                (user.username &&
+                  user.username.toLowerCase() ===
+                    data.user_name.toLowerCase()) ||
+                (user.user_name &&
+                  user.user_name.toLowerCase() ===
+                    data.user_name.toLowerCase()) ||
+                (user.userName &&
+                  user.userName.toLowerCase() === data.user_name.toLowerCase())
+            );
+
+          if (userExists) {
+            // Update the existing entry
+            return prev.map((user) => {
+              const userMatches =
+                (user.username &&
+                  user.username.toLowerCase() ===
+                    data.user_name.toLowerCase()) ||
+                (user.user_name &&
+                  user.user_name.toLowerCase() ===
+                    data.user_name.toLowerCase()) ||
+                (user.userName &&
+                  user.userName.toLowerCase() === data.user_name.toLowerCase());
+
+              return userMatches
+                ? {
+                    ...user,
+                    is_first_blood: true,
+                    solved_at: new Date().toISOString(),
+                  }
+                : user;
+            });
+          } else {
+            // Add the new solver to the beginning of the array
+            return Array.isArray(prev)
+              ? [firstBloodSolver, ...prev]
+              : [firstBloodSolver];
+          }
+        });
+      }
+
+      if (activities) {
+        // Reset counter since we're on the activities tab and updating in real-time
+        setPendingActivitiesCount(0);
+      } else {
+        // We're not on the activities tab, increment the counter
+        setPendingActivitiesCount((prev) => prev + 1);
+      }
+    };
+
+    // Event listener for team updates
+    const onTeamUpdate = (data) => {
+      console.log("Team update received:", data);
+
+      // If we have the team data and it matches our team
+      if (
+        teamData &&
+        data.teamUuid === teamData.uuid &&
+        challenge?.event_uuid
+      ) {
+        // Refresh team data using the fetchTeamInfo function that will be defined later
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const token = Cookies.get("token");
+
+        // Inline fetch team info to avoid dependency on fetchTeamInfo
+        axios
+          .get(`${apiUrl}/${challenge.event_uuid}/my-team`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          })
+          .then((response) => {
+            if (response.data?.data) {
+              setTeamData(response.data.data);
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching team information:", error);
+          });
+      }
+    };
+
+    // Set up event listeners
+    socket.on("newSolve", onNewSolve);
+    socket.on("firstBlood", onFirstBlood);
+    socket.on("teamUpdate", onTeamUpdate);
+
+    // Clean up event listeners when component unmounts
+    return () => {
+      socket.off("newSolve", onNewSolve);
+      socket.off("firstBlood", onFirstBlood);
+      socket.off("teamUpdate", onTeamUpdate);
+    };
+  }, [id, socket, activities, teamData, userData, challenge]);
 
   // Handle parsing API date strings correctly
   const parseApiDate = (dateString) => {
@@ -107,7 +471,8 @@ export default function ChallengePage() {
     }
   };
 
-  const fetchInitialData = async () => {
+  // Memoize fetch functions to prevent recreations
+  const fetchInitialData = useCallback(async () => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = Cookies.get("token");
@@ -161,11 +526,12 @@ export default function ChallengePage() {
     } finally {
       setLoadingPage(false);
     }
-  };
+  }, [id]);
 
+  // Initial data fetch
   useEffect(() => {
     fetchInitialData();
-  }, [id]);
+  }, [fetchInitialData]);
 
   const checkSolvedFlags = async () => {
     try {
@@ -199,8 +565,8 @@ export default function ChallengePage() {
     }
   }, [flags]);
 
-  // Replace the custom fetchActivitiesData function with a simpler version that doesn't change the UI structure
-  const fetchActivitiesData = async (id) => {
+  // Memoize fetchActivitiesData to prevent recreation
+  const fetchActivitiesData = useCallback(async (id) => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = Cookies.get("token");
@@ -222,65 +588,33 @@ export default function ChallengePage() {
       );
       return [];
     }
-  };
+  }, []);
 
-  // Update the socket event handlers to handle real-time updates properly
-  useEffect(() => {
-    const userName = Cookies.get("username");
-    const newSocket = createSocket(userName);
-    setSocket(newSocket);
-
-    // Join the challenge room
-    if (newSocket) {
-      newSocket.emit("joinChallengeRoom", id);
-
-      // Listen for new solves from other users
-      newSocket.on("newSolve", async (data) => {
-        console.log("Received new solve event:", data);
-
-        if (activities) {
-          // Simply trigger a refresh of the data to ensure consistency
-          const freshData = await fetchActivitiesData(id);
-          if (freshData && freshData.length > 0) {
-            setActivitiesData(freshData);
-            setShowEmptyState(false);
-          }
-        } else {
-          // We're not on the activities tab, increment the counter only
-          setPendingActivitiesCount((prev) => prev + 1);
-        }
+  // Fetch team information
+  const fetchTeamInfo = useCallback(async (eventUuid) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
+      const response = await axios.get(`${apiUrl}/${eventUuid}/my-team`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      // Listen for first blood events
-      newSocket.on("firstBlood", async (data) => {
-        console.log("Received first blood event:", data);
-
-        if (activities) {
-          // Simply trigger a refresh of the data to ensure consistency
-          const freshData = await fetchActivitiesData(id);
-          if (freshData && freshData.length > 0) {
-            setActivitiesData(freshData);
-            setShowEmptyState(false);
-          }
-        } else {
-          // We're not on the activities tab, increment the counter only
-          setPendingActivitiesCount((prev) => prev + 1);
-        }
-      });
-    }
-
-    return () => {
-      if (socket) {
-        socket.off("newSolve");
-        socket.off("firstBlood");
-        socket.emit("leaveChallengeRoom", id);
+      if (response.data?.data) {
+        setTeamData(response.data.data);
       }
-    };
-  }, [id, activities]);
+    } catch (error) {
+      console.error("Error fetching team information:", error);
+    }
+  }, []);
 
-  // Update the useEffect for fetching activities data when tab becomes active
+  // Update for fetching activities when tab becomes active
   useEffect(() => {
     if (activities) {
+      // Reset pending activities counter when switching to Activities tab
+      setPendingActivitiesCount(0);
+
       // Load activities data when the activities tab is active
       const loadActivitiesData = async () => {
         try {
@@ -291,8 +625,6 @@ export default function ChallengePage() {
           } else {
             setShowEmptyState(true);
           }
-          // Reset counter when tab becomes active
-          setPendingActivitiesCount(0);
         } catch (error) {
           console.error("Error loading activities data:", error);
           setShowEmptyState(true);
@@ -301,38 +633,16 @@ export default function ChallengePage() {
 
       loadActivitiesData();
     }
-  }, [activities, id]);
+  }, [activities, id, fetchActivitiesData]);
 
-  // Add a function to fetch team information at the beginning of the file
+  // Fetch team information when challenge data is loaded
   useEffect(() => {
-    // Fetch team information when component mounts
-    const fetchTeamInfo = async () => {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-        const token = Cookies.get("token");
-        const response = await axios.get(
-          `${apiUrl}/${challenge?.event_uuid}/my-team`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        if (response.data?.data) {
-          setTeamData(response.data.data);
-        }
-      } catch (error) {
-        console.error("Error fetching team information:", error);
-      }
-    };
-
     if (challenge?.event_uuid) {
-      fetchTeamInfo();
+      fetchTeamInfo(challenge.event_uuid);
     }
-  }, [challenge?.event_uuid]);
+  }, [challenge?.event_uuid, fetchTeamInfo]);
 
-  // Modify the submitFlag function to ensure team data is included in the socket payload
+  // Modified submitFlag function with socket integration
   const submitFlag = async () => {
     try {
       setIsLoading(true);
@@ -381,7 +691,8 @@ export default function ChallengePage() {
               setTeamData(teamResponse.data.data);
 
               // Now we have fresh team data, emit socket events
-              const username = Cookies.get("username") || "";
+              const username =
+                userData?.user_name || Cookies.get("username") || "";
               const pointsEarned = response.data.data.points || 0;
               const isFirstBlood = response.data.data.is_first_blood || false;
 
@@ -405,6 +716,7 @@ export default function ChallengePage() {
               const socketPayload = {
                 challenge_id: id,
                 username: username,
+                user_name: username,
                 eventId: eventId,
                 teamUuid: teamResponse.data.data.uuid,
                 teamName: teamResponse.data.data.name,
@@ -417,6 +729,7 @@ export default function ChallengePage() {
                   teamResponse.data.data.statistics?.total_challenges_solved ||
                   0,
                 challenge_name: challenge?.title || "Challenge",
+                profile_image: userData?.profile_image || "/icon1.png",
               };
 
               console.log("Emitting flag event:", socketPayload);
@@ -454,7 +767,7 @@ export default function ChallengePage() {
                   username: username,
                   user_name: username,
                   userName: username,
-                  profile_image: "/icon1.png", // Default icon, will be updated later
+                  profile_image: userData?.profile_image || "/icon1.png",
                   is_first_blood: isFirstBlood,
                   solved_at: new Date().toISOString(),
                 };
@@ -547,6 +860,7 @@ export default function ChallengePage() {
       setError(error.response?.data?.message || "An error occurred");
     } finally {
       setIsLoading(false);
+      setFlagInput("");
     }
   };
 
@@ -604,12 +918,90 @@ export default function ChallengePage() {
     fetchTeamData();
   }, [id]);
 
+  // Join or leave team rooms when challenge data changes
+  useEffect(() => {
+    if (socket && challenge?.event_uuid) {
+      // Join the team room for this event
+      socket.emit("joinTeamRoom", challenge.event_uuid);
+      console.log(`Joined team room: ${challenge.event_uuid}`);
+
+      // Clean up when component unmounts or challenge changes
+      return () => {
+        socket.emit("leaveTeamRoom", challenge.event_uuid);
+        console.log(`Left team room: ${challenge.event_uuid}`);
+      };
+    }
+  }, [socket, challenge?.event_uuid]);
+
   return (
     <>
       {loadingPage ? (
         <LoadingPage />
       ) : (
-        <div className="max-w-[2000px] pt-36 mx-auto pb-5">
+        <div className="max-w-[2000px] pt-36 mx-auto pb-5 relative">
+          {/* Socket connection status indicator */}
+          <div className="absolute top-4 right-4 flex items-center gap-1 text-xs">
+            <div
+              className={`h-2 w-2 rounded-full ${
+                socketConnected ? "bg-green-500" : "bg-red-500"
+              }`}
+            ></div>
+            <span className="text-gray-400">
+              {socketConnected
+                ? isEnglish
+                  ? "Connected"
+                  : "متصل"
+                : isEnglish
+                ? "Disconnected"
+                : "غير متصل"}
+            </span>
+          </div>
+
+          {/* Real-time toast notifications */}
+          {toast && (
+            <div className="fixed bottom-4 right-4 z-50 w-64">
+              <div
+                className={`bg-[#131619] border ${
+                  toast.type === "firstBlood"
+                    ? "border-red-500"
+                    : "border-[#38FFE5]"
+                } rounded-lg p-3 shadow-lg slide-in-animation`}
+              >
+                <div className="flex items-center gap-2">
+                  <Image
+                    src={toast.profileImage || "/icon1.png"}
+                    alt="User"
+                    width={32}
+                    height={32}
+                    className="rounded-full"
+                  />
+                  <div className="flex-1">
+                    <p className="text-white text-sm font-medium">
+                      {toast.user}
+                    </p>
+                    <p className="text-gray-400 text-xs">
+                      {toast.type === "firstBlood"
+                        ? isEnglish
+                          ? "Got first blood!"
+                          : "حصل على الدم الأول!"
+                        : isEnglish
+                        ? "Solved the challenge"
+                        : "حل التحدي"}
+                    </p>
+                  </div>
+                  <Image
+                    src={
+                      toast.type === "firstBlood" ? "/blood.png" : "/flag.png"
+                    }
+                    alt={toast.type === "firstBlood" ? "First Blood" : "Flag"}
+                    width={24}
+                    height={24}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {challenge?.flag_type === "multiple_individual" ? (
             challenge?.flags_data?.map((flag, index) => (
               <div key={index} className="mb-8">
@@ -890,6 +1282,11 @@ export default function ChallengePage() {
                 }`}
               >
                 {isEnglish ? "Activities" : "الأنشطة"}
+                {!activities && pendingActivitiesCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                    {pendingActivitiesCount}
+                  </span>
+                )}
               </button>
             </div>
 

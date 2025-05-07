@@ -262,7 +262,7 @@ export default function ForgotPassword() {
       );
 
       // If successful, move to OTP+Password step (skip OTP verification step)
-    
+
       setStep(2); // Move directly to combined OTP + password step
       return {
         success: true,
@@ -422,7 +422,7 @@ export default function ForgotPassword() {
       case 1:
         return (
           <>
-            <h1 className="text-white text-2xl sm:text-3xl md:text-[36px] lg:text-[40px] pt-8 sm:pt-12 lg:pt-16 font-extrabold font-Tajawal text-center">
+            <h1 className="text-white text-2xl sm:text-3xl md:text-[36px] lg:text-[40px] pt-8 sm:pt-12 lg:pt-2 font-extrabold font-Tajawal text-center">
               {isEnglish ? "Forgot Password" : "نسيت كلمة المرور"}
             </h1>
             <p className="text-gray-400 text-center mt-4">
@@ -450,7 +450,7 @@ export default function ForgotPassword() {
                     setValidationErrors((prev) => ({ ...prev, email: "" }));
                   }}
                   value={email}
-                  className={`bg-black py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${
+                  className={`bg-[#0B0D0F]  py-2.5 sm:py-3 hover:border-2 hover:border-gray-500 ${
                     validationErrors.email
                       ? "border-red-500"
                       : "border-transparent"
@@ -745,12 +745,12 @@ export default function ForgotPassword() {
     }
   };
   return (
-    <div className="bg-[#0B0D0F] relative pb-20 min-h-screen">
+    <div className="bg-[#0B0D0F] h-screen flex flex-col">
       {isLoaded ? (
         <>
-          <div className="flex items-center flex-col lg:flex-row-reverse justify-between">
+          <div className="flex items-center flex-col lg:flex-row-reverse justify-between py-4">
             <Logo />
-            <div className="flex items-center mt-8 lg:ml-16 gap-8 px-4">
+            <div className="flex items-center mt-2 lg:mt-0 lg:ml-16 gap-8 px-6">
               <Link href="/login">
                 <button className="text-white cursor-pointer hover:bg-[#38FFE5] transition-all duration-400 hover:text-black border-2 border-white font-medium py-2 px-4 rounded">
                   {isEnglish ? "Login" : "تسجيل الدخول"}
@@ -765,11 +765,11 @@ export default function ForgotPassword() {
             </div>
           </div>
 
-          <div className="lg:min-h-screen pt-10 flex items-center justify-center px-4 sm:px-6 md:px-8">
-            <div className="bg-[#131619] px-6 sm:px-12 md:px-20 lg:px-28 rounded-2xl flex flex-col gap-4 w-full max-w-[720px] mx-auto">
+          <div className="flex-1 flex items-center justify-center px-4 sm:px-6 md:px-8">
+            <div className="bg-[#131619] px-6 sm:px-10 md:px-14 lg:px-20 rounded-2xl flex flex-col w-full max-w-[650px] mx-auto py-8">
               {renderStepContent()}
 
-              <p className="text-gray-400 text-center mt-8 mb-8">
+              <p className="text-gray-400 text-center mt-8 mb-4">
                 {isEnglish ? "Remember your password?" : "تتذكر كلمة المرور؟"}{" "}
                 <Link href="/login" className="text-[#38FFE5] hover:underline">
                   {isEnglish ? "Login" : "تسجيل الدخول"}

