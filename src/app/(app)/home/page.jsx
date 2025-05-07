@@ -509,8 +509,12 @@ export default function Home() {
                               </span>
                               <span className="text-white text-sm lg:text-base">
                                 {isEnglish
-                                  ? `earned bytes from ${activity.challenge_title}`
-                                  : `حصل علي بايتس من ${activity.challenge_title}`}
+                                  ? activity.is_first_blood
+                                    ? `got first blood from ${activity.challenge_title}`
+                                    : `earned bytes from ${activity.challenge_title}`
+                                  : activity.is_first_blood
+                                  ? `حصل علي البايتس الاول في ${activity.challenge_title}`
+                                  : `حصل علي بايتس في ${activity.challenge_title}`}
                               </span>
                             </div>
                           </td>

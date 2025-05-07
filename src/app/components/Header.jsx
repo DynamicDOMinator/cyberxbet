@@ -300,7 +300,7 @@ export default function Header() {
               {isEnglish ? "Players Online" : "عدد اللاعبين"}
             </p>
             <Menu as="div" className="relative">
-              <MenuButton className="flex items-center gap-2 hover:bg-gray-800 transition-all duration-500 py-2 px-2 rounded-md text-white focus:outline-none cursor-pointer">
+              <MenuButton className="flex items-center gap-2 hover:bg-gradient-to-r hover:from-[rgba(6,55,63,0.6)] hover:to-[rgba(56,255,229,0.18)] hover:transition-colors hover:duration-500 py-2 px-2 rounded-md text-white focus:outline-none cursor-pointer">
                 <div
                   className={`${
                     !profileImage ? "" : ""

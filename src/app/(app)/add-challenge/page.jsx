@@ -598,12 +598,15 @@ export default function AddChallenge() {
         };
       case "pending":
       default:
-        return { text: isEnglish ? "Pending" : "معلق", color: "text-[#BCC9DB]" };
+        return {
+          text: isEnglish ? "Pending" : "معلق",
+          color: "text-[#BCC9DB]",
+        };
     }
   };
 
   // Form field label style
-  const labelStyle = `text-[#BCC9DB] font-medium `;
+  const labelStyle = `text-white font-medium `;
 
   const inputStyle =
     "w-full bg-[#0B0D0F] rounded-md mt-4 px-4 py-3 text-[#BCC9DB]  focus:outline-none focus:ring-1 focus:ring-[#38FFE5]";
@@ -625,7 +628,7 @@ export default function AddChallenge() {
         dir={isEnglish ? "ltr" : "rtl"}
         className="flex justify-between items-center mb-4"
       >
-        <h3 className="text-[#BCC9DB] text-lg">
+        <h3 className="text-white text-lg">
           {isEnglish
             ? title
             : title === "Challenge File"
@@ -954,7 +957,7 @@ export default function AddChallenge() {
               placeholder={isEnglish ? "Challenge name" : "اسم التحدي"}
               value={searchTerm}
               onChange={handleSearchChange}
-              className="bg-transparent text-[#BCC9DB] px-4 py-2 rounded-md pr-10 rtl:pl-10 w-full focus:outline-none focus:ring-1 focus:ring-[#38FFE5]"
+              className="bg-transparent text-[#BCC9DB] px-4 py-2 rounded-md pr-10 rtl:pl-10 w-full  focus:outline-none "
               dir={isEnglish ? "ltr" : "rtl"}
             />
             <div
@@ -1016,7 +1019,9 @@ export default function AddChallenge() {
                         height={56}
                         className="min-w-[56px] min-h-[56px]"
                       />
-                      <p className="font-bold text-[24px] text-[#BCC9DB]">{challenge.name}</p>
+                      <p className="font-bold text-[24px] text-[#BCC9DB]">
+                        {challenge.name}
+                      </p>
                     </div>
                     <p className="text-gray-300 text-[18px]">
                       {challenge.description}
@@ -1028,7 +1033,7 @@ export default function AddChallenge() {
                     className="absolute bottom-0 left-0 right-0 flex justify-between items-center p-4 "
                   >
                     <div className="flex items-center">
-                      <span className="text-[#BCC9DB]">
+                      <span className="text-white">
                         {isEnglish ? "Difficulty level" : "مستوى الصعوبة"}:{" "}
                       </span>
                       <span className={`${difficultyInfo.color} ml-1 rtl:mr-1`}>
@@ -1069,7 +1074,7 @@ export default function AddChallenge() {
 
       <div className="px-4 py-8 text-right">
         <h1
-          className={`text-[#BCC9DB] text-xl mb-6 font-bold ${
+          className={`text-white text-xl mb-6 font-bold ${
             isEnglish ? "text-left" : "text-right"
           }`}
         >
@@ -1315,7 +1320,7 @@ export default function AddChallenge() {
               dir={isEnglish ? "ltr" : "rtl"}
               className="mb-2 pt-4 flex justify-between items-center"
             >
-              <h3 className="text-[#BCC9DB] text-lg">
+              <h3 className="text-white text-lg">
                 {isEnglish ? "Difficulty" : "الصعوبة"}
               </h3>
             </div>
@@ -1428,7 +1433,7 @@ export default function AddChallenge() {
               dir={isEnglish ? "ltr" : "rtl"}
               className="flex justify-between items-center mb-4"
             >
-              <h3 className="text-[#BCC9DB] text-lg">
+              <h3 className="text-white text-lg">
                 {isEnglish ? "Flags" : "الأعلام"}
               </h3>
             </div>

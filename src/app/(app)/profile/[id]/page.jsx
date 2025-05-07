@@ -562,8 +562,8 @@ export default function Profile() {
                       <Image
                         src="/ranking.png"
                         alt="progress"
-                        width={36}
-                        height={36}
+                        width={56}
+                        height={56}
                       />
                       <p className="text-[#BCC9DB] text-[16px] sm:text-[18px]">
                         {userData?.rank > 0
@@ -980,17 +980,17 @@ export default function Profile() {
                 {userEvents.length > 0 ? (
                   <div
                     dir={isEnglish ? "ltr" : "rtl"}
-                    className="grid mt-20   grid-cols-1 md:grid-cols-2 lg:grid-cols-3 md:mt-16 gap-4 md:gap-6"
+                    className="grid mt-20 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 md:mt-16 gap-4 md:gap-[56px] pb-10"
                   >
                     {userEvents.map((event) => (
                       <div
                         onClick={() => router.push(`/events/${event.uuid}`)}
                         key={event.uuid}
-                        className="bg-white/1 cursor-pointer h-[320px] relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-white/1 cursor-pointer min-h-[320px] relative rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
                       >
                         <div className="relative h-1/2 w-full">
                           <Image
-                            className="object-cover"
+                            className="object-cover rounded-t-2xl"
                             src={event.image}
                             alt={event.title}
                             fill
@@ -998,13 +998,13 @@ export default function Profile() {
                             priority
                           />
                         </div>
-                        <div className="p-4">
-                          <h3 className="text-lg md:text-xl my-5 text-center font-semibold mb-4">
+                        <div className="px-4 pt-[27px]">
+                          <h3 className="text-lg md:text-[27px] text-center font-semibold">
                             {event.title}
                           </h3>
-                          <hr className="text-[#38FFE5]/20" />
+                          <hr className="text-[#38FFE5]/20 mt-[27px]" />
                           <div
-                            className={`flex items-center py-4 ${
+                            className={`flex items-center pt-[20px] ${
                               isEnglish ? "justify-center" : "justify-center"
                             }`}
                           >

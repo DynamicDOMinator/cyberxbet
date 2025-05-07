@@ -1606,6 +1606,7 @@ export default function ProfileSettings() {
                   <input
                     type="text"
                     value={socialAccounts.discord.value}
+                    dir={isEnglish ? "ltr" : "rtl"}
                     onChange={(e) =>
                       handleSocialMediaChange("discord", e.target.value)
                     }
@@ -1621,8 +1622,8 @@ export default function ProfileSettings() {
                           : "رابط حسابك في ديسكورد"
                         : ""
                     }
-                    dir="ltr"
-                    style={{ textAlign: "left" }}
+                   
+                    style={{ textAlign: isEnglish ? "left" : "right" }}
                   />
                   {validationErrors.discord && (
                     <p className="text-red-500 text-xs mt-1 text-right">
@@ -1725,7 +1726,7 @@ export default function ProfileSettings() {
                         : "رابط حسابك في لينكد إن"
                     }
                     dir="ltr"
-                    style={{ textAlign: "left" }}
+                    style={{ textAlign: isEnglish ? "left" : "right" }}
                   />
                   {validationErrors.linkedin && (
                     <p className="text-red-500 text-xs mt-1 text-right">
@@ -1830,7 +1831,7 @@ export default function ProfileSettings() {
                         : ""
                     }
                     dir="ltr"
-                    style={{ textAlign: "left" }}
+                    style={{ textAlign: isEnglish ? "left" : "right" }}
                   />
                   {validationErrors.instagram && (
                     <p className="text-red-500 text-xs mt-1 text-right">
@@ -1936,7 +1937,7 @@ export default function ProfileSettings() {
                         : ""
                     }
                     dir="ltr"
-                    style={{ textAlign: "left" }}
+                    style={{ textAlign: isEnglish ? "left" : "right" }}
                   />
                   {validationErrors.tiktok && (
                     <p className="text-red-500 text-xs mt-1 text-right">
@@ -2041,7 +2042,7 @@ export default function ProfileSettings() {
                         : ""
                     }
                     dir="ltr"
-                    style={{ textAlign: "left" }}
+                    style={{ textAlign: isEnglish ? "left" : "right" }}
                   />
                   {validationErrors.youtube && (
                     <p className="text-red-500 text-xs mt-1 text-right">
@@ -2146,7 +2147,7 @@ export default function ProfileSettings() {
                         : ""
                     }
                     dir="ltr"
-                    style={{ textAlign: "left" }}
+                    style={{ textAlign: isEnglish ? "left" : "right" }}
                   />
                   {validationErrors.twitter && (
                     <p className="text-red-500 text-xs mt-1 text-right">

@@ -1268,22 +1268,7 @@ export default function EventPage() {
           </div>
         )}
 
-        {eventHasEnded && (
-          <div className="absolute flex flex-col items-center justify-center w-full h-full bg-black/80 rounded-xl">
-            <div>
-              <p className="text-xl sm:text-2xl font-bold flex items-center gap-4">
-                تم انتهاء الفاعليه
-                <span
-                  style={{
-                    animation: "pulse 3s ease-in-out infinite",
-                    boxShadow: "0 0 5px #FF3838",
-                  }}
-                  className="w-2 sm:w-3 h-2 sm:h-3 bg-[#FF3838] rounded-full"
-                ></span>
-              </p>
-            </div>
-          </div>
-        )}
+     
 
         <div className="flex flex-col h-full justify-end pb-4 sm:pb-6 md:pb-8 lg:pb-10">
           <div className="flex flex-col md:flex-row items-center p-3 sm:p-4 md:p-6">
@@ -1545,9 +1530,10 @@ export default function EventPage() {
               className="bg-white/5 rounded-2xl p-6 lg:mt-12 hover:shadow-[0_0_15px_rgba(56,255,229,0.3)] transition-shadow"
             >
               <div
-              
                 className={`flex ${
-                  isEnglish ? "flex-row-reverse pr-4 justify-end" : "flex-row-reverse justify-end pr-3 "
+                  isEnglish
+                    ? "flex-row-reverse pr-4 justify-end"
+                    : "flex-row-reverse justify-end pr-3 "
                 }  items-center mb-4 gap-5`}
               >
                 <div
@@ -1555,9 +1541,7 @@ export default function EventPage() {
                     isEnglish ? "items-start" : "items-end"
                   }`}
                 >
-                  <p className=" font-bold text-xl">
-                    {challenge.title}
-                  </p>
+                  <p className=" font-bold text-xl">{challenge.title}</p>
                 </div>
                 <div
                   className={`bg-transparent ${
@@ -1615,7 +1599,17 @@ export default function EventPage() {
                     {isEnglish ? "Difficulty:" : "مستوى الصعوبة:"}
                   </span>
                   <span className={getDifficultyColor(challenge.difficulty)}>
-                    {challenge.difficulty}
+                    {isEnglish
+                      ? challenge.difficulty === "صعب"
+                        ? "Hard"
+                        : challenge.difficulty === "صعب جدا"
+                        ? "Very Hard"
+                        : challenge.difficulty === "متوسط"
+                        ? "Medium"
+                        : challenge.difficulty === "سهل"
+                        ? "Easy"
+                        : challenge.difficulty
+                      : challenge.difficulty}
                   </span>
                 </div>
                 <Link
@@ -2567,7 +2561,7 @@ export default function EventPage() {
           </div>
 
           {/* Responsive Table Container */}
-          <div className="w-full overflow-x-auto">
+          <div className="w-full overflow-x-auto bg-[#06373F26] p-5">
             <div className="min-w-[700px]">
               {/* Table Header */}
               <div
@@ -2644,7 +2638,7 @@ export default function EventPage() {
                               unoptimized={true}
                             />
                           ) : (
-                            <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center bg-[#06373F] rounded-full">
+                            <div className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center ">
                               <Image
                                 src="/icon1.png"
                                 alt="team"
@@ -2713,7 +2707,7 @@ export default function EventPage() {
                           alt="first blood"
                           width={25}
                           height={25}
-                          className="w-5 h-5 md:w-6 md:h-6"
+                          className="w-5 h-5 md:w-6 md:h-7"
                         />
                         <span
                           className={`text-white text-sm md:text-xl ${

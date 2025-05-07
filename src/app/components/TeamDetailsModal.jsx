@@ -6,7 +6,7 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import { useUserProfile } from "@/app/context/UserProfileContext";
 import { useRouter } from "next/navigation";
 import { createSocket } from "@/lib/socket-client";
-
+import { BiLoaderAlt } from "react-icons/bi";
 export default function TeamDetailsModal({
   isOpen,
   onClose,
@@ -161,12 +161,12 @@ export default function TeamDetailsModal({
         onClick={onClose}
       ></div>
       <div
-        className="bg-[#131619] rounded-lg p-8 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto relative z-10"
+        className="bg-[#131619] rounded-2xl p-8 w-full max-w-4xl mx-4 max-h-[90vh] overflow-y-auto relative z-10"
         dir={isEnglish ? "ltr" : "rtl"}
       >
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#38FFE5]"></div>
+            <BiLoaderAlt className="animate-spin text-[#38FFE5] text-5xl mx-auto mb-4" />
           </div>
         ) : teamDetails ? (
           <>
@@ -219,7 +219,7 @@ export default function TeamDetailsModal({
 
             {/* Team Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <div className="bg-[#FFFFFF0D] p-4 rounded-lg">
+              <div className="bg-[#FFFFFF0D] p-4 rounded-2xl">
                 <div className="flex items-center gap-2">
                   <Image src="/byte.png" alt="bytes" width={24} height={24} />
                   <span className="text-white font-bold">
@@ -230,7 +230,7 @@ export default function TeamDetailsModal({
                   {isEnglish ? "Total Bytes" : "إجمالي البايتس"}
                 </p>
               </div>
-              <div className="bg-[#FFFFFF0D] p-4 rounded-lg">
+              <div className="bg-[#FFFFFF0D] p-4 rounded-2xl">
                 <div className="flex items-center gap-2">
                   <Image
                     src="/blood.png"
@@ -246,7 +246,7 @@ export default function TeamDetailsModal({
                   {isEnglish ? "First Bloods" : "البايتس الأولى"}
                 </p>
               </div>
-              <div className="bg-[#FFFFFF0D] p-4 rounded-lg">
+              <div className="bg-[#FFFFFF0D] p-4 rounded-2xl">
                 <div className="flex items-center gap-2">
                   <Image
                     src="/icon-challnge.png"
@@ -273,7 +273,7 @@ export default function TeamDetailsModal({
                 {teamDetails.members.map((member) => (
                   <div
                     key={member.uuid}
-                    className="bg-[#FFFFFF0D] p-4 rounded-lg"
+                    className="bg-[#FFFFFF0D] p-4 rounded-2xl"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">

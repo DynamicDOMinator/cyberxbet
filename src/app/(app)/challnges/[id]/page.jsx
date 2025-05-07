@@ -31,6 +31,9 @@ const ChallengesPage = () => {
       case "صعب":
       case "Hard":
         return "text-red-500";
+      case "صعب جدا":
+      case "Very Hard":
+        return "text-red-700";
       default:
         return "text-[#00D0FF]";
     }
@@ -252,8 +255,8 @@ const ChallengesPage = () => {
             className="bg-white/5 rounded-2xl p-6 lg:mt-12 hover:shadow-[0_0_15px_rgba(56,255,229,0.3)] transition-shadow"
           >
             <div
-              className={`flex ${
-                isEnglish ? "flex-row-reverse " : "flex-row "
+              className={`flex   ${
+                isEnglish ? "" : "flex-row "
               }  items-center mb-4  gap-4`}
             >
               <div

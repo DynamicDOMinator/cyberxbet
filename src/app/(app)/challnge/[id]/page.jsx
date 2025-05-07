@@ -760,6 +760,7 @@ export default function ChallengePage() {
                 alt="profile"
                 width={32}
                 height={32}
+                className={user.profile_image ? "rounded-full" : ""}
               />
               <p
                 onClick={() => router.push(`/profile/${user.user_name}`)}
@@ -937,6 +938,12 @@ export default function ChallengePage() {
                           alt="First Blood"
                           width={32}
                           height={32}
+                          className={
+                            challenge?.flags_data?.[0]?.first_blood
+                              ?.profile_image
+                              ? "rounded-full"
+                              : ""
+                          }
                         />
                         <p
                           onClick={() =>
