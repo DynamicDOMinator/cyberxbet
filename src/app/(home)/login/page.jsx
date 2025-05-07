@@ -318,7 +318,7 @@ export default function Login() {
             className="text-white text-center text-xs sm:text-sm mt-6"
           >
             {isEnglish
-              ? "This site is protected by reCAPTCHA and the Google"
+              ? "This site is protected by reCAPTCHA  "
               : " هذا الموقع محمي بواسطة reCAPTCHA "}
             <span className="text-[#38FFE5] cursor-pointer pl-1">
               {isEnglish ? "Privacy Policy " : "  سياسة الخصوصية"}
