@@ -2292,7 +2292,11 @@ export default function ProfileSettings() {
 
           {/* Success Message */}
           {successMessage && (
-            <div className="fixed top-24 left-0 right-0 mx-auto w-full max-w-md px-4 z-50">
+            <div
+              className={`fixed bottom-8 ${
+                isEnglish ? "left-8" : "right-8"
+              } max-w-md px-4 z-50 transition-all duration-300 animate-fade-in-up`}
+            >
               <div className="bg-[#1A2025] border border-[#38FFE5] text-center text-white px-4 py-3 rounded-xl shadow-lg">
                 <span className="block sm:inline">{successMessage}</span>
               </div>
