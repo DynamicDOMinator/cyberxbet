@@ -182,7 +182,7 @@ export default function Login() {
       </div>
 
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 md:px-8 ">
-        <div className="bg-[#131619] px-6 sm:px-10 md:px-14 lg:px-20 rounded-2xl flex flex-col w-full max-w-[650px] mx-auto py-8">
+        <div className="bg-[#131619] px-6 sm:px-10 md:px-14 lg:px-20 rounded-2xl flex flex-col w-full max-w-[650px] mx-auto py-20">
           <h1 className="text-white text-2xl sm:text-3xl md:text-[34px] font-extrabold font-Tajawal text-center">
             {isEnglish ? "Login to Your Account" : "تسجيل الدخول إلي حسابك"}
           </h1>
