@@ -1537,31 +1537,32 @@ export default function EventPage() {
       {activeTab === "challenges" && isChallengesStarted && (
         <div
           dir={isEnglish ? "ltr" : "rtl"}
-          className="grid grid-cols-1 md:grid-cols-2 mb-10 lg:grid-cols-3 gap-4"
+          className="grid grid-cols-1 md:grid-cols-2 mb-10 lg:grid-cols-4 gap-4"
         >
           {challenges.map((challenge) => (
             <div
               key={`${challenge.challenge_id}`}
-              className="bg-white/5 rounded-lg p-6 hover:shadow-[0_0_15px_rgba(56,255,229,0.3)] transition-shadow"
+              className="bg-white/5 rounded-2xl p-6 lg:mt-12 hover:shadow-[0_0_15px_rgba(56,255,229,0.3)] transition-shadow"
             >
               <div
+              
                 className={`flex ${
-                  isEnglish ? "flex-row pr-4" : "flex-row-reverse pr-3"
-                } justify-between items-center mb-4`}
+                  isEnglish ? "flex-row-reverse pr-4 justify-end" : "flex-row-reverse justify-end pr-3 "
+                }  items-center mb-4 gap-5`}
               >
                 <div
                   className={`flex flex-col ${
                     isEnglish ? "items-start" : "items-end"
                   }`}
                 >
-                  <span className="text-[#38FFE5] font-bold text-xl">
+                  <p className=" font-bold text-xl">
                     {challenge.title}
-                  </span>
+                  </p>
                 </div>
                 <div
                   className={`bg-transparent ${
-                    isEnglish ? "flex-row-reverse" : ""
-                  } rounded-none w-12 h-12 gap-2 flex items-center justify-center`}
+                    isEnglish ? "" : ""
+                  } rounded-none w-12 h-12 gap-2 `}
                 >
                   <Image
                     src={challenge.category_icon_url}
@@ -1619,7 +1620,7 @@ export default function EventPage() {
                 </div>
                 <Link
                   href={`/event/${challenge.challenge_id}`}
-                  className="text-[#38FFE5] hover:px-1 py-1 rounded hover:bg-[#38FFE5]/10 hover:transition-all duration-300"
+                  className="text-[#38FFE5] font-semibold   rounded  hover:bg-[#38FFE5]/10 hover:transition-all duration-300 hover:p-1 hover:brightness-110"
                 >
                   {isEnglish ? "Start Now" : "ابدأ الآن"}
                 </Link>
