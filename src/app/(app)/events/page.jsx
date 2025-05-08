@@ -544,7 +544,7 @@ export default function Events() {
 
           <div
             dir={isEnglish ? "ltr" : "rtl"}
-            className="grid mt-20 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 md:mt-16 gap-4 md:gap-[56px] pb-10"
+            className="grid mt-20 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 md:mt-16 gap-4 md:gap-[56px] pb-10"
           >
             {event.map((event) => (
               <div
@@ -564,7 +564,7 @@ export default function Events() {
                   />
                 </div>
                 <div className="px-4 pt-[27px]">
-                  <h3 className="text-lg md:text-[27px]  text-center font-semibold ">
+                  <h3 className="text-lg lg::text-[27px]  text-center font-semibold ">
                     {event.title}
                   </h3>
                   <hr className="text-[#38FFE5]/20 mt-[27px]" />

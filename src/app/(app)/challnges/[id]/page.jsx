@@ -98,7 +98,7 @@ const ChallengesPage = () => {
   }
 
   return (
-    <div className="min-h-screen max-w-[2000px] mx-auto lg:px-20 px-10 text-white p-6">
+    <div className="min-h-screen max-w-[2000px] mx-auto lg:px-12 px-10 text-white p-6">
       {/* Header Section */}
       <div
         className={`flex justify-between items-center mb-8 pt-28 ${
@@ -247,7 +247,7 @@ const ChallengesPage = () => {
       {/* Challenges Grid */}
       <div
         dir={isEnglish ? "ltr" : "rtl"}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
       >
         {challenges.map((challenge) => (
           <div

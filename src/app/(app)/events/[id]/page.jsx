@@ -1522,7 +1522,7 @@ export default function EventPage() {
       {activeTab === "challenges" && isChallengesStarted && (
         <div
           dir={isEnglish ? "ltr" : "rtl"}
-          className="grid grid-cols-1 md:grid-cols-2 mb-10 lg:grid-cols-4 gap-4"
+          className="grid grid-cols-1 md:grid-cols-2 mb-10 lg:grid-cols-3 xl:grid-cols-4 gap-4"
         >
           {challenges.map((challenge) => (
             <div
