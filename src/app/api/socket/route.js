@@ -8,6 +8,9 @@ export const dynamic = "force-dynamic";
 let onlineUsers = [];
 let onlineCount = 0;
 
+// Track system state
+let systemFrozen = false;
+
 // Track last activity timestamps
 const connectionTimestamps = new Map(); // userName -> timestamp
 
@@ -93,6 +96,7 @@ export async function GET(req) {
   const eventId = url.searchParams.get("event_id");
   const teamUpdatesParam = url.searchParams.get("team_updates");
   const resetParam = url.searchParams.get("reset");
+  const freezeStatusParam = url.searchParams.get("freeze_status");
 
   // Handle reset request
   if (resetParam === "true") {
@@ -100,6 +104,14 @@ export async function GET(req) {
     return NextResponse.json({
       online: 0,
       message: "All connection data reset",
+    });
+  }
+
+  // Handle freeze status request
+  if (freezeStatusParam === "true") {
+    return NextResponse.json({
+      frozen: systemFrozen,
+      message: "System freeze status retrieved",
     });
   }
 
@@ -142,6 +154,7 @@ export async function GET(req) {
   console.log("GET /api/socket - returning online count:", onlineCount);
   return NextResponse.json({
     online: onlineCount,
+    frozen: systemFrozen,
     message: "Socket.IO serverless endpoint active",
   });
 }
@@ -390,6 +403,40 @@ export async function POST(req) {
         challenge_id,
       });
     }
+    // Handle admin freeze control
+    else if (action === "admin_freeze_control") {
+      // In a real app, we would check admin credentials here
+      const isAdmin = userName && userName.includes("admin"); // Simple check for demo purposes
+
+      if (isAdmin || data.key === "cb209876540331298765") {
+        // Allow control key as backup
+        systemFrozen = !!data.freeze;
+        console.log(
+          `System freeze state set to: ${systemFrozen} by ${
+            userName || "API key"
+          }`
+        );
+
+        return NextResponse.json({
+          status: "success",
+          success: true,
+          frozen: systemFrozen,
+          message: `System ${systemFrozen ? "frozen" : "unfrozen"}`,
+        });
+      } else {
+        console.log(
+          `Unauthorized freeze control attempt by ${userName || "unknown user"}`
+        );
+        return NextResponse.json(
+          {
+            status: "error",
+            success: false,
+            message: "Unauthorized",
+          },
+          { status: 403 }
+        );
+      }
+    }
     // Handle unknown actions
     else {
       return NextResponse.json(
@@ -406,6 +453,7 @@ export async function POST(req) {
     return NextResponse.json(
       {
         count: onlineCount || 0,
+        frozen: systemFrozen,
         error: "Failed to process request",
         message: error.message,
       },

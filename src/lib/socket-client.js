@@ -32,6 +32,9 @@ const generateTabId = () => {
 // Singleton socket instance
 let socketInstance = null;
 
+// Track system freeze state
+let systemFrozenState = false;
+
 // For non-Vercel environments, use the normal Socket.IO connection
 export const createSocket = (userName = null) => {
   // If we already have a socket instance, return it
@@ -67,6 +70,21 @@ export const createSocket = (userName = null) => {
         userName: user || "anonymous", // Send username as auth data
         tabId: tabId, // Send tab ID to help server track connections
       },
+    });
+
+    // Setup system freeze state handler
+    socketInstance.on("system_freeze", (data) => {
+      systemFrozenState = data.frozen;
+      console.log(`System freeze state updated: ${systemFrozenState}`);
+
+      // Dispatch custom event for components to listen to
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("system_freeze_update", {
+            detail: { frozen: systemFrozenState },
+          })
+        );
+      }
     });
 
     // Add a manual heartbeat to help track active connections
@@ -135,6 +153,19 @@ export const disconnectSocket = () => {
   }
 };
 
+// Function to get current system freeze state
+export const getSystemFreezeState = () => {
+  return systemFrozenState;
+};
+
+// Function for admin to control system freeze state
+export const adminControlFreeze = (freeze) => {
+  if (!socketInstance) return false;
+
+  socketInstance.emit("admin_freeze_control", { freeze });
+  return true;
+};
+
 // Create a virtual socket object that uses REST API instead of WebSockets
 // This emulates the Socket.IO interface but works on Vercel
 function createVirtualSocket(userName, tabId) {
@@ -142,6 +173,9 @@ function createVirtualSocket(userName, tabId) {
   let online = 0;
   let connected = false;
   let anonymousId = null;
+
+  // Keep track of system freeze state
+  let virtualSystemFrozen = false;
 
   // Track challenge rooms this socket has joined
   const joinedRooms = new Set();
@@ -279,6 +313,42 @@ function createVirtualSocket(userName, tabId) {
     challengePollingIntervals.set(challengeId, intervalId);
   };
 
+  // Function to poll for system state
+  const setupSystemStatePolling = () => {
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await axios.get("/api/system-freeze");
+
+        if (response.data.frozen !== virtualSystemFrozen) {
+          virtualSystemFrozen = response.data.frozen;
+
+          // Notify listeners
+          if (eventHandlers.system_freeze) {
+            eventHandlers.system_freeze.forEach((handler) =>
+              handler({ frozen: virtualSystemFrozen })
+            );
+          }
+
+          // Dispatch custom event
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("system_freeze_update", {
+                detail: { frozen: virtualSystemFrozen },
+              })
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Error polling for system freeze state:", error);
+      }
+    }, 5000); // Poll every 5 seconds
+
+    return intervalId;
+  };
+
+  // Setup system state polling
+  const systemStatePollingId = setupSystemStatePolling();
+
   // Create a virtual socket with the same API as Socket.IO
   return {
     id: `virtual-${Math.random().toString(36).substring(2, 9)}`,
@@ -302,6 +372,11 @@ function createVirtualSocket(userName, tabId) {
         online > 0
       ) {
         handler(online);
+      }
+
+      // If this is a system freeze handler, call it with current state
+      if (event === "system_freeze") {
+        handler({ frozen: virtualSystemFrozen });
       }
     },
 
@@ -485,6 +560,43 @@ function createVirtualSocket(userName, tabId) {
           }
         })();
       }
+      // Handle admin freeze control
+      else if (
+        event === "admin_freeze_control" &&
+        typeof data.freeze === "boolean"
+      ) {
+        (async () => {
+          try {
+            const response = await axios.post("/api/socket", {
+              action: "admin_freeze_control",
+              freeze: data.freeze,
+              userName,
+              id: anonymousId,
+            });
+
+            // Update local state
+            if (response.data.success) {
+              virtualSystemFrozen = response.data.frozen;
+
+              // Notify handlers
+              if (eventHandlers.admin_freeze_response) {
+                eventHandlers.admin_freeze_response.forEach((handler) =>
+                  handler(response.data)
+                );
+              }
+            }
+          } catch (error) {
+            console.error("Error sending admin freeze control:", error);
+
+            // Notify handlers of error
+            if (eventHandlers.admin_freeze_response) {
+              eventHandlers.admin_freeze_response.forEach((handler) =>
+                handler({ success: false, message: "Network error" })
+              );
+            }
+          }
+        })();
+      }
     },
 
     off(event) {
@@ -505,6 +617,9 @@ function createVirtualSocket(userName, tabId) {
         clearInterval(intervalId);
       }
       teamPollingIntervals.clear();
+
+      // Clear system state polling
+      clearInterval(systemStatePollingId);
 
       (async () => {
         try {

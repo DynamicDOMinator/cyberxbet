@@ -564,7 +564,7 @@ export default function Events() {
                   />
                 </div>
                 <div className="px-4 pt-[27px]">
-                  <h3 className="text-lg lg::text-[27px]  text-center font-semibold ">
+                  <h3 className="text-lg lg:text-[27px]  text-center font-semibold ">
                     {event.title}
                   </h3>
                   <hr className="text-[#38FFE5]/20 mt-[27px]" />

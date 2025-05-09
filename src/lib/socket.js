@@ -10,6 +10,8 @@ let teamRooms = {};
 let challengeActivities = new Map();
 // Track team updates
 let teamActivities = new Map();
+// System state
+let systemFrozen = false;
 
 export function initializeSocket(server) {
   if (!io) {
@@ -30,6 +32,9 @@ export function initializeSocket(server) {
 
       // Send initial online count to all clients
       io.emit("onlineCount", onlineUsers.size);
+
+      // Send initial freeze state to the client
+      socket.emit("system_freeze", { frozen: systemFrozen });
 
       // Handle user joining a team room
       socket.on("joinTeamRoom", (eventId) => {
@@ -230,6 +235,43 @@ export function initializeSocket(server) {
         }
       });
 
+      // Handle admin freeze control
+      socket.on("admin_freeze_control", (data) => {
+        try {
+          // Check if the user has admin privileges
+          if (socket.userData && socket.userData.isAdmin) {
+            console.log(
+              `Admin freeze control: ${data.freeze ? "freeze" : "unfreeze"}`
+            );
+            systemFrozen = data.freeze;
+
+            // Broadcast to all clients
+            io.emit("system_freeze", { frozen: systemFrozen });
+
+            // Send confirmation to the admin
+            socket.emit("admin_freeze_response", {
+              success: true,
+              frozen: systemFrozen,
+            });
+          } else {
+            // Unauthorized attempt
+            console.log(
+              `Unauthorized freeze control attempt by socket ${socket.id}`
+            );
+            socket.emit("admin_freeze_response", {
+              success: false,
+              message: "Unauthorized",
+            });
+          }
+        } catch (error) {
+          console.error("Error in freeze control handler:", error);
+          socket.emit("admin_freeze_response", {
+            success: false,
+            message: "Error processing request",
+          });
+        }
+      });
+
       // Handle user disconnection
       socket.on("disconnect", () => {
         console.log("User disconnected:", socket.id);
@@ -365,4 +407,20 @@ export function notifyTeamUpdate(eventId, updateData) {
   }
 
   return true;
+}
+
+// Function to get system freeze state
+export function getSystemFreezeState() {
+  return systemFrozen;
+}
+
+// Function to set system freeze state and broadcast to all clients
+export function setSystemFreezeState(frozen, broadcastUpdate = true) {
+  systemFrozen = !!frozen;
+
+  if (broadcastUpdate && io) {
+    io.emit("system_freeze", { frozen: systemFrozen });
+  }
+
+  return systemFrozen;
 }

