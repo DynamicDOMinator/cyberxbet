@@ -108,35 +108,11 @@ export default function Events() {
       setEventFrozen(data.frozen);
 
       if (data.frozen) {
-        toast.error(
-          isEnglish
-            ? "This event has been frozen by administrators"
-            : "تم تجميد هذا الحدث من قبل المسؤولين"
-        );
-      } else {
-        toast.success(
-          isEnglish
-            ? "This event has been unfrozen by administrators"
-            : "تم إلغاء تجميد هذا الحدث من قبل المسؤولين"
-        );
+        // Toast removed
       }
     } else if (!data.eventId) {
       // Global freeze
       setIsFrozen(data.frozen);
-
-      if (data.frozen) {
-        toast.error(
-          isEnglish
-            ? "The system has been frozen by administrators"
-            : "تم تجميد النظام من قبل المسؤولين"
-        );
-      } else {
-        toast.success(
-          isEnglish
-            ? "The system has been unfrozen by administrators"
-            : "تم إلغاء تجميد النظام من قبل المسؤولين"
-        );
-      }
     }
   };
 
