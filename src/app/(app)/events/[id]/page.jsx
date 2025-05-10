@@ -2723,39 +2723,7 @@ export default function EventPage() {
                                   </th>
                                 </tr>
                               </thead>
-                              <thead>
-                                <tr
-                                  className={`text-white ${
-                                    isEnglish ? "flex-row-reverse" : "flex-row"
-                                  } flex items-center justify-between`}
-                                >
-                                  <th
-                                    className={`py-3 lg:py-4 w-[25%] text-sm lg:text-base ${
-                                      isEnglish
-                                        ? "text-left pl-3 lg:pl-5"
-                                        : "text-right pr-3 lg:pr-5"
-                                    }`}
-                                  >
-                                    {isEnglish ? "Time" : "التوقيت"}
-                                  </th>
-                                  <th
-                                    className={`py-3 lg:py-4 w-[25%] text-sm lg:text-base ${
-                                      isEnglish ? "text-left" : "text-right"
-                                    }`}
-                                  >
-                                    {isEnglish ? "Bytes" : "البايتس"}
-                                  </th>
-                                  <th
-                                    className={`py-3 lg:py-4 w-[50%] text-sm lg:text-base ${
-                                      isEnglish
-                                        ? "text-left pl-3 lg:pl-5"
-                                        : "text-right pr-3 lg:pr-5"
-                                    }`}
-                                  >
-                                    {isEnglish ? "User" : "المستخدم"}
-                                  </th>
-                                </tr>
-                              </thead>
+                             
                             </table>
                           </div>
 
