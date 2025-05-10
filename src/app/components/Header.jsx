@@ -64,9 +64,9 @@ export default function Header() {
     const fetchOnlineCountFallback = async () => {
       try {
         // Fallback to API endpoint if socket fails
-        const response = await axios.get("/api/online-players");
-        if (response.data && typeof response.data.count === "number") {
-          setOnlinePlayers(response.data.count);
+        const response = await axios.get("/api/socket");
+        if (response.data && typeof response.data.online === "number") {
+          setOnlinePlayers(response.data.online);
         } else {
           // If API fails too, set default count
           setOnlinePlayers(1);
@@ -106,18 +106,7 @@ export default function Header() {
           }
         });
 
-        // Set up a fallback polling mechanism in case socket events aren't firing
-        countPollingInterval = setInterval(async () => {
-          try {
-            const response = await axios.get("/api/online-players");
-            if (response.data && typeof response.data.count === "number") {
-              setOnlinePlayers(response.data.count);
-            }
-          } catch (error) {
-            // Silent fail - we'll try again next interval
-          }
-        }, 30000); // Poll every 30 seconds
-      } else {
+     
         // If we don't have a username yet, try to get the count via API
         fetchOnlineCountFallback();
       }

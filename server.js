@@ -2,7 +2,6 @@ const { createServer } = require("http");
 const { parse } = require("url");
 const next = require("next");
 const { Server } = require("socket.io");
-const crypto = require("crypto"); // Add crypto for secure key verification
 
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
@@ -1035,6 +1034,24 @@ app.prepare().then(() => {
           newTeamTotal: data.newTeamTotal,
           timestamp: Date.now(),
         });
+
+        // Also emit an activity update for real-time activities feed
+        io.to(`team_${data.eventId}`).emit("activityUpdate", {
+          eventId: data.eventId,
+          username: data.username || socket.userName,
+          user_name: data.username || socket.userName,
+          challenge_id: data.challenge_id,
+          challenge_title: data.challenge_name || "Challenge",
+          challenge_name: data.challenge_name || "Challenge",
+          challenge_uuid: data.challenge_id,
+          teamUuid: data.teamUuid,
+          teamName: data.teamName || "Team",
+          profile_image: data.profile_image || "/icon1.png",
+          is_first_blood: false,
+          total_bytes: data.points || 0,
+          solved_at: new Date().toISOString(),
+          timestamp: Date.now(),
+        });
       }
     });
 
@@ -1046,18 +1063,21 @@ app.prepare().then(() => {
       connectionTimestamps.set(socket.id, Date.now());
 
       console.log(
-        `FIRST BLOOD! Challenge ${data.challenge_id} by ${
-          socket.userName || data.username || "anonymous"
-        }`
+        `FIRST BLOOD! Challenge ${data.challenge_id}${
+          data.flag_id ? ` flag ${data.flag_id}` : ""
+        } by ${socket.userName || data.username || "anonymous"}`
       );
 
       // Add additional data for the socket broadcast
       const broadcastData = {
         ...data,
         username: data.username || socket.userName,
+        user_name: data.username || socket.userName, // Add user_name for consistency
         profile_image: data.profile_image || null,
         timestamp: Date.now(),
         is_first_blood: true,
+        // Include flag_id if available
+        flag_id: data.flag_id || null,
       };
 
       // Broadcast the first blood event to everyone in the challenge room
@@ -1073,6 +1093,25 @@ app.prepare().then(() => {
           newTeamTotal: data.newTeamTotal,
           timestamp: Date.now(),
           isFirstBlood: true,
+          flag_id: data.flag_id || null,
+        });
+
+        // Also emit an activity update for real-time activities feed
+        io.to(`team_${data.eventId}`).emit("activityUpdate", {
+          eventId: data.eventId,
+          username: data.username || socket.userName,
+          user_name: data.username || socket.userName,
+          challenge_id: data.challenge_id,
+          challenge_title: data.challenge_name || "Challenge",
+          challenge_name: data.challenge_name || "Challenge",
+          challenge_uuid: data.challenge_id,
+          teamUuid: data.teamUuid,
+          teamName: data.teamName || "Team",
+          profile_image: data.profile_image || "/icon1.png",
+          is_first_blood: true,
+          total_bytes: data.points || 0,
+          solved_at: new Date().toISOString(),
+          timestamp: Date.now(),
         });
       }
     });
@@ -1086,6 +1125,68 @@ app.prepare().then(() => {
         timestamp: new Date().toISOString(),
         source: "state_request",
       });
+    });
+
+    // Handle activity update events
+    socket.on("activityUpdate", (data) => {
+      const action = data?.action;
+      const event_id = data?.eventId;
+
+      if (action === "activityUpdate" && event_id) {
+        // Get or initialize team updates for this event
+        if (!teamUpdates.has(event_id)) {
+          teamUpdates.set(event_id, {
+            updates: [],
+            lastTeamUpdate: Date.now(),
+          });
+        }
+
+        const eventTeamData = teamUpdates.get(event_id);
+
+        // Create the update object
+        const updateData = {
+          ...(data.activity_data || {}),
+          eventId: event_id,
+          username: data.userName || userName,
+          user_name: data.userName || userName,
+          challenge_id: data.challenge_id,
+          challenge_title: data.challenge_title || "Challenge",
+          challenge_name: data.challenge_name || "Challenge",
+          teamUuid: data.teamUuid,
+          teamName: data.teamName || "Team",
+          profile_image: data.profile_image || "/icon1.png",
+          is_first_blood: data.isFirstBlood || false,
+          total_bytes: data.total_bytes || 0,
+          solved_at: data.solved_at || new Date().toISOString(),
+          timestamp: Date.now(),
+        };
+
+        // Add update to the list (keep max 100 updates)
+        eventTeamData.updates.push(updateData);
+        if (eventTeamData.updates.length > 100) {
+          eventTeamData.updates = eventTeamData.updates.slice(-100);
+        }
+
+        // Update timestamp
+        eventTeamData.lastTeamUpdate = Date.now();
+
+        // Update connection timestamp
+        if (userName) connectionTimestamps.set(userName, Date.now());
+
+        // Broadcast activity update to all clients in the team room
+        console.log(`Broadcasting activity update for event ${event_id}`);
+
+        // Import the socket.io instance to broadcast the event
+        if (io) {
+          io.to(`team_${event_id}`).emit("activityUpdate", updateData);
+        }
+
+        return NextResponse.json({
+          status: "success",
+          message: "Activity update recorded",
+          event_id,
+        });
+      }
     });
 
     socket.on("disconnect", () => {
@@ -1209,3 +1310,10 @@ app.prepare().then(() => {
     });
   });
 });
+
+// Generate a unique ID without using crypto
+function generateUniqueId() {
+  return `id_${Math.random()
+    .toString(36)
+    .substring(2, 15)}_${Date.now().toString(36)}`;
+}

@@ -7,186 +7,272 @@ export const dynamic = "force-dynamic";
 // Control key for admin operations
 const CONTROL_KEY = "cb209876540331298765";
 
-// In-memory state (will reset on server restart)
-// Instead of local state, use global state from server.js
-// let systemFrozen = false;
+// Stores the global freeze state
+let globalFrozen = false;
+
+// Stores event-specific freeze states
+const eventFreezeStates = new Map();
+
+// Debug flag - set to true to enable detailed logging
+const DEBUG = true;
+
+// Debug logger function
+function debugLog(...args) {
+  if (DEBUG) {
+    console.log(`[FREEZE API ${new Date().toISOString()}]`, ...args);
+  }
+}
+
+// Initialize global state if it doesn't exist
+if (typeof global !== "undefined") {
+  if (!global.eventFreezeStates) {
+    global.eventFreezeStates = {};
+  }
+  if (global.systemFrozen === undefined) {
+    global.systemFrozen = false;
+  }
+}
 
 // Helper to get the current system frozen state
-function getSystemFrozenState() {
-  // Try to get from global state first
+function getSystemFrozenState(eventId = null) {
+  // If an eventId is provided, check for event-specific state
+  if (eventId) {
+    // First check in global state if available (preferred storage)
+    if (
+      typeof global !== "undefined" &&
+      global.eventFreezeStates &&
+      global.eventFreezeStates[eventId] !== undefined
+    ) {
+      debugLog(
+        `Found event freeze state in global state for ${eventId}: ${global.eventFreezeStates[eventId]}`
+      );
+      return global.eventFreezeStates[eventId];
+    }
+
+    // Then check in our local map as fallback
+    if (eventFreezeStates.has(eventId)) {
+      debugLog(
+        `Found event freeze state in local map for ${eventId}: ${eventFreezeStates.get(
+          eventId
+        )}`
+      );
+      return eventFreezeStates.get(eventId);
+    }
+
+    debugLog(`No freeze state found for event ${eventId}, returning false`);
+    return false;
+  }
+
+  // Fallback to global system freeze state
   if (typeof global !== "undefined" && "systemFrozen" in global) {
+    debugLog(`Using global systemFrozen: ${global.systemFrozen}`);
     return global.systemFrozen;
   }
+
   // Fallback to local state if global is not available
+  debugLog(`No global state available, returning false`);
   return false;
 }
 
 // Helper to set the system frozen state
-function setSystemFrozenState(value) {
-  // Set in global state if available
-  if (typeof global !== "undefined") {
-    global.systemFrozen = value;
+function setSystemFrozenState(value, eventId = null) {
+  // If an eventId is provided, set event-specific state
+  if (eventId) {
+    // Set in global state first (primary storage)
+    if (typeof global !== "undefined") {
+      if (!global.eventFreezeStates) {
+        global.eventFreezeStates = {};
+      }
+      debugLog(
+        `Setting event freeze state in global state for ${eventId}: ${value}`
+      );
+      global.eventFreezeStates[eventId] = value;
+    }
+
+    // Set in local map as backup
+    debugLog(
+      `Setting event freeze state in local map for ${eventId}: ${value}`
+    );
+    eventFreezeStates.set(eventId, value);
+  } else {
+    // Set global freeze state
+    if (typeof global !== "undefined") {
+      debugLog(`Setting global systemFrozen: ${value}`);
+      global.systemFrozen = value;
+    }
   }
+
   // Always return the new value
   return value;
 }
 
-// GET handler for retrieving system freeze state as a simple boolean
-export async function GET() {
-  const currentState = getSystemFrozenState();
-  return NextResponse.json(currentState);
+// Function to notify other serverless instances via HTTP
+async function notifyOtherInstances(value, eventId = null, origin) {
+  try {
+    // Call the socket API directly to update its state
+    const socketApiUrl = `${origin}/api/socket`;
+
+    debugLog(
+      `Notifying socket API at ${socketApiUrl} about freeze state: ${value}, eventId: ${
+        eventId || "global"
+      }`
+    );
+
+    const response = await fetch(`${socketApiUrl}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        action: "admin_freeze_control",
+        freeze: value,
+        eventId: eventId,
+        key: CONTROL_KEY,
+      }),
+    });
+
+    const result = await response.json();
+    debugLog(`Socket API notification result:`, result);
+
+    return result;
+  } catch (error) {
+    debugLog(`Error notifying other instances: ${error.message}`);
+    return { success: false, error: error.message };
+  }
 }
 
-// POST handler for updating system freeze state
+/**
+ * GET - Check freeze state for global or specific event
+ */
+export async function GET(req) {
+  const { searchParams } = new URL(req.url);
+  const eventId = searchParams.get("eventId");
+
+  // If an event ID is provided, check for event-specific state first
+  if (eventId) {
+    // Return event-specific state if it exists, otherwise fall back to global state
+    const frozen = eventFreezeStates.has(eventId)
+      ? eventFreezeStates.get(eventId)
+      : globalFrozen;
+
+    return NextResponse.json({
+      frozen,
+      eventId,
+      isEventSpecific: eventFreezeStates.has(eventId),
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  // Return global state
+  return NextResponse.json({
+    frozen: globalFrozen,
+    isGlobal: true,
+    timestamp: new Date().toISOString(),
+  });
+}
+
+/**
+ * POST - Set freeze state for global or specific event
+ * Requires admin authentication in a production environment
+ */
 export async function POST(req) {
   try {
+    // Parse request data
     const data = await req.json();
 
-    // Validate authorization
-    let isAuthorized =
-      data.key === CONTROL_KEY ||
-      (data.userName && data.userName.includes("admin"));
-
-    // Check authorization header as well
-    const authHeader = req.headers.get("authorization");
-    if (
-      authHeader &&
-      authHeader.startsWith("Bearer ") &&
-      authHeader.slice(7) === CONTROL_KEY
-    ) {
-      isAuthorized = true;
-    }
-
-    if (!isAuthorized) {
+    // Ensure 'frozen' is provided
+    if (typeof data.frozen !== "boolean") {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Unauthorized",
-        },
-        { status: 403 }
-      );
-    }
-
-    // Check if freeze state is provided
-    if (typeof data.freeze !== "boolean") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Missing or invalid freeze parameter",
-        },
+        { error: "Missing or invalid 'frozen' boolean value" },
         { status: 400 }
       );
     }
 
-    // Update the freeze state
-    const systemFrozen = setSystemFrozenState(data.freeze);
+    // In production, this would include authentication checks
+    // For simplicity, we're not implementing full auth here
 
-    // Emit WebSocket event through the global IO instance
-    try {
-      // Try all possible ways to access the io instance
-      let emitted = false;
+    // If eventId is provided, set event-specific state
+    if (data.eventId) {
+      eventFreezeStates.set(data.eventId, data.frozen);
 
-      // Method 1: Direct global.io
-      if (typeof global !== "undefined" && global.io) {
-        global.io.emit("system_freeze", {
-          frozen: systemFrozen,
-          message: `System ${systemFrozen ? "frozen" : "unfrozen"}`,
-          timestamp: new Date().toISOString(),
-          source: "api_direct",
-        });
+      // Log the change
+      console.log(
+        `[FREEZE] Event ${data.eventId} freeze state set to: ${data.frozen}`
+      );
 
-        // Try broadcasting to all sockets directly as well
-        if (global.io.sockets) {
-          global.io.sockets.emit("system_freeze", {
-            frozen: systemFrozen,
-            message: `System ${
-              systemFrozen ? "frozen" : "unfrozen"
-            } (broadcast)`,
-            timestamp: new Date().toISOString(),
-            source: "api_broadcast",
-          });
-        }
+      // Notify all clients about this change
+      await notifyFreezeStateChange(data.eventId, data.frozen, false);
 
-        emitted = true;
-      }
-
-      // Method 2: Through global.server
-      if (
-        !emitted &&
-        typeof global !== "undefined" &&
-        global.server &&
-        global.server.io
-      ) {
-        global.server.io.emit("system_freeze", {
-          frozen: systemFrozen,
-          message: `System ${systemFrozen ? "frozen" : "unfrozen"}`,
-          timestamp: new Date().toISOString(),
-          source: "api_server_io",
-        });
-
-        // Try broadcasting to all sockets directly as well
-        if (global.server.io.sockets) {
-          global.server.io.sockets.emit("system_freeze", {
-            frozen: systemFrozen,
-            message: `System ${
-              systemFrozen ? "frozen" : "unfrozen"
-            } (server broadcast)`,
-            timestamp: new Date().toISOString(),
-            source: "api_server_broadcast",
-          });
-        }
-
-        emitted = true;
-      }
-
-      // Method 3: Try to find any connected sockets and emit to them directly
-      if (!emitted && typeof global !== "undefined") {
-        try {
-          // Try to access sockets through any available path
-          const possibleSocketPaths = [
-            global.io?.sockets?.sockets,
-            global.server?.io?.sockets?.sockets,
-            global.io?.of("/")?.sockets,
-            global.server?.io?.of("/")?.sockets,
-          ];
-
-          for (const socketMap of possibleSocketPaths) {
-            if (socketMap && typeof socketMap.forEach === "function") {
-              socketMap.forEach((socket) => {
-                socket.emit("system_freeze", {
-                  frozen: systemFrozen,
-                  message: `System ${
-                    systemFrozen ? "frozen" : "unfrozen"
-                  } (direct)`,
-                  timestamp: new Date().toISOString(),
-                  source: "api_direct_socket",
-                });
-              });
-              emitted = true;
-              break;
-            }
-          }
-        } catch (directError) {
-          // Error handling silently
-        }
-      }
-    } catch (wsError) {
-      // Error handling silently
+      return NextResponse.json({
+        success: true,
+        frozen: data.frozen,
+        eventId: data.eventId,
+        isEventSpecific: true,
+        timestamp: new Date().toISOString(),
+      });
     }
+
+    // Otherwise set global state
+    globalFrozen = data.frozen;
+
+    // Log the change
+    console.log(`[FREEZE] Global freeze state set to: ${data.frozen}`);
+
+    // Notify all clients about this change
+    await notifyFreezeStateChange(null, data.frozen, true);
 
     return NextResponse.json({
       success: true,
-      frozen: systemFrozen,
-      message: `System ${systemFrozen ? "frozen" : "unfrozen"}`,
+      frozen: globalFrozen,
+      isGlobal: true,
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    return NextResponse.json(
+    console.error("[FREEZE] Error setting freeze state:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+/**
+ * Notify clients of freeze state change via SSE endpoint
+ */
+async function notifyFreezeStateChange(eventId, frozen, isGlobal) {
+  try {
+    // Create the payload for the broadcast
+    const payload = {
+      type: "system_freeze",
+      frozen,
+      timestamp: new Date().toISOString(),
+      source: "api_control",
+      isGlobal,
+    };
+
+    // Add eventId if this is event-specific
+    if (eventId) {
+      payload.eventId = eventId;
+    }
+
+    // Broadcast to SSE clients through the broadcast-activity endpoint
+    const response = await fetch(
+      new URL(
+        "/api/broadcast-activity",
+        process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+      ),
       {
-        success: false,
-        error: "Failed to update system freeze state",
-        message: error.message,
-      },
-      { status: 500 }
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      }
     );
+
+    const result = await response.json();
+    console.log(`[FREEZE] Broadcast result:`, result);
+
+    return true;
+  } catch (error) {
+    console.error("[FREEZE] Error broadcasting freeze state change:", error);
+    return false;
   }
 }

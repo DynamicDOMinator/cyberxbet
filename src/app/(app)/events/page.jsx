@@ -559,7 +559,6 @@ export default function Events() {
                     alt={event.title}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    
                     priority
                   />
                 </div>
@@ -605,7 +604,11 @@ export default function Events() {
                         isEnglish ? "text-left" : "text-right"
                       }`}
                     >
-                      {formatDate(event.start_date)}
+                      {event.is_ended
+                        ? `${
+                            isEnglish ? "Ended at " : "انتهى في "
+                          } ${formatDate(event.end_date)}`
+                        : formatDate(event.start_date)}
                     </span>
                   </div>
                 </div>

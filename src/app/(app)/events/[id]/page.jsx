@@ -11,9 +11,15 @@ import Cookies from "js-cookie";
 import Image from "next/image";
 import TeamRegistrationModal from "@/app/components/TeamRegistrationModal";
 import { IoCopy } from "react-icons/io5";
-import toast, { Toaster } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 import { useUserProfile } from "@/app/context/UserProfileContext";
 import { createSocket } from "@/lib/socket-client";
+import {
+  broadcastFlagSubmission,
+  listenForFlagSubmissions,
+  testFlagSubmission,
+  debugEventListeners,
+} from "@/lib/flag-events";
 
 import LoadingPage from "@/app/components/LoadingPage";
 import { useRouter } from "next/navigation";
@@ -81,6 +87,433 @@ export default function EventPage() {
   // Add state for freeze status
   const [isLeaderboardFrozen, setIsLeaderboardFrozen] = useState(false);
 
+  // Update the socket and event listener setup
+  useEffect(() => {
+    if (!id) return;
+    console.log(`[SOCKET] Initializing socket connection for event ${id}`);
+
+    // Use user name from cookies for a consistent connection
+    const userName = Cookies.get("username");
+    const newSocket = createSocket(userName);
+    setSocket(newSocket);
+
+    if (newSocket) {
+      // Set up connection and event listeners
+      console.log(`[SOCKET] Socket created, joining team room for event ${id}`);
+      newSocket.emit("joinTeamRoom", id);
+
+      // Set up flag submission handler with better debugging
+      const handleFlagSubmission = (data) => {
+        console.log(`[SOCKET] Received flag submission event:`, data);
+
+        // Only process events for this event
+        if (data.eventId === id || data.event_id === id) {
+          // Handle the flag submission
+          handleRealTimeActivity(data);
+
+          // Also update the scoreboard immediately if we're viewing it
+          if (activeTab === "leaderboard" && isEventScoreBoard) {
+            updateScoreboardWithNewPoints(
+              data.username || data.user_name,
+              data.points || data.total_bytes || 0,
+              data.isFirstBlood || data.is_first_blood || false,
+              data.teamUuid || data.team_uuid
+            );
+          }
+        }
+      };
+
+      // Set up team update handler with better debugging
+      const handleTeamUpdate = (data) => {
+        console.log(`[SOCKET] Received team update event:`, data);
+
+        // Only process events for this event
+        if (data.eventId === id || data.event_id === id) {
+          // For activities tab, add the new activity
+          handleRealTimeActivity(data);
+
+          // For leaderboard, update points if applicable
+          if (
+            activeTab === "leaderboard" &&
+            isEventScoreBoard &&
+            (data.points || data.total_bytes)
+          ) {
+            updateScoreboardWithNewPoints(
+              data.username || data.user_name,
+              data.points || data.total_bytes || 0,
+              data.isFirstBlood || data.is_first_blood || false,
+              data.teamUuid || data.team_uuid
+            );
+          }
+
+          // Force refresh team data for any team update
+          setTimeout(() => {
+            forceRefreshTeamData();
+          }, 500);
+        }
+      };
+
+      // Set up all event listeners
+      newSocket.on("flagSubmitted", handleFlagSubmission);
+      newSocket.on("teamUpdate", handleTeamUpdate);
+
+      // Add connect/disconnect handlers
+      newSocket.on("connect", () => {
+        console.log(`[SOCKET] Socket connected successfully`);
+        // Re-join room on reconnect
+        newSocket.emit("joinTeamRoom", id);
+      });
+
+      // Also set up window event listener for flag submissions
+      if (typeof window !== "undefined") {
+        console.log("[DOM] Setting up flag_submitted event listener");
+
+        // Function to handle DOM flag_submitted events
+        const handleDomFlagEvent = (event) => {
+          const data = event.detail;
+          console.log("[DOM] Received flag_submitted event:", data);
+
+          // Only process events for this event
+          if ((data.eventId === id || data.event_id === id) && !data.testMode) {
+            handleRealTimeActivity(data);
+
+            // Also update the scoreboard immediately if we're viewing it
+            if (activeTab === "leaderboard" && isEventScoreBoard) {
+              updateScoreboardWithNewPoints(
+                data.username || data.user_name,
+                data.points || data.total_bytes || 0,
+                data.isFirstBlood || data.is_first_blood || false,
+                data.teamUuid || data.team_uuid
+              );
+            }
+          }
+        };
+
+        // Add the event listener
+        window.addEventListener("flag_submitted", handleDomFlagEvent);
+
+        // Return cleanup function
+        return () => {
+          console.log(`[SOCKET+DOM] Cleaning up event listeners for ${id}`);
+
+          // Remove socket event listeners
+          if (newSocket) {
+            newSocket.off("flagSubmitted", handleFlagSubmission);
+            newSocket.off("teamUpdate", handleTeamUpdate);
+            newSocket.emit("leaveTeamRoom", id);
+          }
+
+          // Remove DOM event listener
+          window.removeEventListener("flag_submitted", handleDomFlagEvent);
+        };
+      }
+
+      // If window is not defined (SSR), just return socket cleanup
+      return () => {
+        console.log(`[SOCKET] Cleaning up socket event listeners for ${id}`);
+        if (newSocket) {
+          newSocket.off("flagSubmitted", handleFlagSubmission);
+          newSocket.off("teamUpdate", handleTeamUpdate);
+          newSocket.emit("leaveTeamRoom", id);
+        }
+      };
+    }
+  }, [id, activeTab, isEventScoreBoard]); // Add activeTab and isEventScoreBoard to deps
+
+  // Add a direct SSE connection as a reliable backup
+  useEffect(() => {
+    if (!id || typeof window === "undefined") return;
+
+    console.log(
+      `[SSE] Setting up Server-Sent Events connection for event ${id}`
+    );
+    let eventSource = null;
+    let reconnectAttempt = 0;
+    const maxReconnectAttempts = 5;
+
+    function setupSSE() {
+      try {
+        // Close existing connection if any
+        if (eventSource) {
+          eventSource.close();
+        }
+
+        console.log(`[SSE] Creating new SSE connection for event ${id}`);
+
+        // Create a new connection with a random parameter to avoid caching
+        eventSource = new EventSource(
+          `/api/broadcast-activity?eventId=${id}&_=${Date.now()}`
+        );
+
+        eventSource.onopen = () => {
+          console.log(`[SSE] Connection opened successfully for event ${id}`);
+          reconnectAttempt = 0; // Reset reconnect counter on successful connection
+        };
+
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log(`[SSE] Received message for event ${id}:`, data);
+
+            if (data.type === "connection") {
+              console.log(
+                `[SSE] Connection established with client ID: ${data.clientId}`
+              );
+            } else {
+              // Process activity data
+              console.log(`[SSE] Processing activity data:`, data);
+              handleRealTimeActivity(data);
+            }
+          } catch (error) {
+            console.error(`[SSE] Error parsing SSE message:`, error);
+          }
+        };
+
+        eventSource.onerror = (error) => {
+          console.error(`[SSE] Connection error for event ${id}:`, error);
+
+          // Close current connection
+          eventSource.close();
+          console.log(`[SSE] Closed errored connection`);
+
+          // Attempt to reconnect with backoff
+          if (reconnectAttempt < maxReconnectAttempts) {
+            reconnectAttempt++;
+            const delay = Math.min(1000 * Math.pow(2, reconnectAttempt), 30000);
+            console.log(
+              `[SSE] Reconnecting in ${delay}ms (attempt ${reconnectAttempt}/${maxReconnectAttempts})`
+            );
+
+            setTimeout(() => {
+              console.log(`[SSE] Attempting to reconnect...`);
+              setupSSE();
+            }, delay);
+          } else {
+            console.log(`[SSE] Max reconnect attempts reached, giving up`);
+          }
+        };
+      } catch (error) {
+        console.error(`[SSE] Error setting up SSE:`, error);
+      }
+    }
+
+    // Setup initial connection
+    setupSSE();
+
+    // Also add a periodic reconnect to ensure connection stays fresh
+    const reconnectInterval = setInterval(() => {
+      console.log(`[SSE] Performing scheduled reconnect for event ${id}`);
+      setupSSE();
+    }, 5 * 60 * 1000); // Every 5 minutes
+
+    // Clean up on unmount
+    return () => {
+      console.log(`[SSE] Cleaning up SSE connection for event ${id}`);
+      if (eventSource) {
+        eventSource.close();
+      }
+      clearInterval(reconnectInterval);
+    };
+  }, [id]);
+
+  // Define the event handler functions
+  const handleTeamUpdate = (data) => {
+    console.log("Received team update:", data);
+    // Force refresh team data for any team update for this event
+    if (data.eventId === id) {
+      // Add small delay to ensure database has updated
+      setTimeout(() => {
+        forceRefreshTeamData();
+      }, 500);
+
+      // Also handle different team update events
+      if (data.action === "join" || data.action === "create") {
+        // Special handling for join/create events
+        if (teams?.uuid === data.teamUuid) {
+          getTeams();
+        }
+      } else if (data.action === "remove") {
+        // If I was removed
+        const myUsername = Cookies.get("username");
+        if (data.removedUser === myUsername) {
+          setTeams(null);
+          setIsInTeam(false);
+          setIsRemovedFromTeam(true);
+          setHasCheckedTeam(true);
+          setButtonText(isEnglish ? "Join Team" : "انضمام");
+
+          // Show toast notification
+          toast.error(
+            isEnglish
+              ? "You have been removed from the team"
+              : "تمت إزالتك من الفريق"
+          );
+        }
+      } else if (data.action === "points_update") {
+        // For points updates, directly update scoreboard if we're viewing it
+        if (isEventScoreBoard && activeTab === "leaderboard") {
+          updateScoreboardWithNewPoints(
+            data.username || data.user_name,
+            data.points || 0,
+            data.isFirstBlood || false,
+            data.teamUuid
+          );
+        }
+
+        // For activities tab, add the new activity
+        handleRealTimeActivity(data);
+      }
+    }
+  };
+
+  const handleFlagSubmission = (data) => {
+    console.log("Received flag submission:", data);
+
+    // Ensure we have the eventId
+    if (!data.eventId && data.event_id) {
+      data.eventId = data.event_id;
+    }
+
+    if (data.eventId === id) {
+      // Force refresh team data regardless of which team submitted
+      setTimeout(() => {
+        forceRefreshTeamData();
+      }, 500);
+
+      // Show a toast notification for the flag submission if it's my team
+      if (teams?.uuid === data.teamUuid) {
+        const username = data.username || data.user_name;
+        toast.success(
+          isEnglish
+            ? `${username} solved a challenge for ${data.points} points!`
+            : `حل ${username} تحديًا مقابل ${data.points} نقطة!`
+        );
+      }
+
+      // Update scoreboard if we're viewing it
+      if (isEventScoreBoard && activeTab === "leaderboard") {
+        updateScoreboardWithNewPoints(
+          data.username || data.user_name,
+          data.points || 0,
+          false,
+          data.teamUuid
+        );
+      }
+
+      // Always update activities regardless of active tab
+      // This ensures the data is ready when user switches to activities tab
+      handleRealTimeActivity(data);
+
+      // If we're not on the activities tab, show a small notification
+      if (activeTab !== "activities") {
+        const username = data.username || data.user_name || "Someone";
+        const challenge = data.challenge_name || "a challenge";
+        toast.info(
+          isEnglish
+            ? `${username} just solved ${challenge}!`
+            : `${username} حل للتو ${challenge}!`,
+          { duration: 2000 }
+        );
+      }
+    }
+  };
+
+  const handleFirstBlood = (data) => {
+    console.log("Received first blood:", data);
+
+    // Ensure we have the eventId
+    if (!data.eventId && data.event_id) {
+      data.eventId = data.event_id;
+    }
+
+    if (data.eventId === id) {
+      // Force refresh team data regardless of which team got first blood
+      setTimeout(() => {
+        forceRefreshTeamData();
+      }, 500);
+
+      // Show a toast notification for the first blood if it's my team
+      if (teams?.uuid === data.teamUuid) {
+        const username = data.username || data.user_name;
+        toast.success(
+          isEnglish
+            ? `${username} got first blood for ${data.points} points!`
+            : `حصل ${username} على الدم الأول مقابل ${data.points} نقطة!`
+        );
+      }
+
+      // Update scoreboard if we're viewing it
+      if (isEventScoreBoard && activeTab === "leaderboard") {
+        updateScoreboardWithNewPoints(
+          data.username || data.user_name,
+          data.points || 0,
+          true,
+          data.teamUuid
+        );
+      }
+
+      // Always update activities regardless of active tab
+      handleRealTimeActivity(data);
+
+      // If we're not on the activities tab, show a notification about first blood
+      if (activeTab !== "activities") {
+        const username = data.username || data.user_name || "Someone";
+        const challenge = data.challenge_name || "a challenge";
+        toast.info(
+          isEnglish
+            ? `${username} got FIRST BLOOD on ${challenge}!`
+            : `${username} حصل على الدم الأول في ${challenge}!`,
+          {
+            duration: 3000,
+            icon: "🩸",
+            style: {
+              borderLeft: "4px solid red",
+            },
+          }
+        );
+      }
+    }
+  };
+
+  const handleLeaderboardUpdate = (data) => {
+    console.log("Received leaderboard update:", data);
+
+    // Ensure we have the eventId
+    if (!data.eventId && data.event_id) {
+      data.eventId = data.event_id;
+    }
+
+    if (data.eventId === id) {
+      if (isEventScoreBoard && activeTab === "leaderboard") {
+        // Display a mini notification if some team scores
+        if (data.teamUuid) {
+          const teamName = data.teamName || "Unknown team";
+          const points = data.points || 0;
+          const challengeName = data.challenge_name || "a challenge";
+
+          // Show a toast notification for all scoreboard participants
+          toast.info(
+            isEnglish
+              ? `${teamName} solved ${challengeName} for ${points} points!`
+              : `حل فريق ${teamName} التحدي ${challengeName} مقابل ${points} نقطة!`,
+            { duration: 3000 }
+          );
+        }
+
+        // Update the scoreboard immediately
+        updateScoreboardWithNewPoints(
+          data.username || data.user_name,
+          data.points || 0,
+          data.isFirstBlood || false,
+          data.teamUuid
+        );
+      }
+
+      // Always update activities regardless of active tab
+      handleRealTimeActivity(data);
+    }
+  };
+
   // Add a function to force refresh team data
   const forceRefreshTeamData = async () => {
     try {
@@ -89,170 +522,6 @@ export default function EventPage() {
       console.error("Error refreshing team data:", error);
     }
   };
-
-  // Initialize socket connection
-  useEffect(() => {
-    const userName = Cookies.get("username");
-    const newSocket = createSocket(userName);
-    setSocket(newSocket);
-
-    // Join the team updates room for this event
-    if (newSocket) {
-      newSocket.emit("joinTeamRoom", id);
-
-      // Listen for team updates
-      newSocket.on("teamUpdate", (data) => {
-        console.log("Received team update:", data);
-        // Force refresh team data for any team update for this event
-        if (data.eventId === id) {
-          // Add small delay to ensure database has updated
-          setTimeout(() => {
-            forceRefreshTeamData();
-          }, 500);
-
-          // Also handle different team update events
-          if (data.action === "join" || data.action === "create") {
-            // Special handling for join/create events
-            if (teams?.uuid === data.teamUuid) {
-              getTeams();
-            }
-          } else if (data.action === "remove") {
-            // If I was removed
-            const myUsername = Cookies.get("username");
-            if (data.removedUser === myUsername) {
-              setTeams(null);
-              setIsInTeam(false);
-              setIsRemovedFromTeam(true);
-              setHasCheckedTeam(true);
-              setButtonText(isEnglish ? "Join Team" : "انضمام");
-
-              // Show toast notification
-              toast.error(
-                isEnglish
-                  ? "You have been removed from the team"
-                  : "تمت إزالتك من الفريق"
-              );
-            }
-          } else if (data.action === "points_update") {
-            // For points updates, directly update scoreboard if we're viewing it
-            if (isEventScoreBoard && activeTab === "leaderboard") {
-              updateScoreboardWithNewPoints(
-                data.username,
-                data.points || 0,
-                data.isFirstBlood || false,
-                data.teamUuid
-              );
-            }
-          }
-        }
-      });
-
-      // Listen specifically for leaderboard updates - these are direct scoreboard update events
-      newSocket.on("leaderboardUpdate", (data) => {
-        console.log("Received leaderboard update:", data);
-        if (
-          data.eventId === id &&
-          isEventScoreBoard &&
-          activeTab === "leaderboard"
-        ) {
-          // Display a mini notification if some team scores
-          if (data.teamUuid) {
-            const teamName = data.teamName || "Unknown team";
-            const points = data.points || 0;
-            const challengeName = data.challenge_name || "a challenge";
-
-            // Show a toast notification for all scoreboard participants
-            toast.info(
-              isEnglish
-                ? `${teamName} solved ${challengeName} for ${points} points!`
-                : `حل فريق ${teamName} التحدي ${challengeName} مقابل ${points} نقطة!`,
-              { duration: 3000 }
-            );
-          }
-
-          // Update the scoreboard immediately
-          updateScoreboardWithNewPoints(
-            data.username,
-            data.points || 0,
-            data.isFirstBlood || false,
-            data.teamUuid
-          );
-        }
-      });
-
-      // Listen for flag submission updates from any team member
-      newSocket.on("flagSubmitted", (data) => {
-        console.log("Received flag submission:", data);
-        if (data.eventId === id) {
-          // Force refresh team data regardless of which team submitted
-          setTimeout(() => {
-            forceRefreshTeamData();
-          }, 500);
-
-          // Show a toast notification for the flag submission if it's my team
-          if (teams?.uuid === data.teamUuid) {
-            const username = data.username;
-            toast.success(
-              isEnglish
-                ? `${username} solved a challenge for ${data.points} points!`
-                : `حل ${username} تحديًا مقابل ${data.points} نقطة!`
-            );
-          }
-
-          // Update scoreboard if we're viewing it
-          if (isEventScoreBoard && activeTab === "leaderboard") {
-            updateScoreboardWithNewPoints(
-              data.username,
-              data.points || 0,
-              false,
-              data.teamUuid
-            );
-          }
-        }
-      });
-
-      // Listen for first blood specific events
-      newSocket.on("flagFirstBlood", (data) => {
-        console.log("Received first blood:", data);
-        if (data.eventId === id) {
-          // Force refresh team data regardless of which team got first blood
-          setTimeout(() => {
-            forceRefreshTeamData();
-          }, 500);
-
-          // Show a toast notification for the first blood if it's my team
-          if (teams?.uuid === data.teamUuid) {
-            const username = data.username;
-            toast.success(
-              isEnglish
-                ? `${username} got first blood for ${data.points} points!`
-                : `حصل ${username} على الدم الأول مقابل ${data.points} نقطة!`
-            );
-          }
-
-          // Update scoreboard if we're viewing it
-          if (isEventScoreBoard && activeTab === "leaderboard") {
-            updateScoreboardWithNewPoints(
-              data.username,
-              data.points || 0,
-              true,
-              data.teamUuid
-            );
-          }
-        }
-      });
-    }
-
-    return () => {
-      if (socket) {
-        socket.off("teamUpdate");
-        socket.off("flagSubmitted");
-        socket.off("flagFirstBlood");
-        socket.off("leaderboardUpdate");
-        socket.emit("leaveTeamRoom", id);
-      }
-    };
-  }, [id, teams?.uuid, isEnglish, isEventScoreBoard, activeTab]);
 
   useEffect(() => {
     // Update the current date/time based on user's timezone
@@ -916,8 +1185,115 @@ export default function EventPage() {
     eventScoreBoard();
   }, []);
 
+  // Enhance the updateScoreboardWithNewPoints function to handle data more accurately
+  const updateScoreboardWithNewPoints = (
+    username,
+    newPoints,
+    isFirstBlood = false,
+    teamUuid = null
+  ) => {
+    if (!teamUuid) {
+      console.log("[LEADERBOARD] Missing team UUID for update, skipping");
+      return;
+    }
+
+    newPoints = Number(newPoints);
+    if (isNaN(newPoints) || newPoints <= 0) {
+      console.log(
+        `[LEADERBOARD] Invalid points value: ${newPoints}, skipping update`
+      );
+      return;
+    }
+
+    console.log(
+      `[LEADERBOARD] Updating team ${teamUuid} with ${newPoints} points, first blood: ${isFirstBlood}`
+    );
+
+    // Check if we're getting too far out of sync with backend data
+    // If a team is not found or data looks significantly off, refresh the entire scoreboard
+    const currentData = [...scoreboardData];
+    const teamIndex = currentData.findIndex(
+      (team) => team.team_uuid === teamUuid
+    );
+
+    if (teamIndex === -1) {
+      // If team isn't in our local data at all, refresh everything
+      console.log(
+        `[LEADERBOARD] Team ${teamUuid} not found in scoreboard, refreshing all data`
+      );
+      eventScoreBoard();
+      return;
+    }
+
+    // Set up a periodic full refresh to ensure data stays in sync
+    if (
+      !window._lastFullRefresh ||
+      Date.now() - window._lastFullRefresh > 30000
+    ) {
+      console.log(
+        "[LEADERBOARD] Performing periodic full refresh to ensure data accuracy"
+      );
+      window._lastFullRefresh = Date.now();
+      eventScoreBoard();
+      return;
+    }
+
+    setScoreboardData((prevData) => {
+      if (!prevData || prevData.length === 0) {
+        console.log(
+          "[LEADERBOARD] No existing scoreboard data, skipping update"
+        );
+        return prevData;
+      }
+
+      // Map the data to add the updated fields and calculate the new scores
+      const updatedData = prevData.map((team) => {
+        // If teamUuid is provided, we match by team UUID
+        if (team.team_uuid === teamUuid) {
+          // Update team stats
+          const updatedPoints = Number(team.points) + newPoints;
+          const updatedChallengesSolved = Number(team.challenges_solved) + 1;
+          const updatedFirstBloodCount = isFirstBlood
+            ? Number(team.first_blood_count) + 1
+            : Number(team.first_blood_count);
+
+          console.log(
+            `[LEADERBOARD] Updating team ${team.team_name} with new points: ${newPoints}, total: ${updatedPoints}`
+          );
+
+          return {
+            ...team,
+            points: updatedPoints,
+            challenges_solved: updatedChallengesSolved,
+            first_blood_count: updatedFirstBloodCount,
+          };
+        }
+
+        return team;
+      });
+
+      // Resort by points
+      const sortedData = [...updatedData].sort((a, b) => b.points - a.points);
+
+      // Assign new ranks
+      return sortedData.map((team, index) => ({
+        ...team,
+        rank: index + 1,
+      }));
+    });
+  };
+
+  // Enhance the eventScoreBoard function to better handle data updates
   const eventScoreBoard = async () => {
+    if (isLeaderboardFrozen) {
+      console.log(
+        "[LEADERBOARD] Skipping scoreboard refresh - board is frozen"
+      );
+      return;
+    }
+
     try {
+      console.log(`[LEADERBOARD] Fetching scoreboard for event ${id}`);
       const api = process.env.NEXT_PUBLIC_API_URL;
       const res = await axios.get(`${api}/${id}/scoreboard`, {
         headers: {
@@ -926,13 +1302,158 @@ export default function EventPage() {
       });
 
       if (res.data.data.length > 0) {
+        // Save previous data for comparison
+        const previousData = scoreboardData;
+
+        // Set the last refresh timestamp for our periodic refresh check
+        if (typeof window !== "undefined") {
+          window._lastFullRefresh = Date.now();
+        }
+
+        // Compare new data with old data to look for significant discrepancies
+        let hasSignificantChanges = false;
+        if (previousData.length > 0) {
+          // Check if team counts differ
+          if (previousData.length !== res.data.data.length) {
+            hasSignificantChanges = true;
+            console.log(
+              "[LEADERBOARD] Team count changed, full refresh needed"
+            );
+          } else {
+            // Check a sample of teams for data consistency
+            for (let i = 0; i < Math.min(previousData.length, 5); i++) {
+              const oldTeam = previousData[i];
+              const newTeam = res.data.data.find(
+                (t) => t.team_uuid === oldTeam.team_uuid
+              );
+
+              if (!newTeam) {
+                hasSignificantChanges = true;
+                break;
+              }
+
+              // Check if points are more than 10% different
+              const pointDiff = Math.abs(oldTeam.points - newTeam.points);
+              if (pointDiff > Math.max(oldTeam.points, newTeam.points) * 0.1) {
+                console.log(
+                  `[LEADERBOARD] Significant point difference for team ${oldTeam.team_name}: ${oldTeam.points} vs ${newTeam.points}`
+                );
+                hasSignificantChanges = true;
+                break;
+              }
+            }
+          }
+        }
+
+        // If we detected significant changes or this is initial load, use the backend data directly
+        if (hasSignificantChanges || previousData.length === 0) {
+          console.log("[LEADERBOARD] Using fresh data from backend");
+          setScoreboardData(res.data.data);
+        } else {
+          // For smaller updates, ensure we don't lose real-time updates by merging data
+          console.log(
+            "[LEADERBOARD] Merging backend data with real-time updates"
+          );
+          setScoreboardData((prevData) => {
+            const mergedData = res.data.data.map((newTeam) => {
+              const existingTeam = prevData.find(
+                (team) => team.team_uuid === newTeam.team_uuid
+              );
+              if (existingTeam) {
+                // Use whichever points value is higher to avoid losing updates
+                return {
+                  ...newTeam,
+                  points: Math.max(existingTeam.points, newTeam.points),
+                  challenges_solved: Math.max(
+                    existingTeam.challenges_solved,
+                    newTeam.challenges_solved
+                  ),
+                  first_blood_count: Math.max(
+                    existingTeam.first_blood_count,
+                    newTeam.first_blood_count
+                  ),
+                };
+              }
+              return newTeam;
+            });
+
+            // Sort by points
+            return mergedData
+              .sort((a, b) => b.points - a.points)
+              .map((team, index) => ({
+                ...team,
+                rank: index + 1,
+              }));
+          });
+        }
+
         setIsEventScoreBoard(true);
-        setScoreboardData(res.data.data);
       }
     } catch (error) {
+      console.error("[LEADERBOARD] Error fetching scoreboard:", error);
       return null;
     }
   };
+
+  // Add a refresh trigger whenever a team might be modified
+  // This ensures we have accurate data even if some events are missed
+  useEffect(() => {
+    if (teams?.uuid && isEventScoreBoard) {
+      // If user's team data changes, we should refresh the scoreboard to be safe
+      eventScoreBoard();
+    }
+  }, [teams, isEventScoreBoard]);
+
+  // Add an effect to periodically validate scoreboard data
+  useEffect(() => {
+    if (!id || !isEventScoreBoard || isLeaderboardFrozen) return;
+
+    // Refresh on initial load and tab switch
+    if (activeTab === "leaderboard") {
+      eventScoreBoard();
+    }
+  }, [id, isEventScoreBoard, isLeaderboardFrozen, activeTab]);
+
+  // Replace flag submission listener with a more robust one
+  useEffect(() => {
+    if (!id || !isEventScoreBoard) return;
+
+    console.log(
+      `[FLAG-EVENTS] Setting up robust flag submission listener for event ${id}`
+    );
+
+    // Set up a dedicated listener for flag submissions with data validation
+    const cleanup = listenForFlagSubmissions(id, (data) => {
+      console.log(
+        `[FLAG-EVENTS] Received flag submission for leaderboard:`,
+        data
+      );
+
+      // First apply the update locally
+      if (data.teamUuid || data.team_uuid) {
+        const teamUuid = data.teamUuid || data.team_uuid;
+        updateScoreboardWithNewPoints(
+          data.username || data.user_name,
+          data.points || data.total_bytes || 0,
+          data.isFirstBlood || data.is_first_blood || false,
+          teamUuid
+        );
+
+        // Schedule a validation check shortly after
+        // This ensures our local state eventually converges with backend state
+        setTimeout(() => {
+          if (activeTab === "leaderboard" && !isLeaderboardFrozen) {
+            console.log(
+              "[LEADERBOARD] Running post-submission validation check"
+            );
+            eventScoreBoard();
+          }
+        }, 3000); // 3 seconds after submission
+      }
+    });
+
+    return cleanup;
+  }, [id, isEventScoreBoard]);
 
   useEffect(() => {
     // If we're in team tab, we're marked as in a team, but don't have team data
@@ -966,215 +1487,339 @@ export default function EventPage() {
     }
   };
 
-  // Function to handle real-time scoreboard updates
-  const updateScoreboardWithNewPoints = (
-    username,
-    newPoints,
-    isFirstBlood = false,
-    teamUuid = null
-  ) => {
-    setScoreboardData((prevData) => {
-      if (!prevData || prevData.length === 0) return prevData;
+  // Update the fetchActivities function to support real-time updates
+  const fetchActivities = async () => {
+    try {
+      setIsActivitiesLoading(true);
+      const api = process.env.NEXT_PUBLIC_API_URL;
+      const res = await axios.get(`${api}/events/activities/${id}`, {
+        headers: {
+          Authorization: `Bearer ${Cookies.get("token")}`,
+        },
+      });
 
-      // First, map the data to add the updated fields and calculate the new scores
-      const updatedData = prevData
-        .map((team) => {
-          // If teamUuid is provided, we match by team UUID
-          const isTeamMatch = teamUuid
-            ? team.team_uuid === teamUuid
-            : team.members?.some((member) => member.username === username);
+      if (res.data && res.data.activities) {
+        // Store the fetched activities
+        setActivities(res.data.activities);
 
-          if (isTeamMatch) {
-            // Update team stats
-            const updatedPoints = Number(team.points) + Number(newPoints);
-            const updatedChallengesSolved = Number(team.challenges_solved) + 1;
-            const updatedFirstBloodCount = isFirstBlood
-              ? Number(team.first_blood_count) + 1
-              : Number(team.first_blood_count);
+        // Update the timestamp of the last activities fetch
+        if (typeof window !== "undefined") {
+          window._lastActivitiesFetch = Date.now();
+        }
 
-            console.log(
-              `Updating team ${team.team_name} with new points: ${newPoints}, total: ${updatedPoints}`
-            );
-
-            return {
-              ...team,
-              points: updatedPoints,
-              challenges_solved: updatedChallengesSolved,
-              first_blood_count: updatedFirstBloodCount,
-              // Mark this team as having just received points for animation
-              justUpdated: true,
-              justUpdatedTime: Date.now(),
-            };
-          }
-
-          return team;
-        })
-        .sort((a, b) => b.points - a.points); // Resort by points
-
-      return updatedData;
-    });
+        console.log(
+          `[ACTIVITIES] Fetched ${res.data.activities.length} activities from API`
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+    } finally {
+      setIsActivitiesLoading(false);
+    }
   };
 
-  // Clear the justUpdated flag after animation duration
+  // Add a dedicated effect to handle real-time updates for activities
   useEffect(() => {
-    if (!scoreboardData || scoreboardData.length === 0) return;
+    if (!id || !socket) return;
 
-    // Check if any team has the justUpdated flag
-    const hasUpdated = scoreboardData.some((team) => team.justUpdated);
+    console.log(
+      `[ACTIVITIES] Setting up real-time listeners for activities in event ${id}`
+    );
 
-    if (hasUpdated) {
-      // Set a timeout to clear the flag after animation plays
-      const timer = setTimeout(() => {
-        setScoreboardData((prevData) =>
-          prevData.map((team) => ({
-            ...team,
-            justUpdated: false,
-          }))
-        );
-      }, 3000); // 3 seconds animation
+    // Function to handle new activity updates
+    const handleNewActivity = (data) => {
+      // Skip if not for this event
+      if (data.eventId !== id && data.event_id !== id) return;
 
-      return () => clearTimeout(timer);
-    }
-  }, [scoreboardData]);
+      console.log(`[ACTIVITIES] Received new activity for event ${id}:`, data);
 
-  // useEffect for socket initialization and event handling
-  useEffect(() => {
-    const userName = Cookies.get("username");
-    const newSocket = createSocket(userName);
-    setSocket(newSocket);
+      // Process the activity
+      handleRealTimeActivity(data);
+    };
 
-    // Join the team updates room for this event
-    if (newSocket) {
-      newSocket.emit("joinTeamRoom", id);
+    // Register event listeners for activities
+    socket.on("flagSubmitted", handleNewActivity);
+    socket.on("teamUpdate", handleNewActivity);
+    socket.on("activityUpdate", handleNewActivity);
 
-      // Listen for team updates
-      newSocket.on("teamUpdate", (data) => {
-        console.log("Received team update:", data);
-        // Force refresh team data for any team update for this event
-        if (data.eventId === id) {
-          // Add small delay to ensure database has updated
-          setTimeout(() => {
-            forceRefreshTeamData();
-          }, 500);
-
-          // Also handle different team update events
-          if (data.action === "join" || data.action === "create") {
-            // Special handling for join/create events
-            if (teams?.uuid === data.teamUuid) {
-              getTeams();
-            }
-          } else if (data.action === "remove") {
-            // If I was removed
-            const myUsername = Cookies.get("username");
-            if (data.removedUser === myUsername) {
-              setTeams(null);
-              setIsInTeam(false);
-              setIsRemovedFromTeam(true);
-              setHasCheckedTeam(true);
-              setButtonText(isEnglish ? "Join Team" : "انضمام");
-
-              // Show toast notification
-              toast.error(
-                isEnglish
-                  ? "You have been removed from the team"
-                  : "تمت إزالتك من الفريق"
-              );
-            }
-          } else if (data.action === "points_update") {
-            // For points updates, directly update scoreboard if we're viewing it
-            if (isEventScoreBoard && activeTab === "leaderboard") {
-              updateScoreboardWithNewPoints(
-                data.username,
-                data.points || 0,
-                data.isFirstBlood || false,
-                data.teamUuid
-              );
-            }
-          }
-        }
-      });
-
-      // Listen for flag submission updates from any team member
-      newSocket.on("flagSubmitted", (data) => {
-        console.log("Received flag submission:", data);
-        if (data.eventId === id) {
-          // Force refresh team data regardless of which team submitted
-          setTimeout(() => {
-            forceRefreshTeamData();
-          }, 500);
-
-          // Show a toast notification for the flag submission if it's my team
-          if (teams?.uuid === data.teamUuid) {
-            const username = data.username;
-            toast.success(
-              isEnglish
-                ? `${username} solved a challenge for ${data.points} points!`
-                : `حل ${username} تحديًا مقابل ${data.points} نقطة!`
-            );
-          }
-
-          // Update scoreboard if we're viewing it
-          if (isEventScoreBoard && activeTab === "leaderboard") {
-            updateScoreboardWithNewPoints(
-              data.username,
-              data.points || 0,
-              false,
-              data.teamUuid
-            );
-          }
-        }
-      });
-
-      // Listen for first blood specific events
-      newSocket.on("flagFirstBlood", (data) => {
-        console.log("Received first blood:", data);
-        if (data.eventId === id) {
-          // Force refresh team data regardless of which team got first blood
-          setTimeout(() => {
-            forceRefreshTeamData();
-          }, 500);
-
-          // Show a toast notification for the first blood if it's my team
-          if (teams?.uuid === data.teamUuid) {
-            const username = data.username;
-            toast.success(
-              isEnglish
-                ? `${username} got first blood for ${data.points} points!`
-                : `حصل ${username} على الدم الأول مقابل ${data.points} نقطة!`
-            );
-          }
-
-          // Update scoreboard if we're viewing it
-          if (isEventScoreBoard && activeTab === "leaderboard") {
-            updateScoreboardWithNewPoints(
-              data.username,
-              data.points || 0,
-              true,
-              data.teamUuid
-            );
-          }
-        }
-      });
+    // Also set up a DOM event listener for flag submissions
+    if (typeof window !== "undefined") {
+      window.addEventListener("flag_submitted", (event) =>
+        handleNewActivity(event.detail)
+      );
+      window.addEventListener("team_update", (event) =>
+        handleNewActivity(event.detail)
+      );
     }
 
+    // Clean up on unmount
     return () => {
+      console.log(
+        `[ACTIVITIES] Cleaning up activity listeners for event ${id}`
+      );
+
       if (socket) {
-        socket.off("teamUpdate");
-        socket.off("flagSubmitted");
-        socket.off("flagFirstBlood");
-        socket.emit("leaveTeamRoom", id);
+        socket.off("flagSubmitted", handleNewActivity);
+        socket.off("teamUpdate", handleNewActivity);
+        socket.off("activityUpdate", handleNewActivity);
+      }
+
+      if (typeof window !== "undefined") {
+        window.removeEventListener("flag_submitted", (event) =>
+          handleNewActivity(event.detail)
+        );
+        window.removeEventListener("team_update", (event) =>
+          handleNewActivity(event.detail)
+        );
       }
     };
-  }, [id, teams?.uuid, isEnglish, isEventScoreBoard, activeTab]);
+  }, [id, socket]);
+
+  // Add back the useEffect to load activities when tab changes
+  useEffect(() => {
+    if (activeTab === "activities") {
+      fetchActivities();
+    }
+  }, [activeTab, id]);
+
+  // Update the handleRealTimeActivity function to better handle activities
+  const handleRealTimeActivity = (data) => {
+    if (!data) {
+      console.log("[ACTIVITIES] Skipping empty activity update");
+      return;
+    }
+
+    // Check if this event is for our event
+    const dataEventId = data.eventId || data.event_id;
+    if (!dataEventId || dataEventId !== id) {
+      console.log("[ACTIVITIES] Skipping activity update - event ID mismatch", {
+        dataEventId,
+        currentEventId: id,
+      });
+      return;
+    }
+
+    // Create a consistent activity ID for deduplication
+    const activityId =
+      data.broadcast_id ||
+      `${data.username || data.user_name || ""}_${
+        data.challenge_id || data.challengeId || ""
+      }_${data.timestamp || Date.now()}`;
+
+    console.log(
+      `[ACTIVITIES] Processing activity update with ID: ${activityId}`
+    );
+
+    // Use session storage to track recently processed activities
+    if (typeof window !== "undefined") {
+      try {
+        // Get recently processed activities from session storage
+        const recentActivities = JSON.parse(
+          sessionStorage.getItem(`recent_activities_${id}`) || "[]"
+        );
+
+        // Check if we've already processed this activity
+        if (recentActivities.includes(activityId)) {
+          console.log(
+            `[ACTIVITIES] Skipping duplicate activity with ID: ${activityId}`
+          );
+          return;
+        }
+
+        // Add this activity to recent ones
+        recentActivities.push(activityId);
+
+        // Keep only the last 50 activities to avoid memory issues
+        if (recentActivities.length > 50) {
+          recentActivities.splice(0, recentActivities.length - 50);
+        }
+
+        // Save back to session storage
+        sessionStorage.setItem(
+          `recent_activities_${id}`,
+          JSON.stringify(recentActivities)
+        );
+      } catch (error) {
+        console.error("[ACTIVITIES] Error tracking recent activities:", error);
+      }
+    }
+
+    // CRITICAL FIX: Ensure consistent point values by prioritizing total_bytes
+    // Use a single calculation to ensure the same value is used throughout
+    const pointValue = data.total_bytes || data.points || 0;
+
+    // Create a new activity object with flexible field mapping
+    const newActivity = {
+      user_name: data.username || data.user_name || "Unknown",
+      user_profile_image:
+        data.profile_image || data.userProfileImage || "/icon1.png",
+      challenge_title: data.challenge_name || data.challengeName || "Challenge",
+      challenge_uuid: data.challengeId || data.challenge_id,
+      total_bytes: pointValue, // Use our consistent point value
+      points: pointValue, // Include both field formats
+      is_first_blood: data.isFirstBlood || data.is_first_blood || false,
+      solved_at: data.timestamp || Date.now(),
+      // Store the activity ID for future reference
+      activity_id: activityId,
+    };
+
+    console.log("[ACTIVITIES] Created new activity object:", newActivity);
+
+    // Add the new activity to the beginning of the list
+    setActivities((prevActivities) => {
+      if (!Array.isArray(prevActivities)) return [newActivity];
+
+      // If we already have an identical activity, don't add a duplicate
+      const activityExists = prevActivities.some(
+        (act) =>
+          // Check for activity_id first (most reliable)
+          (act.activity_id && act.activity_id === activityId) ||
+          // Fallback to checking other fields
+          (act.user_name === newActivity.user_name &&
+            act.challenge_uuid === newActivity.challenge_uuid &&
+            // Use approximate timestamp matching (within 5 seconds)
+            Math.abs(
+              new Date(act.solved_at).getTime() -
+                new Date(newActivity.solved_at).getTime()
+            ) < 5000)
+      );
+
+      if (activityExists) {
+        console.log(
+          "[ACTIVITIES] Activity already exists in the list, not adding duplicate"
+        );
+        return prevActivities;
+      }
+
+      console.log("[ACTIVITIES] Adding new activity to the list");
+      return [newActivity, ...prevActivities];
+    });
+
+    // Also update the scoreboard if we're on the leaderboard tab
+    if (activeTab === "leaderboard" && isEventScoreBoard) {
+      const teamUuid = data.teamUuid || data.team_uuid;
+      if (teamUuid) {
+        console.log("[ACTIVITIES] Updating scoreboard based on activity");
+        updateScoreboardWithNewPoints(
+          data.username || data.user_name,
+          pointValue,
+          data.isFirstBlood || data.is_first_blood || false,
+          teamUuid
+        );
+      }
+    }
+  };
+
+  // Add back the useEffects for fetching activities and scoreboard
+  // Add an effect to fetch activities when switching to the activities tab
+  useEffect(() => {
+    if (activeTab === "activities") {
+      fetchActivities();
+    }
+  }, [activeTab, id]);
 
   // Additional effect to trigger scoreboard fetch when switching to leaderboard tab
   useEffect(() => {
     if (activeTab === "leaderboard" && isEventScoreBoard) {
       eventScoreBoard();
     }
-  }, [activeTab]);
+  }, [activeTab, isEventScoreBoard]);
 
-  // Add useEffect for WebSocket connection to listen for freeze events
+  // Add a direct broadcast function to handle flag submissions
+  const broadcastActivity = async (data) => {
+    try {
+      console.log("Broadcasting activity directly:", data);
+
+      // Prepare the payload
+      const payload = {
+        eventId: id,
+        challengeId: data.challenge_id || data.challengeId,
+        challenge_id: data.challenge_id || data.challengeId,
+        username: data.username || data.user_name,
+        user_name: data.username || data.user_name,
+        teamUuid: data.teamUuid,
+        teamName: data.teamName,
+        points: data.points,
+        isFirstBlood: data.isFirstBlood || false,
+        challenge_name: data.challenge_name,
+        profile_image: data.profile_image,
+        timestamp: Date.now(),
+        broadcast_id: Math.random().toString(36).substring(2, 15),
+      };
+
+      // Post to our broadcast API
+      const response = await fetch("/api/broadcast-activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Cookies.get("token")}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to broadcast activity:", await response.text());
+      } else {
+        console.log("Activity broadcast successful");
+      }
+
+      // Also update our local state immediately
+      handleRealTimeActivity(payload);
+    } catch (error) {
+      console.error("Error broadcasting activity:", error);
+    }
+  };
+
+  // Add a global listener for flag submissions
+  useEffect(() => {
+    // Define event handler for flag submissions
+    const handleGlobalFlagSubmit = (event) => {
+      // Check if this event is relevant to us
+      if (event && event.detail && event.detail.eventId === id) {
+        console.log("Caught global flag submission event:", event.detail);
+        broadcastActivity(event.detail);
+      }
+    };
+
+    // Add global event listener
+    if (typeof window !== "undefined") {
+      window.addEventListener("flag_submitted", handleGlobalFlagSubmit);
+    }
+
+    // Clean up
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("flag_submitted", handleGlobalFlagSubmit);
+      }
+    };
+  }, [id]);
+
+  // Introduce a testing function that simulates a flag submission (for development)
+  const simulateSubmission = () => {
+    const simulatedData = {
+      challenge_id: `sim-${Math.random().toString(36).substring(2, 7)}`,
+      username: Cookies.get("username") || "TestUser",
+      user_name: Cookies.get("username") || "TestUser",
+      eventId: id,
+      teamUuid: teams?.uuid || "test-team",
+      teamName: teams?.name || "Test Team",
+      points: Math.floor(Math.random() * 100) + 1,
+      isFirstBlood: Math.random() > 0.8,
+      challenge_name: "Test Challenge",
+      profile_image: "/icon1.png",
+      timestamp: new Date().toISOString(),
+    };
+
+    // Dispatch a DOM event that will be caught by our listener
+    if (typeof window !== "undefined") {
+      const event = new CustomEvent("flag_submitted", {
+        detail: simulatedData,
+      });
+      window.dispatchEvent(event);
+    }
+  };
+
+  // Add back the WebSocket freeze event listener
   useEffect(() => {
     if (!id) return;
 
@@ -1193,124 +1838,66 @@ export default function EventPage() {
 
     checkFreezeState();
 
-    // Set up socket connection for real-time updates
-    let socket;
+    // Listen for system freeze updates that affect this event
+    const handleFreezeUpdate = (event) => {
+      const { frozen, eventId, isGlobal } = event.detail;
 
-    if (typeof window !== "undefined") {
-      // Import socket.io-client dynamically
-      import("socket.io-client").then(({ io }) => {
-        socket = io({
-          path: "/api/socket",
-          transports: ["websocket", "polling"],
-        });
-
-        socket.on("connect", () => {
-          // Request current freeze state for this event
-          socket.emit("get_system_state", { eventId: id });
-        });
-
-        socket.on("system_freeze", (data) => {
-          // Only update if this event matches or it's a global freeze
-          if (!data.eventId || data.eventId === id) {
-            setIsLeaderboardFrozen(data.frozen);
-          }
-        });
-      });
-    }
-
-    return () => {
-      if (socket) {
-        socket.disconnect();
+      // Apply freeze state if it's for this specific event or it's global
+      if ((eventId && eventId === id) || isGlobal) {
+        setIsLeaderboardFrozen(frozen);
+        console.log(
+          `Leaderboard freeze state updated for event ${id}: ${frozen}`
+        );
       }
     };
+
+    // Add event listener
+    window.addEventListener("system_freeze_update", handleFreezeUpdate);
+
+    // Clean up
+    return () => {
+      window.removeEventListener("system_freeze_update", handleFreezeUpdate);
+    };
   }, [id]);
-
-  // Add this function to fetch activities
-  const fetchActivities = async () => {
-    try {
-      setIsActivitiesLoading(true);
-      const api = process.env.NEXT_PUBLIC_API_URL;
-      const res = await axios.get(`${api}/events/activities/${id}`, {
-        headers: {
-          Authorization: `Bearer ${Cookies.get("token")}`,
-        },
-      });
-
-      if (res.data && res.data.activities) {
-        setActivities(res.data.activities);
-      }
-    } catch (error) {
-      console.error("Error fetching activities:", error);
-    } finally {
-      setIsActivitiesLoading(false);
-    }
-  };
-
-  // Add useEffect to load activities when tab changes
-  useEffect(() => {
-    if (activeTab === "activities") {
-      fetchActivities();
-    }
-  }, [activeTab, id]);
 
   return isLoading ? (
     <LoadingPage />
   ) : (
     <div className="mt-28 lg:mt-36 px-4 sm:px-6 md:px-8 lg:px-10 max-w-[2000px] mx-auto">
-      {/* Add global styles for animations */}
       <style jsx global>{`
-        @keyframes scoreUpdate {
+        @keyframes slideInFromLeft {
           0% {
-            background-color: rgba(56, 255, 229, 0.5);
-          }
-          50% {
-            background-color: rgba(56, 255, 229, 0.3);
+            transform: translateX(100%);
+            opacity: 0;
           }
           100% {
-            background-color: transparent;
+            transform: translateX(0);
+            opacity: 1;
           }
         }
 
-        .score-updated {
-          animation: scoreUpdate 3s ease-out forwards;
+        .slide-in-animation {
+          animation: slideInFromLeft 0.5s ease-out forwards;
+        }
+
+        @keyframes pulse {
+          0% {
+            opacity: 0.5;
+            transform: scale(0.8);
+            box-shadow: 0 0 0 0 rgba(56, 255, 229, 0.7);
+          }
+          70% {
+            opacity: 1;
+            transform: scale(1.1);
+            box-shadow: 0 0 0 10px rgba(56, 255, 229, 0);
+          }
+          100% {
+            opacity: 0.5;
+            transform: scale(0.8);
+            box-shadow: 0 0 0 0 rgba(56, 255, 229, 0);
+          }
         }
       `}</style>
-
-      <Toaster
-        position="top-center"
-        containerStyle={{
-          top: "50%",
-          transform: "translateY(-50%)",
-        }}
-        toastOptions={{
-          duration: 3000,
-          className: "",
-          style: {
-            background: "#333",
-            color: "#fff",
-            direction: isEnglish ? "ltr" : "rtl",
-            textAlign: isEnglish ? "left" : "right",
-          },
-          success: {
-            style: {
-              background: "green",
-            },
-            iconTheme: {
-              primary: "#fff",
-              secondary: "green",
-            },
-          },
-          error: {
-            style: {
-              background: "red",
-            },
-            iconTheme: {
-              primary: "#fff",
-              secondary: "red",
-            },
-          },
-        }}
-      />
 
       {/* Custom notification component */}
       {showCopiedToast && (
@@ -1362,41 +1949,6 @@ export default function EventPage() {
           </div>
         </div>
       )}
-
-      <style jsx global>{`
-        @keyframes slideInFromLeft {
-          0% {
-            transform: translateX(100%);
-            opacity: 0;
-          }
-          100% {
-            transform: translateX(0);
-            opacity: 1;
-          }
-        }
-
-        .slide-in-animation {
-          animation: slideInFromLeft 0.5s ease-out forwards;
-        }
-
-        @keyframes pulse {
-          0% {
-            opacity: 0.5;
-            transform: scale(0.8);
-            box-shadow: 0 0 0 0 rgba(56, 255, 229, 0.7);
-          }
-          70% {
-            opacity: 1;
-            transform: scale(1.1);
-            box-shadow: 0 0 0 10px rgba(56, 255, 229, 0);
-          }
-          100% {
-            opacity: 0.5;
-            transform: scale(0.8);
-            box-shadow: 0 0 0 0 rgba(56, 255, 229, 0);
-          }
-        }
-      `}</style>
 
       <div dir={isEnglish ? "ltr" : "rtl"}>
         <h1 className="text-xl md:text-2xl font-bold flex items-center gap-1">
@@ -2842,8 +3394,8 @@ export default function EventPage() {
                   dir={isEnglish ? "ltr" : "rtl"}
                   key={index}
                   className={`rounded-lg mb-3 px-4 md:px-10 py-3 ${
-                    team.justUpdated ? "score-updated" : ""
-                  } ${index % 2 === 0 ? "bg-[#06373F]" : "bg-transparent"}`}
+                    index % 2 === 0 ? "bg-[#06373F]" : "bg-transparent"
+                  }`}
                 >
                   <div
                     className={`grid grid-cols-5 ${
@@ -2904,11 +3456,7 @@ export default function EventPage() {
                     </div>
 
                     <div className="col-span-1 flex justify-center">
-                      <div
-                        className={`flex flex-row-reverse items-center gap-2 ${
-                          team.justUpdated ? "font-bold" : ""
-                        }`}
-                      >
+                      <div className="flex flex-row-reverse items-center gap-2">
                         <Image
                           src="/byte.png"
                           alt="points"
@@ -2916,11 +3464,7 @@ export default function EventPage() {
                           height={25}
                           className="w-5 h-5 md:w-6 md:h-6"
                         />
-                        <span
-                          className={`text-white text-sm md:text-xl ${
-                            team.justUpdated ? "text-[#38FFE5]" : ""
-                          }`}
-                        >
+                        <span className="text-white text-sm md:text-xl">
                           {team.points}
                         </span>
                       </div>
@@ -2935,11 +3479,7 @@ export default function EventPage() {
                           height={25}
                           className="w-5 h-5 md:w-6 md:h-6"
                         />
-                        <span
-                          className={`text-white text-sm md:text-xl ${
-                            team.justUpdated ? "text-[#38FFE5]" : ""
-                          }`}
-                        >
+                        <span className="text-white text-sm md:text-xl">
                           {team.challenges_solved}
                         </span>
                       </div>
@@ -2954,11 +3494,7 @@ export default function EventPage() {
                           height={25}
                           className="w-5 h-5 md:w-6 md:h-7"
                         />
-                        <span
-                          className={`text-white text-sm md:text-xl ${
-                            team.justUpdated ? "text-[#38FFE5]" : ""
-                          }`}
-                        >
+                        <span className="text-white text-sm md:text-xl">
                           {team.first_blood_count}
                         </span>
                       </div>
@@ -3170,24 +3706,27 @@ export default function EventPage() {
               </h3>
             </div>
 
-            <div className="flex flex-row items-center gap-1">
-              <p>
-                {isEnglish
-                  ? isLeaderboardFrozen
-                    ? "Activities: Frozen"
-                    : "Activities: Live"
-                  : isLeaderboardFrozen
-                  ? "الأنشطة : مجمدة"
-                  : "الأنشطة : حيّة"}
-              </p>
-              <div
-                className={`w-[16px] h-[16px] rounded-full ${
-                  isLeaderboardFrozen ? "bg-red-500" : "bg-[#38FFE5]"
-                }`}
-                style={{
-                  animation: "pulse 3s ease-in-out infinite",
-                }}
-              ></div>
+            <div className="flex flex-row items-center gap-3">
+              {/* Remove the Test Activity button */}
+              <div className="flex flex-row items-center gap-1">
+                <p>
+                  {isEnglish
+                    ? isLeaderboardFrozen
+                      ? "Activities: Frozen"
+                      : "Activities: Live"
+                    : isLeaderboardFrozen
+                    ? "الأنشطة : مجمدة"
+                    : "الأنشطة : حيّة"}
+                </p>
+                <div
+                  className={`w-[16px] h-[16px] rounded-full ${
+                    isLeaderboardFrozen ? "bg-red-500" : "bg-[#38FFE5]"
+                  }`}
+                  style={{
+                    animation: "pulse 3s ease-in-out infinite",
+                  }}
+                ></div>
+              </div>
             </div>
           </div>
 
@@ -3384,6 +3923,43 @@ export default function EventPage() {
           </div>
         </div>
       )}
+
+      {/* Add back the Toaster component */}
+      <Toaster
+        position="top-center"
+        containerStyle={{
+          top: "50%",
+          transform: "translateY(-50%)",
+        }}
+        toastOptions={{
+          duration: 3000,
+          className: "",
+          style: {
+            background: "#333",
+            color: "#fff",
+            direction: isEnglish ? "ltr" : "rtl",
+            textAlign: isEnglish ? "left" : "right",
+          },
+          success: {
+            style: {
+              background: "green",
+            },
+            iconTheme: {
+              primary: "#fff",
+              secondary: "green",
+            },
+          },
+          error: {
+            style: {
+              background: "red",
+            },
+            iconTheme: {
+              primary: "#fff",
+              secondary: "red",
+            },
+          },
+        }}
+      />
     </div>
   );
 }

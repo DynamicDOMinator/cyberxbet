@@ -34,6 +34,8 @@ let socketInstance = null;
 
 // Track system freeze state
 let systemFrozenState = false;
+// Track event-specific freeze states
+const eventFrozenStates = new Map();
 
 // For non-Vercel environments, use the normal Socket.IO connection
 export const createSocket = (userName = null) => {
@@ -74,14 +76,27 @@ export const createSocket = (userName = null) => {
 
     // Setup system freeze state handler
     socketInstance.on("system_freeze", (data) => {
-      systemFrozenState = data.frozen;
-      console.log(`System freeze state updated: ${systemFrozenState}`);
+      // If this is an event-specific freeze state
+      if (data.eventId) {
+        eventFrozenStates.set(data.eventId, data.frozen);
+        console.log(
+          `Event ${data.eventId} freeze state updated: ${data.frozen}`
+        );
+      } else {
+        // This is a global freeze state
+        systemFrozenState = data.frozen;
+        console.log(`Global system freeze state updated: ${systemFrozenState}`);
+      }
 
       // Dispatch custom event for components to listen to
       if (typeof window !== "undefined") {
         window.dispatchEvent(
           new CustomEvent("system_freeze_update", {
-            detail: { frozen: systemFrozenState },
+            detail: {
+              frozen: data.frozen,
+              eventId: data.eventId || null,
+              isGlobal: !data.eventId,
+            },
           })
         );
       }
@@ -154,15 +169,20 @@ export const disconnectSocket = () => {
 };
 
 // Function to get current system freeze state
-export const getSystemFreezeState = () => {
+export const getSystemFreezeState = (eventId = null) => {
+  // If eventId is provided, check for event-specific state first
+  if (eventId && eventFrozenStates.has(eventId)) {
+    return eventFrozenStates.get(eventId);
+  }
+  // Otherwise return global state
   return systemFrozenState;
 };
 
 // Function for admin to control system freeze state
-export const adminControlFreeze = (freeze) => {
+export const adminControlFreeze = (freeze, eventId = null) => {
   if (!socketInstance) return false;
 
-  socketInstance.emit("admin_freeze_control", { freeze });
+  socketInstance.emit("admin_freeze_control", { freeze, eventId });
   return true;
 };
 
@@ -176,6 +196,8 @@ function createVirtualSocket(userName, tabId) {
 
   // Keep track of system freeze state
   let virtualSystemFrozen = false;
+  // Keep track of event-specific freeze states
+  const virtualEventFrozenStates = new Map();
 
   // Track challenge rooms this socket has joined
   const joinedRooms = new Set();
@@ -317,10 +339,11 @@ function createVirtualSocket(userName, tabId) {
   const setupSystemStatePolling = () => {
     const intervalId = setInterval(async () => {
       try {
-        const response = await axios.get("/api/system-freeze");
+        // Poll for global system freeze state
+        const globalResponse = await axios.get("/api/freeze");
 
-        if (response.data.frozen !== virtualSystemFrozen) {
-          virtualSystemFrozen = response.data.frozen;
+        if (globalResponse.data.frozen !== virtualSystemFrozen) {
+          virtualSystemFrozen = globalResponse.data.frozen;
 
           // Notify listeners
           if (eventHandlers.system_freeze) {
@@ -333,8 +356,53 @@ function createVirtualSocket(userName, tabId) {
           if (typeof window !== "undefined") {
             window.dispatchEvent(
               new CustomEvent("system_freeze_update", {
-                detail: { frozen: virtualSystemFrozen },
+                detail: { frozen: virtualSystemFrozen, isGlobal: true },
               })
+            );
+          }
+        }
+
+        // Poll for event-specific freeze states for all joined team rooms
+        for (const eventId of joinedTeamRooms) {
+          try {
+            const eventResponse = await axios.get(
+              `/api/freeze?eventId=${eventId}`
+            );
+
+            if (
+              eventResponse.data &&
+              eventResponse.data.frozen !==
+                virtualEventFrozenStates.get(eventId)
+            ) {
+              virtualEventFrozenStates.set(eventId, eventResponse.data.frozen);
+
+              // Notify listeners
+              if (eventHandlers.system_freeze) {
+                eventHandlers.system_freeze.forEach((handler) =>
+                  handler({
+                    frozen: eventResponse.data.frozen,
+                    eventId: eventId,
+                  })
+                );
+              }
+
+              // Dispatch custom event
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(
+                  new CustomEvent("system_freeze_update", {
+                    detail: {
+                      frozen: eventResponse.data.frozen,
+                      eventId: eventId,
+                      isGlobal: false,
+                    },
+                  })
+                );
+              }
+            }
+          } catch (eventError) {
+            console.error(
+              `Error polling freeze state for event ${eventId}:`,
+              eventError
             );
           }
         }
@@ -376,7 +444,15 @@ function createVirtualSocket(userName, tabId) {
 
       // If this is a system freeze handler, call it with current state
       if (event === "system_freeze") {
+        // Send global state
         handler({ frozen: virtualSystemFrozen });
+
+        // Send event-specific states if any
+        if (virtualEventFrozenStates.size > 0) {
+          virtualEventFrozenStates.forEach((frozen, eventId) => {
+            handler({ frozen, eventId });
+          });
+        }
       }
     },
 
@@ -410,6 +486,33 @@ function createVirtualSocket(userName, tabId) {
           // Set up polling for team updates in this event
           setupTeamPolling(eventId);
 
+          // Immediately check for event-specific freeze state
+          (async () => {
+            try {
+              const response = await axios.get(
+                `/api/freeze?eventId=${eventId}`
+              );
+              if (response.data && response.data.frozen !== undefined) {
+                virtualEventFrozenStates.set(eventId, response.data.frozen);
+
+                // Notify listeners
+                if (eventHandlers.system_freeze) {
+                  eventHandlers.system_freeze.forEach((handler) =>
+                    handler({
+                      frozen: response.data.frozen,
+                      eventId: eventId,
+                    })
+                  );
+                }
+              }
+            } catch (error) {
+              console.error(
+                `Error checking freeze state for event ${eventId}:`,
+                error
+              );
+            }
+          })();
+
           // Notify the server about joining the team room
           (async () => {
             try {
@@ -430,6 +533,9 @@ function createVirtualSocket(userName, tabId) {
 
         if (eventId && joinedTeamRooms.has(eventId)) {
           joinedTeamRooms.delete(eventId);
+
+          // Remove event-specific freeze state
+          virtualEventFrozenStates.delete(eventId);
 
           // Clear polling interval
           if (teamPollingIntervals.has(eventId)) {
@@ -570,13 +676,18 @@ function createVirtualSocket(userName, tabId) {
             const response = await axios.post("/api/socket", {
               action: "admin_freeze_control",
               freeze: data.freeze,
+              eventId: data.eventId || null,
               userName,
               id: anonymousId,
             });
 
             // Update local state
             if (response.data.success) {
-              virtualSystemFrozen = response.data.frozen;
+              if (data.eventId) {
+                virtualEventFrozenStates.set(data.eventId, data.freeze);
+              } else {
+                virtualSystemFrozen = data.freeze;
+              }
 
               // Notify handlers
               if (eventHandlers.admin_freeze_response) {

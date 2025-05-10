@@ -10,6 +10,8 @@ let onlineCount = 0;
 
 // Track system state
 let systemFrozen = false;
+// Track event-specific freeze states
+const eventFreezeStates = new Map();
 
 // Track last activity timestamps
 const connectionTimestamps = new Map(); // userName -> timestamp
@@ -83,6 +85,24 @@ function cleanupOldTeamUpdates() {
   });
 }
 
+// Function to get freeze state for an event or global
+function getFreezeState(eventId = null) {
+  if (eventId && eventFreezeStates.has(eventId)) {
+    return eventFreezeStates.get(eventId);
+  }
+  return systemFrozen;
+}
+
+// Function to set freeze state for an event or global
+function setFreezeState(value, eventId = null) {
+  if (eventId) {
+    eventFreezeStates.set(eventId, value);
+    return value;
+  }
+  systemFrozen = value;
+  return systemFrozen;
+}
+
 // GET handler for polling
 export async function GET(req) {
   // Clean up stale connections
@@ -109,9 +129,15 @@ export async function GET(req) {
 
   // Handle freeze status request
   if (freezeStatusParam === "true") {
+    const specificEventId = url.searchParams.get("eventId");
+    const freezeState = getFreezeState(specificEventId);
+
     return NextResponse.json({
-      frozen: systemFrozen,
-      message: "System freeze status retrieved",
+      frozen: freezeState,
+      eventId: specificEventId || null,
+      message: specificEventId
+        ? `Freeze status for event ${specificEventId} retrieved`
+        : "Global system freeze status retrieved",
     });
   }
 
@@ -130,6 +156,7 @@ export async function GET(req) {
       teamUpdates: eventTeamData.updates,
       lastTeamUpdate: eventTeamData.lastTeamUpdate,
       message: "Team updates retrieved",
+      frozen: getFreezeState(eventId), // Include freeze state for this event
     });
   }
 
@@ -299,6 +326,7 @@ export async function POST(req) {
         status: "success",
         message: "Joined team room",
         event_id,
+        frozen: getFreezeState(event_id), // Include freeze state for this event
       });
     }
     // Handle flag submission events
@@ -407,21 +435,67 @@ export async function POST(req) {
     else if (action === "admin_freeze_control") {
       // In a real app, we would check admin credentials here
       const isAdmin = userName && userName.includes("admin"); // Simple check for demo purposes
+      const eventId = data.eventId || null;
 
       if (isAdmin || data.key === "cb209876540331298765") {
         // Allow control key as backup
-        systemFrozen = !!data.freeze;
+        const freezeState = setFreezeState(!!data.freeze, eventId);
         console.log(
-          `System freeze state set to: ${systemFrozen} by ${
-            userName || "API key"
-          }`
+          `System freeze state set to: ${freezeState} ${
+            eventId ? `for event ${eventId}` : "globally"
+          } by ${userName || "API key"}`
         );
+
+        // Broadcast the freeze state update to all connected clients
+        try {
+          // Prepare the notification data
+          const notificationData = {
+            frozen: freezeState,
+            eventId: eventId,
+            message: `System ${freezeState ? "frozen" : "unfrozen"}${
+              eventId ? ` for event ${eventId}` : ""
+            }`,
+            timestamp: new Date().toISOString(),
+            source: "socket_api",
+          };
+
+          // Broadcast to all clients in the appropriate room
+          if (eventId) {
+            // If this is an event-specific freeze, broadcast to the team room for that event
+            const roomName = `team_${eventId}`;
+            console.log(
+              `Broadcasting freeze state update to room: ${roomName}`
+            );
+
+            // Store the update for future polling
+            if (!teamUpdates.has(eventId)) {
+              teamUpdates.set(eventId, {
+                updates: [],
+                lastTeamUpdate: Date.now(),
+              });
+            }
+
+            const eventData = teamUpdates.get(eventId);
+            eventData.updates.push({
+              action: "freeze_update",
+              frozen: freezeState,
+              timestamp: Date.now(),
+              source: "socket_api",
+            });
+            eventData.lastTeamUpdate = Date.now();
+          }
+        } catch (broadcastError) {
+          console.error("Error broadcasting freeze state:", broadcastError);
+        }
 
         return NextResponse.json({
           status: "success",
           success: true,
-          frozen: systemFrozen,
-          message: `System ${systemFrozen ? "frozen" : "unfrozen"}`,
+          frozen: freezeState,
+          eventId: eventId,
+          message: `System ${freezeState ? "frozen" : "unfrozen"}${
+            eventId ? ` for event ${eventId}` : ""
+          }`,
         });
       } else {
         console.log(

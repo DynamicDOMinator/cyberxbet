@@ -5,11 +5,25 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import Image from "next/image";
 import ConfettiAnimation from "@/components/ConfettiAnimation";
-import LoadingPage from "../../../components/LoadingPage";
+import LoadingPage from "@/app/components/LoadingPage";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { useUserProfile } from "@/app/context/UserProfileContext";
 import { useRouter } from "next/navigation";
 import { createSocket, disconnectSocket } from "@/lib/socket-client";
+import {
+  broadcastFlagSubmission,
+  listenForFlagSubmissions,
+} from "@/lib/flag-events";
+import { toast, Toaster } from "react-hot-toast";
+import { MdKeyboardArrowLeft } from "react-icons/md";
+import { MdKeyboardArrowRight } from "react-icons/md";
+import Link from "next/link";
+import { HiOutlineUsers } from "react-icons/hi2";
+import TeamRegistrationModal from "@/app/components/TeamRegistrationModal";
+import { IoCopy } from "react-icons/io5";
+import { testFlagSubmission, debugEventListeners } from "@/lib/flag-events";
+import TeamDetailsModal from "@/app/components/TeamDetailsModal";
+import { BiLoaderAlt } from "react-icons/bi";
 
 export default function ChallengePage() {
   const [challenge, setChallenge] = useState(null);
@@ -358,6 +372,125 @@ export default function ChallengePage() {
       }
     };
 
+    // Event listener for activity updates
+    const onActivityUpdate = async (data) => {
+      console.log("Activity update received:", data);
+
+      // Only process if we have valid data
+      if (!data || !data.username) return;
+
+      // Don't update if it's our own activity (we already handled it locally)
+      if (data.username === userData?.user_name) return;
+
+      // Create a new activity entry
+      const newActivity = {
+        username: data.username,
+        user_name: data.username,
+        userName: data.username,
+        profile_image: data.profile_image || "/icon1.png",
+        is_first_blood: data.isFirstBlood || false,
+        solved_at: data.solved_at || new Date().toISOString(),
+      };
+
+      // Show toast notification if user is not on activities tab
+      if (!activities) {
+        setToast({
+          type: data.isFirstBlood ? "firstBlood" : "solve",
+          user: data.username,
+          profileImage: data.profile_image || "/icon1.png",
+          timestamp: new Date(),
+        });
+
+        // Auto-dismiss toast after 5 seconds
+        setTimeout(() => setToast(null), 5000);
+
+        // Increment pending activities counter
+        setPendingActivitiesCount((prev) => prev + 1);
+      } else {
+        // We're on the activities tab, update the list immediately
+        setActivitiesData((prev) => {
+          // Check if this user is already in the list
+          const userExists =
+            prev &&
+            Array.isArray(prev) &&
+            prev.some(
+              (user) =>
+                (user.username &&
+                  user.username.toLowerCase() ===
+                    data.username.toLowerCase()) ||
+                (user.user_name &&
+                  user.user_name.toLowerCase() ===
+                    data.username.toLowerCase()) ||
+                (user.userName &&
+                  user.userName.toLowerCase() === data.username.toLowerCase())
+            );
+
+          if (userExists) {
+            // Update the existing entry
+            return prev.map((user) => {
+              const userMatches =
+                (user.username &&
+                  user.username.toLowerCase() ===
+                    data.username.toLowerCase()) ||
+                (user.user_name &&
+                  user.user_name.toLowerCase() ===
+                    data.username.toLowerCase()) ||
+                (user.userName &&
+                  user.userName.toLowerCase() === data.username.toLowerCase());
+
+              return userMatches
+                ? {
+                    ...user,
+                    is_first_blood: data.isFirstBlood || user.is_first_blood,
+                    solved_at: data.solved_at || new Date().toISOString(),
+                  }
+                : user;
+            });
+          } else {
+            // Add the new solver to the beginning of the array
+            return Array.isArray(prev) ? [newActivity, ...prev] : [newActivity];
+          }
+        });
+
+        // If this was an empty state before, make sure to update it
+        if (showEmptyState) {
+          setShowEmptyState(false);
+        }
+      }
+
+      // Update challenge solved count
+      if (challenge?.solved_count !== undefined) {
+        setChallenge((prev) => ({
+          ...prev,
+          solved_count: (prev.solved_count || 0) + 1,
+        }));
+      }
+
+      // Update first blood information if applicable
+      if (
+        data.isFirstBlood &&
+        challenge?.flags_data &&
+        challenge.flags_data.length > 0
+      ) {
+        setChallenge((prev) => {
+          const updatedFlags = [...prev.flags_data];
+          if (updatedFlags[0] && !updatedFlags[0].first_blood) {
+            updatedFlags[0] = {
+              ...updatedFlags[0],
+              first_blood: {
+                user_name: data.username,
+                profile_image: data.profile_image || "/icon1.png",
+              },
+            };
+          }
+          return {
+            ...prev,
+            flags_data: updatedFlags,
+          };
+        });
+      }
+    };
+
     // Event listener for team updates
     const onTeamUpdate = (data) => {
       console.log("Team update received:", data);
@@ -394,12 +527,14 @@ export default function ChallengePage() {
     socket.on("newSolve", onNewSolve);
     socket.on("firstBlood", onFirstBlood);
     socket.on("teamUpdate", onTeamUpdate);
+    socket.on("activityUpdate", onActivityUpdate);
 
     // Clean up event listeners when component unmounts
     return () => {
       socket.off("newSolve", onNewSolve);
       socket.off("firstBlood", onFirstBlood);
       socket.off("teamUpdate", onTeamUpdate);
+      socket.off("activityUpdate", onActivityUpdate);
     };
   }, [id, socket, activities, teamData, userData, challenge]);
 
@@ -642,7 +777,7 @@ export default function ChallengePage() {
     }
   }, [challenge?.event_uuid, fetchTeamInfo]);
 
-  // Modified submitFlag function with socket integration
+  // Modified submitFlag function with direct broadcast integration
   const submitFlag = async () => {
     try {
       setIsLoading(true);
@@ -690,14 +825,16 @@ export default function ChallengePage() {
             if (teamResponse.data?.data) {
               setTeamData(teamResponse.data.data);
 
-              // Now we have fresh team data, emit socket events
+              // Now we have fresh team data, prepare event data
               const username =
                 userData?.user_name || Cookies.get("username") || "";
-              const pointsEarned = response.data.data.points || 0;
               const isFirstBlood = response.data.data.is_first_blood || false;
 
+              // CRITICAL: Use total_bytes as primary point source for consistency with API
               // Find the user's total points in the team members array
               let userPoints = 0;
+              let earnedPoints = 0;
+
               if (
                 username &&
                 teamResponse.data.data.members &&
@@ -709,54 +846,57 @@ export default function ChallengePage() {
                     username &&
                     m.username.toLowerCase() === username.toLowerCase()
                 );
+                // Use total_bytes as our primary source of truth for points
                 userPoints = userMember?.total_bytes || 0;
+
+                // Calculate earned points from what the API returns
+                earnedPoints = response.data.data.points || 0;
               }
 
-              // Create payload with complete information
-              const socketPayload = {
+              // Create payload with complete information and consistent field naming
+              const payload = {
+                eventId: eventId,
+                event_id: eventId,
+                challengeId: id,
                 challenge_id: id,
+                challengeName: challenge?.title || "Challenge",
+                challenge_name: challenge?.title || "Challenge",
                 username: username,
                 user_name: username,
-                eventId: eventId,
                 teamUuid: teamResponse.data.data.uuid,
+                team_uuid: teamResponse.data.data.uuid,
                 teamName: teamResponse.data.data.name,
-                points: pointsEarned,
-                newPoints: userPoints,
-                newTeamTotal:
-                  teamResponse.data.data.statistics?.total_bytes || 0,
+                team_name: teamResponse.data.data.name,
+
+                // CRITICAL: Include both points AND total_bytes to ensure consistency
+                points: earnedPoints,
+                total_bytes: earnedPoints, // This ensures the value is consistent in the broadcast
+
                 isFirstBlood: isFirstBlood,
-                solvedCount:
-                  teamResponse.data.data.statistics?.total_challenges_solved ||
-                  0,
-                challenge_name: challenge?.title || "Challenge",
+                is_first_blood: isFirstBlood,
+                profileImage: userData?.profile_image || "/icon1.png",
                 profile_image: userData?.profile_image || "/icon1.png",
+
+                timestamp: Date.now(),
+                broadcast_id: `${username}_${id}_${Date.now()}`,
               };
 
-              console.log("Emitting flag event:", socketPayload);
+              console.log(
+                "[FLAG-SUBMIT] Broadcasting flag event with points:",
+                earnedPoints
+              );
 
-              // Emit appropriate events
-              if (socket) {
-                if (isFirstBlood) {
-                  socket.emit("flagFirstBlood", socketPayload);
-                } else {
-                  socket.emit("flagSubmitted", socketPayload);
-                }
-
-                // Always emit team update for scoreboard
-                socket.emit("teamUpdate", {
-                  action: "points_update",
-                  ...socketPayload,
-                });
-              }
+              // Use direct payload with the updated function
+              broadcastFlagSubmission(payload);
 
               // Now show appropriate notification
               if (isFirstBlood) {
                 setIsFirstBlood(true);
-                setFirstblood(response.data.data.first_blood_points);
+                setFirstblood(earnedPoints); // Use consistent point value
                 setTimeout(() => setIsFirstBlood(false), 5000);
               } else {
                 setIsSubmitFlag(true);
-                setPoints(pointsEarned);
+                setPoints(earnedPoints); // Use consistent point value
                 setTimeout(() => setIsSubmitFlag(false), 5000);
               }
 
@@ -769,6 +909,8 @@ export default function ChallengePage() {
                   userName: username,
                   profile_image: userData?.profile_image || "/icon1.png",
                   is_first_blood: isFirstBlood,
+                  total_bytes: earnedPoints, // Use consistent point value
+                  points: earnedPoints, // Include both for compatibility
                   solved_at: new Date().toISOString(),
                 };
 
@@ -932,6 +1074,273 @@ export default function ChallengePage() {
       };
     }
   }, [socket, challenge?.event_uuid]);
+
+  // Function to load activities with consistent point values
+  const loadActivities = useCallback(async () => {
+    if (!activities) return;
+    if (!challenge?.event_uuid) return;
+
+    try {
+      setIsLoading(true);
+
+      // Use our dedicated API route to ensure consistent point values
+      const response = await fetch(
+        `/api/activities?eventId=${challenge.event_uuid}&challengeId=${id}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to load activities: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success && Array.isArray(result.data)) {
+        // Data is already normalized with consistent field names in our API route
+        setActivitiesData(result.data);
+        console.log(
+          `[ACTIVITIES] Loaded ${result.data.length} activities with consistent point values`
+        );
+      }
+    } catch (error) {
+      console.error("Error loading activities:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activities, challenge, id]);
+
+  // Load activities whenever tab or challenge changes
+  useEffect(() => {
+    if (activities) {
+      loadActivities();
+    }
+  }, [activities, loadActivities]);
+
+  // Use SSE for another source of real-time updates
+  useEffect(() => {
+    if (!challenge?.event_uuid || !activities) return;
+
+    let eventSource = null;
+
+    try {
+      // Create SSE connection
+      console.log(
+        `[SSE] Setting up connection for event ${challenge.event_uuid}`
+      );
+      eventSource = new EventSource(
+        `/api/broadcast-activity?eventId=${challenge.event_uuid}`
+      );
+
+      eventSource.onopen = () => {
+        console.log(
+          `[SSE] Connection established for event ${challenge.event_uuid}`
+        );
+      };
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+
+          // Skip connection establishment messages
+          if (data.type === "connection_established") {
+            console.log(
+              `[SSE] Connection confirmed: ${data.clientCount} clients connected`
+            );
+            return;
+          }
+
+          // Skip if not for this challenge
+          if (data.challengeId !== id && data.challenge_id !== id) {
+            return;
+          }
+
+          console.log(`[SSE] Received activity:`, data);
+
+          // Use consistent point values (total_bytes as primary source)
+          const points = data.total_bytes || data.points || 0;
+
+          // Add the submission to our local activities state
+          setActivitiesData((prev) => {
+            if (!prev) return [];
+
+            // Check if this submission already exists to avoid duplicates
+            const existingIndex = prev.findIndex(
+              (a) =>
+                (a.username === data.username ||
+                  a.user_name === data.user_name) &&
+                Math.abs(
+                  new Date(a.solved_at || Date.now()) -
+                    new Date(data.timestamp || Date.now())
+                ) < 5000
+            );
+
+            if (existingIndex >= 0) {
+              // Update existing entry with consistent point values
+              const updated = [...prev];
+              updated[existingIndex] = {
+                ...updated[existingIndex],
+                total_bytes: points,
+                points: points,
+                is_first_blood:
+                  data.is_first_blood || data.isFirstBlood || false,
+                timestamp: data.timestamp,
+              };
+              return updated;
+            } else {
+              // Add new entry with normalized fields
+              return [
+                {
+                  username: data.username || data.user_name,
+                  user_name: data.username || data.user_name,
+                  profile_image:
+                    data.profile_image || data.profileImage || "/icon1.png",
+                  is_first_blood:
+                    data.is_first_blood || data.isFirstBlood || false,
+                  isFirstBlood:
+                    data.is_first_blood || data.isFirstBlood || false,
+                  total_bytes: points,
+                  points: points,
+                  solved_at: new Date(
+                    data.timestamp || Date.now()
+                  ).toISOString(),
+                },
+                ...prev,
+              ];
+            }
+          });
+
+          // Show toast notification for other users' submissions
+          if ((data.username || data.user_name) !== userData?.user_name) {
+            toast.success(
+              `${
+                data.username || data.user_name || "Someone"
+              } solved the challenge!`
+            );
+          }
+        } catch (error) {
+          console.error(`[SSE] Error processing event:`, error);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error(`[SSE] Error:`, error);
+
+        // Reconnect after a short delay
+        setTimeout(() => {
+          if (eventSource) {
+            eventSource.close();
+            // The next render will recreate the connection
+          }
+        }, 5000);
+      };
+    } catch (error) {
+      console.error(`[SSE] Failed to establish connection:`, error);
+    }
+
+    // Clean up the SSE connection when the component unmounts
+    return () => {
+      if (eventSource) {
+        console.log(
+          `[SSE] Closing connection for event ${challenge.event_uuid}`
+        );
+        eventSource.close();
+      }
+    };
+  }, [challenge, id, activities, userData]);
+
+  // Listen for flag submissions via DOM events
+  useEffect(() => {
+    if (!challenge?.event_uuid) return;
+
+    console.log(
+      `[FLAG-EVENTS] Setting up flag submission listener for event ${challenge.event_uuid}`
+    );
+
+    // Function to handle real-time flag submission events
+    const handleRealTimeFlagSubmission = (data) => {
+      console.log(`[FLAG-EVENTS] Received flag submission:`, data);
+
+      // Skip if not for this challenge
+      if (data.challengeId !== id && data.challenge_id !== id) {
+        console.log(`[FLAG-EVENTS] Skipping - different challenge ID`);
+        return;
+      }
+
+      // Use consistent point values (total_bytes as primary source)
+      const points = data.total_bytes || data.points || 0;
+
+      // Update notification counter if available
+      if (typeof setPendingActivitiesCount === "function") {
+        setPendingActivitiesCount((prev) => prev + 1);
+      }
+
+      // Add the submission to our local activities state
+      if (setActivitiesData && activities) {
+        setActivitiesData((prev) => {
+          if (!prev) return [];
+
+          // Check if this submission already exists to avoid duplicates
+          const existingIndex = prev.findIndex(
+            (a) =>
+              (a.username === data.username ||
+                a.user_name === data.user_name) &&
+              Math.abs(
+                new Date(a.solved_at || Date.now()) -
+                  new Date(data.timestamp || Date.now())
+              ) < 5000
+          );
+
+          if (existingIndex >= 0) {
+            // Update existing entry with consistent point values
+            const updated = [...prev];
+            updated[existingIndex] = {
+              ...updated[existingIndex],
+              total_bytes: points,
+              points: points,
+              is_first_blood: data.is_first_blood || data.isFirstBlood || false,
+              timestamp: data.timestamp,
+            };
+            return updated;
+          } else {
+            // Add new entry with normalized fields
+            return [
+              {
+                username: data.username || data.user_name,
+                user_name: data.username || data.user_name,
+                profile_image:
+                  data.profile_image || data.profileImage || "/icon1.png",
+                is_first_blood:
+                  data.is_first_blood || data.isFirstBlood || false,
+                isFirstBlood: data.is_first_blood || data.isFirstBlood || false,
+                total_bytes: points,
+                points: points,
+                solved_at: new Date(data.timestamp || Date.now()).toISOString(),
+              },
+              ...prev,
+            ];
+          }
+        });
+      }
+
+      // Show toast notification
+      if (data.username !== userData?.user_name) {
+        toast.success(`${data.username || "Someone"} solved the challenge!`);
+      }
+    };
+
+    // Use the listenForFlagSubmissions function from flag-events.js
+    const cleanup = listenForFlagSubmissions(
+      challenge.event_uuid,
+      handleRealTimeFlagSubmission
+    );
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      if (typeof cleanup === "function") {
+        cleanup();
+        console.log(`[FLAG-EVENTS] Cleaned up flag submission listener`);
+      }
+    };
+  }, [challenge, id, activities, userData]);
 
   return (
     <>
