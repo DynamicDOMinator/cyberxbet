@@ -590,77 +590,93 @@ export async function POST(req) {
       });
     }
     // Handle admin freeze control
-    else if (action === "admin_freeze_control") {
-      // In a real app, we would check admin credentials here
-      const isAdmin = userName && userName.includes("admin"); // Simple check for demo purposes
-      const eventId = data.eventId || null;
-
-      if (isAdmin || data.key === "cb209876540331298765") {
-        // Allow control key as backup
-        const freezeState = setFreezeState(!!data.freeze, eventId);
-        console.log(
-          `System freeze state set to: ${freezeState} ${
-            eventId ? `for event ${eventId}` : "globally"
-          } by ${userName || "API key"}`
-        );
-
-        // Broadcast the freeze state update to all connected clients
-        try {
-          // Prepare the notification data
-          const notificationData = {
-            frozen: freezeState,
-            eventId: eventId,
-            message: `System ${freezeState ? "frozen" : "unfrozen"}${
-              eventId ? ` for event ${eventId}` : ""
-            }`,
-            timestamp: new Date().toISOString(),
-            source: "socket_api",
-          };
-
-          // Store the update for future polling
-          if (eventId && !teamUpdates.has(eventId)) {
-            teamUpdates.set(eventId, {
-              updates: [],
-              lastTeamUpdate: Date.now(),
-            });
-          }
-
-          if (eventId) {
-            const eventData = teamUpdates.get(eventId);
-            eventData.updates.push({
-              action: "freeze_update",
-              frozen: freezeState,
-              timestamp: Date.now(),
-              source: "socket_api",
-            });
-            eventData.lastTeamUpdate = Date.now();
-          }
-        } catch (broadcastError) {
-          console.error("Error broadcasting freeze state:", broadcastError);
-        }
-
-        return NextResponse.json({
-          status: "success",
-          success: true,
-          frozen: freezeState,
-          eventId: eventId,
-          message: `System ${freezeState ? "frozen" : "unfrozen"}${
-            eventId ? ` for event ${eventId}` : ""
-          }`,
-        });
-      } else {
-        console.log(
-          `Unauthorized freeze control attempt by ${userName || "unknown user"}`
-        );
+    else if (
+      action === "admin_freeze_control" &&
+      typeof data.freeze === "boolean"
+    ) {
+      // Validate control key if provided
+      const CONTROL_KEY = "cb209876540331298765"; // Same key as in freeze API
+      if (data.key && data.key !== CONTROL_KEY) {
         return NextResponse.json(
           {
             status: "error",
             success: false,
-            message: "Unauthorized",
+            message: "Invalid control key",
           },
           { status: 403 }
         );
       }
+
+      // Set freeze state in our local storage
+      const eventId = data.eventId || null;
+      const frozen = data.freeze;
+
+      setFreezeState(frozen, eventId);
+
+      // Create the notification payload
+      const freezePayload = {
+        frozen: frozen,
+        timestamp: new Date().toISOString(),
+        source: "socket_api_control",
+      };
+
+      // Add eventId if event-specific
+      if (eventId) {
+        freezePayload.eventId = eventId;
+        console.log(
+          `Socket API: Setting event ${eventId} freeze state to ${frozen}`
+        );
+      } else {
+        console.log(`Socket API: Setting global freeze state to ${frozen}`);
+      }
+
+      // Try to broadcast directly if we have access to Socket.IO server
+      let broadcastSuccess = false;
+
+      try {
+        if (global.io) {
+          // Broadcast to all clients
+          global.io.emit("system_freeze", freezePayload);
+
+          // If event-specific, also broadcast to that event's team room
+          if (eventId) {
+            global.io
+              .to(`team_${eventId}`)
+              .emit("system_freeze", freezePayload);
+          }
+
+          broadcastSuccess = true;
+          console.log(`Socket API: Broadcast freeze state via global.io`);
+        }
+        // Try alternative global.server.io
+        else if (global.server && global.server.io) {
+          global.server.io.emit("system_freeze", freezePayload);
+
+          if (eventId) {
+            global.server.io
+              .to(`team_${eventId}`)
+              .emit("system_freeze", freezePayload);
+          }
+
+          broadcastSuccess = true;
+          console.log(
+            `Socket API: Broadcast freeze state via global.server.io`
+          );
+        }
+      } catch (error) {
+        console.error("Socket API: Error broadcasting freeze state:", error);
+      }
+
+      return NextResponse.json({
+        status: "success",
+        success: true,
+        frozen: frozen,
+        eventId: eventId || null,
+        broadcast: broadcastSuccess,
+        message: `${eventId ? "Event" : "System"} ${
+          frozen ? "frozen" : "unfrozen"
+        } successfully`,
+      });
     }
     // Handle unknown actions
     else {

@@ -180,32 +180,106 @@ export async function POST(req) {
     // Parse request data
     const data = await req.json();
 
-    // Ensure 'frozen' is provided
-    if (typeof data.frozen !== "boolean") {
+    // Check for both 'freeze' and 'frozen' properties
+    // This makes the API more robust by accepting either property name
+    const frozenValue = data.hasOwnProperty("frozen")
+      ? data.frozen
+      : data.hasOwnProperty("freeze")
+      ? data.freeze
+      : undefined;
+
+    // Validate that we have a boolean value
+    if (typeof frozenValue !== "boolean") {
       return NextResponse.json(
-        { error: "Missing or invalid 'frozen' boolean value" },
+        {
+          error:
+            "Missing or invalid 'frozen' boolean value. Please provide either 'frozen' or 'freeze' with a boolean value.",
+        },
         { status: 400 }
       );
     }
 
-    // In production, this would include authentication checks
-    // For simplicity, we're not implementing full auth here
+    // Validate the control key if provided
+    if (data.key && data.key !== CONTROL_KEY) {
+      return NextResponse.json(
+        { error: "Invalid control key" },
+        { status: 403 }
+      );
+    }
 
     // If eventId is provided, set event-specific state
     if (data.eventId) {
-      eventFreezeStates.set(data.eventId, data.frozen);
+      eventFreezeStates.set(data.eventId, frozenValue);
 
       // Log the change
       console.log(
-        `[FREEZE] Event ${data.eventId} freeze state set to: ${data.frozen}`
+        `[FREEZE] Event ${data.eventId} freeze state set to: ${frozenValue}`
       );
 
+      // Try to access global.io (Socket.IO instance) to broadcast the freeze state
+      try {
+        if (typeof global !== "undefined" && global.io) {
+          console.log(
+            `[FREEZE] Broadcasting via Socket.IO for event ${data.eventId}`
+          );
+
+          // Broadcast to all sockets
+          global.io.emit("system_freeze", {
+            frozen: frozenValue,
+            eventId: data.eventId,
+            timestamp: new Date().toISOString(),
+            source: "api_control",
+          });
+
+          // Also broadcast to the specific team room if available
+          global.io.to(`team_${data.eventId}`).emit("system_freeze", {
+            frozen: frozenValue,
+            eventId: data.eventId,
+            timestamp: new Date().toISOString(),
+            source: "api_control",
+          });
+        } else {
+          console.warn(
+            "[FREEZE] Socket.IO instance not available for direct broadcast"
+          );
+        }
+      } catch (socketError) {
+        console.error(
+          "[FREEZE] Error broadcasting via Socket.IO:",
+          socketError
+        );
+      }
+
+      // Also try the server instance if available
+      try {
+        if (
+          typeof global !== "undefined" &&
+          global.server &&
+          global.server.io
+        ) {
+          console.log(
+            `[FREEZE] Broadcasting via server.io for event ${data.eventId}`
+          );
+          global.server.io.emit("system_freeze", {
+            frozen: frozenValue,
+            eventId: data.eventId,
+            timestamp: new Date().toISOString(),
+            source: "api_control",
+          });
+        }
+      } catch (serverSocketError) {
+        console.error(
+          "[FREEZE] Error broadcasting via server.io:",
+          serverSocketError
+        );
+      }
+
       // Notify all clients about this change
-      await notifyFreezeStateChange(data.eventId, data.frozen, false);
+      await notifyFreezeStateChange(data.eventId, frozenValue, false);
 
       return NextResponse.json({
         success: true,
-        frozen: data.frozen,
+        frozen: frozenValue,
         eventId: data.eventId,
         isEventSpecific: true,
         timestamp: new Date().toISOString(),
@@ -213,13 +287,48 @@ export async function POST(req) {
     }
 
     // Otherwise set global state
-    globalFrozen = data.frozen;
+    globalFrozen = frozenValue;
 
     // Log the change
-    console.log(`[FREEZE] Global freeze state set to: ${data.frozen}`);
+    console.log(`[FREEZE] Global freeze state set to: ${frozenValue}`);
+
+    // Try to access global.io (Socket.IO instance) to broadcast the freeze state
+    try {
+      if (typeof global !== "undefined" && global.io) {
+        console.log(`[FREEZE] Broadcasting global freeze state via Socket.IO`);
+        global.io.emit("system_freeze", {
+          frozen: frozenValue,
+          timestamp: new Date().toISOString(),
+          source: "api_control",
+        });
+      } else {
+        console.warn(
+          "[FREEZE] Socket.IO instance not available for direct broadcast"
+        );
+      }
+    } catch (socketError) {
+      console.error("[FREEZE] Error broadcasting via Socket.IO:", socketError);
+    }
+
+    // Also try the server instance if available
+    try {
+      if (typeof global !== "undefined" && global.server && global.server.io) {
+        console.log(`[FREEZE] Broadcasting global freeze state via server.io`);
+        global.server.io.emit("system_freeze", {
+          frozen: frozenValue,
+          timestamp: new Date().toISOString(),
+          source: "api_control",
+        });
+      }
+    } catch (serverSocketError) {
+      console.error(
+        "[FREEZE] Error broadcasting via server.io:",
+        serverSocketError
+      );
+    }
 
     // Notify all clients about this change
-    await notifyFreezeStateChange(null, data.frozen, true);
+    await notifyFreezeStateChange(null, frozenValue, true);
 
     return NextResponse.json({
       success: true,

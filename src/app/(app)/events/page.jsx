@@ -3,7 +3,7 @@ import React from "react";
 import Link from "next/link";
 import axios from "axios";
 import { useLanguage } from "@/app/context/LanguageContext";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Cookies from "js-cookie";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -11,6 +11,7 @@ import LoadingPage from "@/app/components/LoadingPage";
 import { HiOutlineUsers } from "react-icons/hi2";
 import TeamRegistrationModal from "@/app/components/TeamRegistrationModal";
 import toast, { Toaster } from "react-hot-toast";
+import { createSocket, getSystemFreezeState } from "@/lib/socket-client";
 
 export default function Events() {
   const { isEnglish } = useLanguage();
@@ -25,6 +26,9 @@ export default function Events() {
   const [isRegistering, setIsRegistering] = useState(true);
   const [currentPhase, setCurrentPhase] = useState(null);
   const [loadingVisible, setLoadingVisible] = useState(true);
+  const [isFrozen, setIsFrozen] = useState(false);
+  const [eventFrozen, setEventFrozen] = useState(false);
+  const socketRef = useRef(null);
   const router = useRouter();
 
   // Function to format date
@@ -44,6 +48,197 @@ export default function Events() {
       options
     ).format(date);
   };
+
+  // Function to explicitly check freeze state from the API
+  const checkEventFreezeState = async (eventId) => {
+    try {
+      console.log(`Checking freeze state for event ${eventId}`);
+      const response = await axios.get(`/api/freeze?eventId=${eventId}`);
+      const frozen = response.data.frozen;
+      console.log(`Event ${eventId} freeze state from API: ${frozen}`);
+
+      if (frozen) {
+        // Show toast notification for freeze
+        toast.error(
+          isEnglish
+            ? "This event has been frozen by administrators"
+            : "تم تجميد هذا الحدث من قبل المسؤولين"
+        );
+      }
+
+      setEventFrozen(frozen);
+      return frozen;
+    } catch (error) {
+      console.error(`Error checking freeze state for event ${eventId}:`, error);
+      return false;
+    }
+  };
+
+  // Check global system freeze state
+  const checkGlobalFreezeState = async () => {
+    try {
+      console.log("Checking global freeze state");
+      const response = await axios.get("/api/freeze");
+      const frozen = response.data.frozen;
+      console.log(`Global freeze state from API: ${frozen}`);
+
+      if (frozen) {
+        // Show toast notification for freeze
+        toast.error(
+          isEnglish
+            ? "The system has been frozen by administrators"
+            : "تم تجميد النظام من قبل المسؤولين"
+        );
+      }
+
+      setIsFrozen(frozen);
+      return frozen;
+    } catch (error) {
+      console.error("Error checking global freeze state:", error);
+      return false;
+    }
+  };
+
+  // Function to handle system freeze events from socket
+  const handleSystemFreezeEvent = (data) => {
+    console.log("Received system_freeze event:", data);
+
+    if (data.eventId && mainEvent && data.eventId === mainEvent.uuid) {
+      // Event-specific freeze
+      setEventFrozen(data.frozen);
+
+      if (data.frozen) {
+        toast.error(
+          isEnglish
+            ? "This event has been frozen by administrators"
+            : "تم تجميد هذا الحدث من قبل المسؤولين"
+        );
+      } else {
+        toast.success(
+          isEnglish
+            ? "This event has been unfrozen by administrators"
+            : "تم إلغاء تجميد هذا الحدث من قبل المسؤولين"
+        );
+      }
+    } else if (!data.eventId) {
+      // Global freeze
+      setIsFrozen(data.frozen);
+
+      if (data.frozen) {
+        toast.error(
+          isEnglish
+            ? "The system has been frozen by administrators"
+            : "تم تجميد النظام من قبل المسؤولين"
+        );
+      } else {
+        toast.success(
+          isEnglish
+            ? "The system has been unfrozen by administrators"
+            : "تم إلغاء تجميد النظام من قبل المسؤولين"
+        );
+      }
+    }
+  };
+
+  // Initialize socket and set up listeners
+  useEffect(() => {
+    console.log("Initializing socket connection");
+    const userName = Cookies.get("username");
+    const socket = createSocket(userName);
+    socketRef.current = socket;
+
+    // Listen for system_freeze events
+    if (socket) {
+      console.log("Setting up system_freeze event listener");
+
+      socket.on("system_freeze", handleSystemFreezeEvent);
+
+      // Request current system state
+      socket.emit("get_system_state");
+    }
+
+    // Check initial global freeze state
+    checkGlobalFreezeState();
+
+    // Setup window event listener for custom events (for the virtual socket implementation)
+    const handleFreezeUpdate = (event) => {
+      const { detail } = event;
+      console.log("Received system_freeze_update event:", detail);
+
+      if (detail.isGlobal) {
+        setIsFrozen(detail.frozen);
+
+        if (detail.frozen) {
+          toast.error(
+            isEnglish
+              ? "The system has been frozen by administrators"
+              : "تم تجميد النظام من قبل المسؤولين"
+          );
+        } else {
+          toast.success(
+            isEnglish
+              ? "The system has been unfrozen by administrators"
+              : "تم إلغاء تجميد النظام من قبل المسؤولين"
+          );
+        }
+      } else if (
+        detail.eventId &&
+        mainEvent &&
+        detail.eventId === mainEvent.uuid
+      ) {
+        setEventFrozen(detail.frozen);
+
+        if (detail.frozen) {
+          toast.error(
+            isEnglish
+              ? "This event has been frozen by administrators"
+              : "تم تجميد هذا الحدث من قبل المسؤولين"
+          );
+        } else {
+          toast.success(
+            isEnglish
+              ? "This event has been unfrozen by administrators"
+              : "تم إلغاء تجميد هذا الحدث من قبل المسؤولين"
+          );
+        }
+      }
+    };
+
+    window.addEventListener("system_freeze_update", handleFreezeUpdate);
+
+    return () => {
+      // Clean up socket listeners
+      if (socketRef.current) {
+        socketRef.current.off("system_freeze", handleSystemFreezeEvent);
+      }
+
+      window.removeEventListener("system_freeze_update", handleFreezeUpdate);
+    };
+  }, [isEnglish]);
+
+  // Effect to check event-specific freeze state when mainEvent changes
+  useEffect(() => {
+    if (mainEvent?.uuid) {
+      console.log(`Main event loaded: ${mainEvent.uuid}`);
+
+      // Check event-specific freeze state
+      checkEventFreezeState(mainEvent.uuid);
+
+      // Join the team room for real-time updates
+      if (socketRef.current) {
+        console.log(`Joining team room for event: ${mainEvent.uuid}`);
+        socketRef.current.emit("joinTeamRoom", mainEvent.uuid);
+      }
+    }
+
+    return () => {
+      // Leave the team room when component unmounts or mainEvent changes
+      if (mainEvent?.uuid && socketRef.current) {
+        console.log(`Leaving team room for event: ${mainEvent.uuid}`);
+        socketRef.current.emit("leaveTeamRoom", mainEvent.uuid);
+      }
+    };
+  }, [mainEvent]);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -240,6 +435,16 @@ export default function Events() {
   }, [currentPhase, isEnglish, mainEvent]);
 
   const handleButtonClick = () => {
+    // Check if system or event is frozen
+    if (isFrozen || eventFrozen) {
+      toast.error(
+        isEnglish
+          ? "This function is currently frozen by administrators."
+          : "تم تجميد هذه الوظيفة مؤقتًا من قبل المسؤولين."
+      );
+      return;
+    }
+
     if (currentPhase === "team_formation" && !isInTeam) {
       setIsModalOpen(true);
     } else if (currentPhase === "registration" && isRegistering) {
@@ -248,6 +453,16 @@ export default function Events() {
   };
 
   const registerNow = async () => {
+    // Check if system or event is frozen
+    if (isFrozen || eventFrozen) {
+      toast.error(
+        isEnglish
+          ? "Registration is currently frozen by administrators."
+          : "تم تجميد التسجيل مؤقتًا من قبل المسؤولين."
+      );
+      return;
+    }
+
     if (!mainEvent?.uuid) return;
 
     try {
@@ -329,6 +544,17 @@ export default function Events() {
             </p>
           </div>
 
+          {(isFrozen || eventFrozen) && (
+            <div className="mb-6 p-4 bg-red-500/20 border border-red-500 rounded-md text-center animate-pulse">
+              <p className="text-lg font-semibold flex items-center justify-center gap-2">
+                <span className="inline-block h-3 w-3 bg-red-500 rounded-full"></span>
+                {isEnglish
+                  ? "System frozen: Registration and team formation are temporarily disabled."
+                  : "تم تجميد النظام: تم تعطيل التسجيل وتشكيل الفريق مؤقتًا."}
+              </p>
+            </div>
+          )}
+
           <Toaster
             position="top-center"
             containerStyle={{
@@ -336,7 +562,7 @@ export default function Events() {
               transform: "translateY(-50%)",
             }}
             toastOptions={{
-              duration: 3000,
+              duration: 5000, // Increased duration for better visibility
               style: {
                 background: "#333",
                 color: "#fff",
@@ -499,21 +725,33 @@ export default function Events() {
                             disabled={
                               (currentPhase === "team_formation" && isInTeam) ||
                               (!isRegistering &&
-                                currentPhase !== "team_formation")
+                                currentPhase !== "team_formation") ||
+                              isFrozen ||
+                              eventFrozen
                             }
                             className={`${
-                              (isRegistering && !isInTeam) ||
-                              (currentPhase === "team_formation" && !isInTeam)
+                              ((isRegistering && !isInTeam) ||
+                                (currentPhase === "team_formation" &&
+                                  !isInTeam)) &&
+                              !isFrozen &&
+                              !eventFrozen
                                 ? "bg-[#38FFE5] hover:bg-[#38FFE5]/90"
-                                : "bg-[#38FFE5] "
+                                : "bg-[#38FFE5] opacity-70"
                             } ${
-                              (isRegistering && !isInTeam) ||
-                              (currentPhase === "team_formation" && !isInTeam)
+                              ((isRegistering && !isInTeam) ||
+                                (currentPhase === "team_formation" &&
+                                  !isInTeam)) &&
+                              !isFrozen &&
+                              !eventFrozen
                                 ? "cursor-pointer"
                                 : "cursor-not-allowed"
                             } text-[#06373F] font-bold px-4 sm:px-6 py-2 rounded-md transition-colors w-full text-sm sm:text-base`}
                           >
-                            {currentPhase === "team_formation"
+                            {isFrozen || eventFrozen
+                              ? isEnglish
+                                ? "Currently Frozen"
+                                : "تم التجميد مؤقتا"
+                              : currentPhase === "team_formation"
                               ? isInTeam
                                 ? isEnglish
                                   ? "Already in Team"
@@ -540,6 +778,7 @@ export default function Events() {
             maxMembers={mainEvent?.team_maximum_members || 1}
             onSuccess={handleTeamRegistrationSuccess}
             eventUuid={mainEvent?.uuid}
+            isFrozen={isFrozen || eventFrozen}
           />
 
           <div
