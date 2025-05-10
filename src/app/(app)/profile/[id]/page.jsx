@@ -659,8 +659,8 @@ export default function Profile() {
                         <h1>{isEnglish ? "First Bytes" : "البايتس الاولي"}</h1>
                         <p className="font-bold pt-2 min-w-[80px]">
                           {isEnglish
-                            ? `${userData?.total_firstblood_bytes || 0} bytes`
-                            : `${userData?.total_firstblood_bytes || 0} بايتس`}
+                            ? `${userData?.total_firstblood_count || 0} bytes`
+                            : `${userData?.total_firstblood_count || 0} بايتس`}
                         </p>
                       </div>
                     </div>
