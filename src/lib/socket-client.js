@@ -42,6 +42,16 @@ export const createSocket = (userName = null) => {
   // If we already have a socket instance, return it
   if (socketInstance) {
     console.log("Reusing existing socket connection");
+
+    // If username is now provided but wasn't before, update it
+    if (userName && socketInstance._userName !== userName) {
+      console.log(
+        `Updating socket user from ${socketInstance._userName} to ${userName}`
+      );
+      socketInstance.emit("userConnected", { userName });
+      socketInstance._userName = userName;
+    }
+
     return socketInstance;
   }
 
@@ -74,6 +84,9 @@ export const createSocket = (userName = null) => {
       },
     });
 
+    // Store username on the socket instance for reference
+    socketInstance._userName = user;
+
     // Setup system freeze state handler
     socketInstance.on("system_freeze", (data) => {
       // If this is an event-specific freeze state
@@ -102,17 +115,46 @@ export const createSocket = (userName = null) => {
       }
     });
 
+    // Immediately send userConnected event for better tracking
+    if (user) {
+      socketInstance.on("connect", () => {
+        console.log(
+          `Socket connected, sending userConnected event for: ${user}`
+        );
+        socketInstance.emit("userConnected", { userName: user });
+      });
+    }
+
     // Add a manual heartbeat to help track active connections
     if (typeof window !== "undefined") {
       const heartbeatInterval = setInterval(() => {
         if (socketInstance && socketInstance.connected) {
-          socketInstance.emit("heartbeat", { tabId });
+          socketInstance.emit("heartbeat", { tabId, userName: user });
         }
       }, 30000); // Send heartbeat every 30 seconds
 
       // Clean up on page unload
       window.addEventListener("beforeunload", () => {
         clearInterval(heartbeatInterval);
+
+        // Attempt to disconnect properly on page unload
+        if (socketInstance) {
+          try {
+            // Use a synchronous approach on unload to ensure it completes
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "/api/socket", false); // false makes it synchronous
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.send(
+              JSON.stringify({
+                action: "disconnect",
+                userName: socketInstance._userName || user,
+                id: socketInstance.id,
+              })
+            );
+          } catch (e) {
+            // Silently fail on error during unload
+          }
+        }
       });
     }
   }
@@ -125,9 +167,19 @@ export const disconnectSocket = () => {
   if (socketInstance) {
     console.log("Disconnecting and clearing socket singleton instance");
 
+    // Store username before clearing the instance
+    const userName = socketInstance._userName;
+
     if (typeof socketInstance.disconnect === "function") {
       // For real socket.io connections
       try {
+        // First emit a manual disconnect event to ensure server gets it
+        socketInstance.emit("userDisconnected", {
+          userName: userName,
+          tabId: generateTabId(),
+        });
+
+        // Then actually disconnect
         socketInstance.disconnect();
         console.log("Socket.IO connection terminated");
       } catch (error) {
@@ -143,28 +195,36 @@ export const disconnectSocket = () => {
       }
     }
 
+    // Also make an HTTP request to ensure the server knows about the disconnect
+    try {
+      const apiUrl = "/api/socket";
+      fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "disconnect",
+          userName: userName,
+          id: socketInstance.id,
+          tabId: generateTabId(),
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("Disconnect notification acknowledged:", data);
+        })
+        .catch((error) => {
+          console.error("Error sending disconnect notification:", error);
+        });
+    } catch (e) {
+      // Silently fail on fetch error
+      console.error("Error with fetch for disconnect:", e);
+    }
+
     // Clear the singleton instance
     socketInstance = null;
     console.log("Socket instance cleared");
-
-    // If we're running in a browser, we can try to fetch updated count
-    if (typeof window !== "undefined") {
-      try {
-        fetch("/api/online-players")
-          .then((response) => response.json())
-          .then((data) => {
-            console.log("Current online players after disconnect:", data.count);
-          })
-          .catch((error) => {
-            console.error(
-              "Error fetching online count after disconnect:",
-              error
-            );
-          });
-      } catch (e) {
-        // Silently fail on fetch error
-      }
-    }
   }
 };
 
@@ -211,37 +271,147 @@ function createVirtualSocket(userName, tabId) {
   // Map to track polling intervals for team rooms
   const teamPollingIntervals = new Map();
 
-  // Function to reset the connection state
-  const resetConnection = async () => {
-    try {
-      console.log("Resetting socket connection state...");
-      await axios.get("/api/socket?reset=true");
+  // Generate a unique ID for this client instance
+  const clientId = `client_${Math.random()
+    .toString(36)
+    .substring(2, 10)}_${Date.now()}`;
 
-      // Reconnect after reset
+  // Store socket metadata for server tracking
+  const socketMetadata = {
+    id: clientId,
+    userName: userName || null,
+    tabId: tabId,
+    connected: false,
+    lastActive: Date.now(),
+  };
+
+  // Function to keep the connection alive
+  const heartbeat = async () => {
+    try {
+      const response = await axios.post("/api/socket", {
+        action: "heartbeat",
+        userName: socketMetadata.userName || undefined,
+        id: socketMetadata.id || anonymousId,
+        tabId: tabId,
+      });
+
+      // Update the last active timestamp
+      socketMetadata.lastActive = Date.now();
+
+      // During a heartbeat, it's a good time to also fetch the current online count
+      updateOnlineCount();
+
+      return response.data;
+    } catch (error) {
+      console.error("Heartbeat error:", error);
+      return { status: "error", error: error.message };
+    }
+  };
+
+  // Update online count function
+  const updateOnlineCount = async () => {
+    try {
+      const response = await axios.get("/api/socket");
+      if (response.data && typeof response.data.online === "number") {
+        online = Math.max(1, response.data.online); // Ensure at least 1 player online
+
+        // Emit events for any registered handlers
+        if (eventHandlers.onlinePlayers) {
+          eventHandlers.onlinePlayers.forEach((handler) => handler(online));
+        }
+        if (eventHandlers.onlineCount) {
+          eventHandlers.onlineCount.forEach((handler) => handler(online));
+        }
+      }
+    } catch (error) {
+      console.error("Error updating online count:", error);
+    }
+  };
+
+  // Function to connect to the server
+  const connect = async () => {
+    if (connected) return;
+
+    try {
+      console.log(
+        `Connecting virtual socket for user: ${userName || "anonymous"}`
+      );
+
+      // Make the API request to register this connection
       const response = await axios.post("/api/socket", {
         action: "connect",
         userName: userName || undefined,
+        tabId: tabId,
+        socketId: socketMetadata.id,
       });
 
+      // If this is an anonymous connection, store the ID
       if (response.data.id) {
         anonymousId = response.data.id;
+        console.log(`Anonymous connection assigned ID: ${anonymousId}`);
       }
 
-      online = response.data.count;
-      console.log("Connection reset complete. Current users:", online);
+      // Store connection status
+      connected = true;
+      socketMetadata.connected = true;
+      socketMetadata.lastActive = Date.now();
 
-      // Emit updated count
-      if (eventHandlers.onlinePlayers) {
-        eventHandlers.onlinePlayers.forEach((handler) => handler(online));
+      // Update online count
+      online = response.data.count || 0;
+
+      // Trigger connect handlers
+      if (eventHandlers.connect) {
+        eventHandlers.connect.forEach((handler) => handler());
       }
 
-      if (eventHandlers.onlineCount) {
-        eventHandlers.onlineCount.forEach((handler) => handler(online));
+      console.log(`Virtual socket connected. Current online count: ${online}`);
+
+      // Set up periodic heartbeat to keep connection alive
+      const heartbeatInterval = setInterval(heartbeat, 25000); // Every 25 seconds
+
+      // Set up cleanup on page unload
+      if (typeof window !== "undefined") {
+        window.addEventListener("beforeunload", async (event) => {
+          clearInterval(heartbeatInterval);
+          // Try to notify server about disconnect
+          try {
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "/api/socket", false); // Synchronous for unload
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.send(
+              JSON.stringify({
+                action: "disconnect",
+                userName: socketMetadata.userName,
+                id: anonymousId || socketMetadata.id,
+                tabId: tabId,
+              })
+            );
+          } catch (e) {
+            // Silently fail on unload
+          }
+        });
       }
+
+      return response.data;
     } catch (error) {
-      console.error("Error resetting connection:", error);
+      console.error("Connection error:", error);
+      connected = false;
+      return { status: "error", error: error.message };
     }
   };
+
+  // Call connect immediately to establish connection
+  connect().then(() => {
+    // If the user has an authenticated username, also send a userConnected event
+    if (userName) {
+      setTimeout(() => {
+        const socket = {
+          emit: emit,
+        };
+        socket.emit("userConnected", { userName });
+      }, 500); // Slight delay to ensure connection is established
+    }
+  });
 
   // Function to setup team update polling
   const setupTeamPolling = (eventId) => {
@@ -458,7 +628,7 @@ function createVirtualSocket(userName, tabId) {
 
     // Method to manually reset the connection
     reset: async function () {
-      await resetConnection();
+      await connect();
     },
 
     emit(event, data) {

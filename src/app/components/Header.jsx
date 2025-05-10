@@ -56,17 +56,17 @@ export default function Header() {
     setUserName(userProfile?.userName);
   }, [userProfile]);
 
-  // Initialize Socket client with error handling
+  // Initialize Socket client with error handling and improved connection tracking
   useEffect(() => {
-    let socketInstance;
-    let countPollingInterval;
+    let socketInstance = null;
+    let pollInterval = null;
 
     const fetchOnlineCountFallback = async () => {
       try {
         // Fallback to API endpoint if socket fails
         const response = await axios.get("/api/socket");
         if (response.data && typeof response.data.online === "number") {
-          setOnlinePlayers(response.data.online);
+          setOnlinePlayers(Math.max(1, response.data.online));
         } else {
           // If API fails too, set default count
           setOnlinePlayers(1);
@@ -77,54 +77,64 @@ export default function Header() {
       }
     };
 
-    try {
-      // Only create socket connection when we have a username
-      if (userName) {
-        socketInstance = createSocket(userName);
+    const initializeSocket = () => {
+      try {
+        // Only create socket connection when we have a username
+        if (userName) {
+          // Try to get the socket instance
+          socketInstance = createSocket(userName);
 
-        socketInstance.on("connect", () => {
-          // Send username to server if not done via auth
-          socketInstance.emit("userConnected", { userName });
-        });
+          // Set up event listeners for online player count
+          socketInstance.on("onlinePlayers", (count) => {
+            if (typeof count === "number" && count >= 0) {
+              setOnlinePlayers(Math.max(1, count));
+            }
+          });
 
-        socketInstance.on("connect_error", (error) => {
-          console.error("Socket connection error:", error.message);
-          // Try to get count via API if socket fails
+          // Also listen for onlineCount event (for backward compatibility)
+          socketInstance.on("onlineCount", (count) => {
+            if (typeof count === "number" && count >= 0) {
+              setOnlinePlayers(Math.max(1, count));
+            }
+          });
+
+          // When connected, emit userConnected event to ensure proper tracking
+          socketInstance.on("connect", () => {
+            console.log("Socket connected in Header component");
+            socketInstance.emit("userConnected", { userName });
+          });
+
+          // Handle connection errors
+          socketInstance.on("connect_error", (error) => {
+            console.error("Socket connection error:", error.message);
+            fetchOnlineCountFallback();
+          });
+        } else {
+          // If we don't have a username yet, try to get the count via API
           fetchOnlineCountFallback();
-        });
-
-        socketInstance.on("onlinePlayers", (count) => {
-          if (typeof count === "number" && count >= 0) {
-            setOnlinePlayers(count);
-          }
-        });
-
-        // Also listen for onlineCount event (for backward compatibility)
-        socketInstance.on("onlineCount", (count) => {
-          if (typeof count === "number" && count >= 0) {
-            setOnlinePlayers(count);
-          }
-        });
-
-     
-        // If we don't have a username yet, try to get the count via API
+        }
+      } catch (error) {
+        console.error("Socket initialization error:", error);
         fetchOnlineCountFallback();
       }
-    } catch (error) {
-      console.error("Socket initialization error:", error);
-      // Fallback to API for count
-      fetchOnlineCountFallback();
-    }
+    };
 
-    // We don't disconnect the socket on unmount since it's a singleton
-    // It will be reused by other components
+    // Initialize socket
+    initializeSocket();
+
+    // Set up polling as backup for online count
+    pollInterval = setInterval(() => {
+      fetchOnlineCountFallback();
+    }, 60000); // Poll every minute as backup
+
     return () => {
       // Clear polling interval
-      if (countPollingInterval) {
-        clearInterval(countPollingInterval);
+      if (pollInterval) {
+        clearInterval(pollInterval);
       }
 
-      // Just remove our event listeners
+      // Remove event listeners but don't disconnect the socket
+      // since it's a singleton that might be used elsewhere
       if (socketInstance) {
         try {
           socketInstance.off("onlinePlayers");

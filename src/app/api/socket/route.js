@@ -13,8 +13,8 @@ let systemFrozen = false;
 // Track event-specific freeze states
 const eventFreezeStates = new Map();
 
-// Track last activity timestamps
-const connectionTimestamps = new Map(); // userName -> timestamp
+// Track last activity timestamps with user metadata
+const connectionTimestamps = new Map(); // userName -> { timestamp, tabIds: Set(), socketIds: Set() }
 
 // Track anonymous users by ID
 const anonymousUsers = new Set();
@@ -34,15 +34,16 @@ function resetAllConnections() {
   console.log("Socket API: Reset all connection data");
 }
 
-// Function to clean up stale connections (older than 5 minutes)
+// Function to clean up stale connections (older than 3 minutes)
 function cleanupStaleConnections() {
   const now = Date.now();
-  const staleThreshold = 5 * 60 * 1000; // 5 minutes (more aggressive for serverless)
+  const staleThreshold = 3 * 60 * 1000; // 3 minutes (more aggressive for serverless)
   let removed = 0;
+  let initialCount = onlineUsers.length + anonymousUsers.size;
 
   // Filter out stale connections
-  connectionTimestamps.forEach((timestamp, userName) => {
-    if (now - timestamp > staleThreshold) {
+  connectionTimestamps.forEach((data, userName) => {
+    if (now - data.timestamp > staleThreshold) {
       connectionTimestamps.delete(userName);
       if (onlineUsers.includes(userName)) {
         onlineUsers = onlineUsers.filter((user) => user !== userName);
@@ -50,6 +51,20 @@ function cleanupStaleConnections() {
       }
     }
   });
+
+  // Clean up stale anonymous users
+  for (const anonId of anonymousUsers) {
+    const parts = anonId.split("_");
+    if (parts.length > 1) {
+      // If the ID contains a timestamp part, check if it's stale
+      const timestampPart = parts[parts.length - 1];
+      const timestamp = parseInt(timestampPart, 10);
+      if (!isNaN(timestamp) && now - timestamp > staleThreshold) {
+        anonymousUsers.delete(anonId);
+        removed++;
+      }
+    }
+  }
 
   // Check if there's a significant discrepancy between tracked users and timestamps
   if (Math.abs(onlineUsers.length - connectionTimestamps.size) > 2) {
@@ -62,7 +77,7 @@ function cleanupStaleConnections() {
   if (removed > 0) {
     onlineCount = onlineUsers.length + anonymousUsers.size;
     console.log(
-      `Cleaned up ${removed} stale connections. Current user count: ${onlineCount}`
+      `Cleaned up ${removed} stale connections. Initial count: ${initialCount}, Current user count: ${onlineCount}`
     );
   }
 }
@@ -103,6 +118,88 @@ function setFreezeState(value, eventId = null) {
   return systemFrozen;
 }
 
+// Helper function to update a user's connection timestamp and metadata
+function updateUserConnection(userName, metadata = {}) {
+  if (!userName) return;
+
+  // Get existing data or create new record
+  const existingData = connectionTimestamps.get(userName) || {
+    timestamp: Date.now(),
+    tabIds: new Set(),
+    socketIds: new Set(),
+  };
+
+  // Update timestamp
+  existingData.timestamp = Date.now();
+
+  // Add new tab ID if provided
+  if (metadata.tabId) {
+    existingData.tabIds.add(metadata.tabId);
+  }
+
+  // Add new socket ID if provided
+  if (metadata.socketId) {
+    existingData.socketIds.add(metadata.socketId);
+  }
+
+  // Update the map
+  connectionTimestamps.set(userName, existingData);
+
+  // Make sure this user is in the onlineUsers array
+  if (!onlineUsers.includes(userName)) {
+    onlineUsers.push(userName);
+    // Update count
+    onlineCount = onlineUsers.length + anonymousUsers.size;
+  }
+}
+
+// Helper function to disconnect a user
+function disconnectUser(userName, metadata = {}) {
+  if (!userName) return false;
+
+  let removed = false;
+
+  // Handle regular users
+  if (onlineUsers.includes(userName)) {
+    // If tabId provided, just remove that tab
+    if (metadata.tabId && connectionTimestamps.has(userName)) {
+      const userData = connectionTimestamps.get(userName);
+      if (userData.tabIds) {
+        userData.tabIds.delete(metadata.tabId);
+
+        // If user has no more tabs, remove them completely
+        if (userData.tabIds.size === 0) {
+          connectionTimestamps.delete(userName);
+          onlineUsers = onlineUsers.filter((user) => user !== userName);
+          removed = true;
+        } else {
+          // Otherwise update the timestamp
+          userData.timestamp = Date.now();
+          connectionTimestamps.set(userName, userData);
+        }
+      }
+    } else {
+      // No specific tab, remove user completely
+      connectionTimestamps.delete(userName);
+      onlineUsers = onlineUsers.filter((user) => user !== userName);
+      removed = true;
+    }
+  }
+
+  // Handle anonymous users
+  if (metadata.id && anonymousUsers.has(metadata.id)) {
+    anonymousUsers.delete(metadata.id);
+    removed = true;
+  }
+
+  if (removed) {
+    // Update count
+    onlineCount = onlineUsers.length + anonymousUsers.size;
+  }
+
+  return removed;
+}
+
 // GET handler for polling
 export async function GET(req) {
   // Clean up stale connections
@@ -117,6 +214,29 @@ export async function GET(req) {
   const teamUpdatesParam = url.searchParams.get("team_updates");
   const resetParam = url.searchParams.get("reset");
   const freezeStatusParam = url.searchParams.get("freeze_status");
+  const debugParam = url.searchParams.get("debug");
+
+  // Handle debug request to see connection stats
+  if (debugParam === "true") {
+    return NextResponse.json({
+      total: onlineCount,
+      registered: onlineUsers.length,
+      anonymous: anonymousUsers.size,
+      users: onlineUsers,
+      anonymousIds: Array.from(anonymousUsers),
+      connections: Object.fromEntries(
+        Array.from(connectionTimestamps.entries()).map(([key, value]) => [
+          key,
+          {
+            timestamp: value.timestamp,
+            tabCount: value.tabIds ? value.tabIds.size : 0,
+            socketCount: value.socketIds ? value.socketIds.size : 0,
+          },
+        ])
+      ),
+      message: "Debug information retrieved",
+    });
+  }
 
   // Handle reset request
   if (resetParam === "true") {
@@ -190,7 +310,15 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     const data = await req.json();
-    const { action, userName, challenge_id, event_id, flag_data } = data;
+    const {
+      action,
+      userName,
+      challenge_id,
+      event_id,
+      flag_data,
+      tabId,
+      socketId,
+    } = data;
 
     console.log(
       `Socket API: ${action} request for user ${userName || "anonymous"}`
@@ -201,23 +329,19 @@ export async function POST(req) {
 
     // Handle connection events
     if (action === "connect" && userName) {
-      // Only add user if not already in the list
-      if (!onlineUsers.includes(userName)) {
-        onlineUsers.push(userName);
-        onlineCount = onlineUsers.length + anonymousUsers.size;
-        console.log(`User ${userName} connected, total: ${onlineCount}`);
-      }
+      // Update user connection
+      updateUserConnection(userName, { tabId, socketId });
+      console.log(`User ${userName} connected, total: ${onlineCount}`);
 
-      // Update connection timestamp
-      connectionTimestamps.set(userName, Date.now());
       return NextResponse.json({ count: onlineCount });
     }
     // Handle anonymous connections
     else if (action === "connect") {
       // Generate a random ID for this anonymous connection
-      const anonId = `anon_${Math.random().toString(36).substring(2, 10)}`;
+      const anonId = `anon_${Math.random()
+        .toString(36)
+        .substring(2, 10)}_${Date.now()}`;
       anonymousUsers.add(anonId);
-      connectionTimestamps.set(anonId, Date.now());
 
       onlineCount = onlineUsers.length + anonymousUsers.size;
       console.log(
@@ -229,8 +353,17 @@ export async function POST(req) {
     else if (action === "heartbeat") {
       const id = userName || data.id;
       if (id) {
-        // Update connection timestamp
-        connectionTimestamps.set(id, Date.now());
+        if (userName) {
+          // Update user connection with current timestamp
+          updateUserConnection(userName, { tabId, socketId });
+        } else if (anonymousUsers.has(id)) {
+          // Keep the anonymous connection alive
+          // Create a new ID with current timestamp
+          const newAnonId = `anon_${id.split("_")[1]}_${Date.now()}`;
+          anonymousUsers.delete(id);
+          anonymousUsers.add(newAnonId);
+        }
+
         return NextResponse.json({
           status: "success",
           message: "Heartbeat received",
@@ -241,22 +374,41 @@ export async function POST(req) {
         message: "No ID provided for heartbeat",
       });
     }
+    // Handle user reconnected/identified
+    else if (action === "userConnected" && userName) {
+      // User might have connected anonymously first, now identifying themselves
+      updateUserConnection(userName, { tabId, socketId });
+      console.log(`User identified: ${userName}, total: ${onlineCount}`);
+
+      return NextResponse.json({
+        status: "success",
+        message: "User identified",
+        count: onlineCount,
+      });
+    }
+    // Handle explicit userDisconnected event
+    else if (action === "userDisconnected" && userName) {
+      const removed = disconnectUser(userName, { tabId, id: data.id });
+      console.log(
+        `User ${userName} explicitly disconnected, removed: ${removed}, total: ${onlineCount}`
+      );
+
+      return NextResponse.json({
+        status: "success",
+        message: "User explicitly disconnected",
+        count: onlineCount,
+      });
+    }
     // Handle disconnection events
     else if (action === "disconnect") {
       const id = userName || data.id;
       if (id) {
-        // Remove user from the appropriate list
-        if (onlineUsers.includes(id)) {
-          onlineUsers = onlineUsers.filter((user) => user !== id);
-        } else if (anonymousUsers.has(id)) {
-          anonymousUsers.delete(id);
-        }
+        // Remove user using our helper function
+        const removed = disconnectUser(id, { tabId, id: data.id, socketId });
+        console.log(
+          `User ${id} disconnected, removed: ${removed}, total: ${onlineCount}`
+        );
 
-        // Remove connection timestamp
-        connectionTimestamps.delete(id);
-
-        onlineCount = onlineUsers.length + anonymousUsers.size;
-        console.log(`User ${id} disconnected, total: ${onlineCount}`);
         return NextResponse.json({ count: onlineCount });
       }
       return NextResponse.json({
@@ -275,6 +427,11 @@ export async function POST(req) {
     }
     // Handle team update events
     else if (action === "teamUpdate" && event_id) {
+      // Keep user connection fresh
+      if (userName) {
+        updateUserConnection(userName, { tabId, socketId });
+      }
+
       // Get or initialize team updates for this event
       if (!teamUpdates.has(event_id)) {
         teamUpdates.set(event_id, {
@@ -300,9 +457,6 @@ export async function POST(req) {
       // Update timestamp
       eventTeamData.lastTeamUpdate = Date.now();
 
-      // Update connection timestamp
-      if (userName) connectionTimestamps.set(userName, Date.now());
-
       console.log(
         `Team update in event ${event_id} by ${userName || "anonymous"}: ${
           data.action
@@ -316,8 +470,10 @@ export async function POST(req) {
     }
     // Handle joining team room
     else if (action === "joinTeamRoom" && event_id) {
-      // Update connection timestamp
-      if (userName) connectionTimestamps.set(userName, Date.now());
+      // Keep user connection fresh
+      if (userName) {
+        updateUserConnection(userName, { tabId, socketId });
+      }
 
       console.log(
         `User ${userName || "anonymous"} joined team room for event ${event_id}`
@@ -331,6 +487,9 @@ export async function POST(req) {
     }
     // Handle flag submission events
     else if (action === "flagSubmitted" && challenge_id && userName) {
+      // Keep user connection fresh
+      updateUserConnection(userName, { tabId, socketId });
+
       // Get or initialize challenge data
       if (!challengeData.has(challenge_id)) {
         challengeData.set(challenge_id, {
@@ -358,9 +517,6 @@ export async function POST(req) {
 
       challenge.lastUpdated = Date.now();
 
-      // Update connection timestamp
-      if (userName) connectionTimestamps.set(userName, Date.now());
-
       console.log(
         `Flag submitted by ${userName} for challenge ${challenge_id}`
       );
@@ -376,6 +532,9 @@ export async function POST(req) {
     }
     // Handle first blood events
     else if (action === "flagFirstBlood" && challenge_id && userName) {
+      // Keep user connection fresh
+      updateUserConnection(userName, { tabId, socketId });
+
       // Get or initialize challenge data
       if (!challengeData.has(challenge_id)) {
         challengeData.set(challenge_id, {
@@ -404,9 +563,6 @@ export async function POST(req) {
 
       challenge.lastUpdated = Date.now();
 
-      // Update connection timestamp
-      if (userName) connectionTimestamps.set(userName, Date.now());
-
       console.log(`First blood by ${userName} for challenge ${challenge_id}`);
 
       return NextResponse.json({
@@ -419,8 +575,10 @@ export async function POST(req) {
     }
     // Handle join challenge room events
     else if (action === "joinChallengeRoom" && challenge_id) {
-      // Update connection timestamp
-      if (userName) connectionTimestamps.set(userName, Date.now());
+      // Keep user connection fresh
+      if (userName) {
+        updateUserConnection(userName, { tabId, socketId });
+      }
 
       console.log(
         `User ${userName || "anonymous"} joined challenge room ${challenge_id}`
@@ -459,22 +617,15 @@ export async function POST(req) {
             source: "socket_api",
           };
 
-          // Broadcast to all clients in the appropriate room
+          // Store the update for future polling
+          if (eventId && !teamUpdates.has(eventId)) {
+            teamUpdates.set(eventId, {
+              updates: [],
+              lastTeamUpdate: Date.now(),
+            });
+          }
+
           if (eventId) {
-            // If this is an event-specific freeze, broadcast to the team room for that event
-            const roomName = `team_${eventId}`;
-            console.log(
-              `Broadcasting freeze state update to room: ${roomName}`
-            );
-
-            // Store the update for future polling
-            if (!teamUpdates.has(eventId)) {
-              teamUpdates.set(eventId, {
-                updates: [],
-                lastTeamUpdate: Date.now(),
-              });
-            }
-
             const eventData = teamUpdates.get(eventId);
             eventData.updates.push({
               action: "freeze_update",

