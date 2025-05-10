@@ -802,6 +802,24 @@ export default function ChallengePage() {
       // Check for solved flags after successful submission
       await checkSolvedFlags();
 
+      // ADDED: Check if all flags are solved
+      try {
+        const allFlagsCheck = await axios.get(
+          `${apiUrl}/challenges/${id}/check`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (allFlagsCheck.data.data.all_flags_solved === true) {
+          setIsLocked(true);
+        }
+      } catch (error) {
+        console.error("Error checking if all flags are solved:", error);
+      }
+
       if (response.status === 200 && response.data.status === "success") {
         try {
           // Try to get the latest team data first to ensure we have team UUID
