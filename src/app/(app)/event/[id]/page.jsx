@@ -612,22 +612,31 @@ export default function ChallengePage() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = Cookies.get("token");
 
-      // Step 1: Fetch challenge data
-      const challengeResponse = await axios.get(
-        `${apiUrl}/event-challenges/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+      // Function to fetch challenge data
+      const fetchChallengeData = async () => {
+        try {
+          const challengeResponse = await axios.get(
+            `${apiUrl}/event-challenges/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          setChallenge(challengeResponse.data.data);
+        } catch (error) {
+          console.error("Error fetching challenge data:", error);
         }
-      );
-      setChallenge(challengeResponse.data.data);
+      };
+
+      // Initial fetch
+      await fetchChallengeData();
 
       // Step 2: Fetch team data (if challenge data contains event_uuid)
-      if (challengeResponse.data.data?.event_uuid) {
+      if (challenge?.event_uuid) {
         try {
           const teamResponse = await axios.get(
-            `${apiUrl}/${challengeResponse.data.data.event_uuid}/my-team`,
+            `${apiUrl}/${challenge.event_uuid}/my-team`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -663,10 +672,39 @@ export default function ChallengePage() {
     }
   }, [id]);
 
-  // Initial data fetch
+  // Initial data fetch with polling
   useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const token = Cookies.get("token");
+
+    // Function to fetch challenge data
+    const fetchChallengeData = async () => {
+      try {
+        const challengeResponse = await axios.get(
+          `${apiUrl}/event-challenges/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setChallenge(challengeResponse.data.data);
+      } catch (error) {
+        console.error("Error fetching challenge data:", error);
+      }
+    };
+
+    // Initial fetch
     fetchInitialData();
-  }, [fetchInitialData]);
+
+    // Set up interval for polling
+    const intervalId = setInterval(fetchChallengeData, 5000);
+
+    // Cleanup function
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [fetchInitialData, id]);
 
   const checkSolvedFlags = async () => {
     try {
@@ -911,11 +949,9 @@ export default function ChallengePage() {
               if (isFirstBlood) {
                 setIsFirstBlood(true);
                 setFirstblood(earnedPoints); // Use consistent point value
-                setTimeout(() => setIsFirstBlood(false), 5000);
               } else {
                 setIsSubmitFlag(true);
                 setPoints(earnedPoints); // Use consistent point value
-                setTimeout(() => setIsSubmitFlag(false), 5000);
               }
 
               // Update the activities list to include the current user's submission immediately
@@ -1107,7 +1143,7 @@ export default function ChallengePage() {
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to load activities: ${response.statusText}`);
+        return null;
       }
 
       const result = await response.json();
@@ -1338,11 +1374,6 @@ export default function ChallengePage() {
           }
         });
       }
-
-      // Show toast notification
-      if (data.username !== userData?.user_name) {
-        toast.success(`${data.username || "Someone"} solved the challenge!`);
-      }
     };
 
     // Use the listenForFlagSubmissions function from flag-events.js
@@ -1383,51 +1414,6 @@ export default function ChallengePage() {
                 : "غير متصل"}
             </span>
           </div>
-
-          {/* Real-time toast notifications */}
-          {toast && (
-            <div className="fixed bottom-4 right-4 z-50 w-64">
-              <div
-                className={`bg-[#131619] border ${
-                  toast.type === "firstBlood"
-                    ? "border-red-500"
-                    : "border-[#38FFE5]"
-                } rounded-lg p-3 shadow-lg slide-in-animation`}
-              >
-                <div className="flex items-center gap-2">
-                  <Image
-                    src={toast.profileImage || "/icon1.png"}
-                    alt="User"
-                    width={32}
-                    height={32}
-                    className="rounded-full"
-                  />
-                  <div className="flex-1">
-                    <p className="text-white text-sm font-medium">
-                      {toast.user}
-                    </p>
-                    <p className="text-gray-400 text-xs">
-                      {toast.type === "firstBlood"
-                        ? isEnglish
-                          ? "Got first blood!"
-                          : "حصل على الدم الأول!"
-                        : isEnglish
-                        ? "Solved the challenge"
-                        : "حل التحدي"}
-                    </p>
-                  </div>
-                  <Image
-                    src={
-                      toast.type === "firstBlood" ? "/blood.png" : "/flag.png"
-                    }
-                    alt={toast.type === "firstBlood" ? "First Blood" : "Flag"}
-                    width={24}
-                    height={24}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
 
           {challenge?.flag_type === "multiple_individual" ? (
             challenge?.flags_data?.map((flag, index) => (
@@ -1764,7 +1750,9 @@ export default function ChallengePage() {
                         height={48}
                       />
                       <p className="text-white text-[20px] text-center ">
-                        تهانينا! لقد التقط جميع الأعلام بنجاح
+                        {isEnglish
+                          ? "Congratulations! You have completed the challenge"
+                          : "تهانينا! لقد أتممت التحدي بنجاح"}
                       </p>
                     </div>
                   ) : (
@@ -1774,7 +1762,7 @@ export default function ChallengePage() {
                           <input
                             type="text"
                             placeholder={isEnglish ? "Flag" : "العلم"}
-                            className="bg-[#0B0D0F] w-full border border-gray-700 rounded-2xl p-3 text-white"
+                            className="bg-[#0B0D0F] w-full border border-gray-700 rounded-lg p-3 text-white"
                             value={flagInput}
                             onChange={(e) => setFlagInput(e.target.value)}
                           />
@@ -1783,7 +1771,7 @@ export default function ChallengePage() {
                         <button
                           onClick={submitFlag}
                           disabled={isLoading}
-                          className="bg-[#38FFE5] w-full lg:w-1/3 py-3 cursor-pointer hover:bg-[#38FFE5]/90 text-black font-semibold px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="bg-[#38FFE5] w-full lg:w-1/3 py-3 cursor-pointer hover:bg-[#38FFE5]/90 text-black font-semibold px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {isLoading ? (
                             <div className="flex items-center justify-center">
@@ -2173,9 +2161,13 @@ export default function ChallengePage() {
 
           {/* First blood animation card  */}
           {isFirstBlood && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[2px]">
-              <div className="bg-[url('/blooda.png')] flex items-center justify-center w-full h-full bg-cover bg-center bg-no-repeat">
-                <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-2xl p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[2px] ">
+              <div
+                onClick={() => setIsFirstBlood(false)}
+                className="blood-bg relative flex items-center w-[600px] h-[600px] justify-center overflow-hidden"
+              >
+             
+                <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] relative z-10 min-h-[300px] rounded-lg p-4">
                   <div>
                     <div className="flex items-center justify-center gap-4 pb-16">
                       <h3 className="text-white text-xl md:text-2xl font-semibold">
@@ -2186,6 +2178,7 @@ export default function ChallengePage() {
                         alt="First Blood"
                         width={32}
                         height={32}
+                        priority
                       />
                     </div>
 
@@ -2199,7 +2192,7 @@ export default function ChallengePage() {
                         dir="rtl"
                         className="text-white text-center text-xl md:text-2xl font-semibold"
                       >
-                        <span className="text-red-500">{firstblood}</span>
+                        <span className="text-red-500"> {firstblood} </span>
                         <span dir="rtl" className="text-red-500">
                           {isEnglish ? "Bytes" : "بايتس"}{" "}
                         </span>
@@ -2213,10 +2206,12 @@ export default function ChallengePage() {
               </div>
             </div>
           )}
-
           {/* Submit flag animation  */}
           {isSubmitFlag && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center">
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center"
+              onClick={() => setIsSubmitFlag(false)}
+            >
               <ConfettiAnimation />
               <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] min-h-[300px] rounded-2xl p-4">
                 <div>

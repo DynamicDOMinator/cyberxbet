@@ -323,8 +323,8 @@ export default function Events() {
           <div className={`mb-8 ${isEnglish ? "text-left" : "text-right"}`}>
             <p dir={isEnglish ? "ltr" : "rtl"} className="text-lg">
               {isEnglish
-                ? "All events available in "
-                : "جميع الفعاليات الموجودة في "}
+                ? "All events hosted by "
+                : "  جميع الفعاليات المُستضافة من"}
               <span className="text-[#38FFE5] font-bold">CyberXbytes</span>
             </p>
           </div>

@@ -2000,7 +2000,7 @@ export default function EventPage() {
                     isEnglish ? "flex-row-reverse" : ""
                   } text-sm sm:text-base md:text-[18px] gap-2`}
                 >
-                  {isEnglish ? "Starts at " : "بدء في "}
+                  {isEnglish ? "Starts at " : " تبدأ في "}
                   {formatDate(event.start_date)}
                   <span className="text-[#38FFE5] flex items-center">
                     <svg
@@ -2034,7 +2034,7 @@ export default function EventPage() {
                     isEnglish ? "flex-row-reverse" : ""
                   } text-sm sm:text-base md:text-[18px] gap-2`}
                 >
-                  {isEnglish ? "Ends at " : "انتهي في "}
+                  {isEnglish ? "Ends at " : " تنتهي في "}
                   {formatDate(event.end_date)}
                   <span className="text-[#38FFE5] flex items-center">
                     <svg
@@ -3706,79 +3706,80 @@ export default function EventPage() {
               </h3>
             </div>
 
-            <div className="flex flex-row items-center gap-3">
-              {/* Remove the Test Activity button */}
-              <div className="flex flex-row items-center gap-1">
-                <p>
-                  {isEnglish
-                    ? isLeaderboardFrozen
-                      ? "Activities: Frozen"
-                      : "Activities: Live"
-                    : isLeaderboardFrozen
-                    ? "الأنشطة : مجمدة"
-                    : "الأنشطة : حيّة"}
-                </p>
-                <div
-                  className={`w-[16px] h-[16px] rounded-full ${
-                    isLeaderboardFrozen ? "bg-red-500" : "bg-[#38FFE5]"
-                  }`}
-                  style={{
-                    animation: "pulse 3s ease-in-out infinite",
-                  }}
-                ></div>
+            {activities.length > 0 && (
+              <div className="flex flex-row items-center gap-3">
+                <div className="flex flex-row items-center gap-1">
+                  <p>
+                    {isEnglish
+                      ? isLeaderboardFrozen
+                        ? "Activities: Frozen"
+                        : "Activities: Live"
+                      : isLeaderboardFrozen
+                      ? "الأنشطة : مجمدة"
+                      : "الأنشطة : حيّة"}
+                  </p>
+                  <div
+                    className={`w-[16px] h-[16px] rounded-full ${
+                      isLeaderboardFrozen ? "bg-red-500" : "bg-[#38FFE5]"
+                    }`}
+                    style={{
+                      animation: "pulse 3s ease-in-out infinite",
+                    }}
+                  ></div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
-          <div className="px-4 lg:px-10 py-6 lg:py-10 bg-[#06373F26] rounded-2xl">
-            <div className="overflow-x-auto">
-              <div className="min-w-[768px] w-full">
-                {/* Header wrapper div */}
-                <div className="rounded-2xl bg-[#38FFE50D] mb-6 lg:mb-10">
-                  <table className={`w-full ${isEnglish ? "pl-5" : "pr-5"}`}>
-                    <thead>
-                      <tr
-                        className={`text-white ${
-                          isEnglish ? "flex-row-reverse" : "flex-row"
-                        } flex items-center justify-between`}
-                      >
-                        <th
-                          className={`py-3 lg:py-4 w-[25%] text-sm lg:text-base ${
-                            isEnglish
-                              ? "text-left pl-3 lg:pl-5"
-                              : "text-right pr-3 lg:pr-5"
-                          }`}
+          {isActivitiesLoading ? (
+            <div className="flex justify-center items-center py-10">
+              <BiLoaderAlt className="animate-spin text-[#38FFE5] text-5xl mx-auto" />
+            </div>
+          ) : activities.length > 0 ? (
+            <div className="px-4 lg:px-10 py-6 lg:py-10 bg-[#06373F26] rounded-2xl">
+              <div className="overflow-x-auto">
+                <div className="min-w-[768px] w-full">
+                  {/* Header wrapper div */}
+                  <div className="rounded-2xl bg-[#38FFE50D] mb-6 lg:mb-10">
+                    <table className={`w-full ${isEnglish ? "pl-5" : "pr-5"}`}>
+                      <thead>
+                        <tr
+                          className={`text-white ${
+                            isEnglish ? "flex-row-reverse" : "flex-row"
+                          } flex items-center justify-between`}
                         >
-                          {isEnglish ? "Time" : "التوقيت"}
-                        </th>
-                        <th
-                          className={`py-3 lg:py-4 w-[25%] text-sm lg:text-base ${
-                            isEnglish ? "text-left" : "text-right"
-                          }`}
-                        >
-                          {isEnglish ? "Bytes" : "البايتس"}
-                        </th>
-                        <th
-                          className={`py-3 lg:py-4 w-[50%] text-sm lg:text-base ${
-                            isEnglish
-                              ? "text-left pl-3 lg:pl-5"
-                              : "text-right pr-3 lg:pr-5"
-                          }`}
-                        >
-                          {isEnglish ? "User" : "المستخدم"}
-                        </th>
-                      </tr>
-                    </thead>
-                  </table>
-                </div>
-
-                {/* Body rows */}
-                {isActivitiesLoading ? (
-                  <div className="flex justify-center items-center py-10">
-                    <BiLoaderAlt className="animate-spin text-[#38FFE5] text-5xl mx-auto" />
+                          <th
+                            className={`py-3 lg:py-4 w-[25%] text-sm lg:text-base ${
+                              isEnglish
+                                ? "text-left pl-3 lg:pl-5"
+                                : "text-right pr-3 lg:pr-5"
+                            }`}
+                          >
+                            {isEnglish ? "Time" : "التوقيت"}
+                          </th>
+                          <th
+                            className={`py-3 lg:py-4 w-[25%] text-sm lg:text-base ${
+                              isEnglish ? "text-left" : "text-right"
+                            }`}
+                          >
+                            {isEnglish ? "Bytes" : "البايتس"}
+                          </th>
+                          <th
+                            className={`py-3 lg:py-4 w-[50%] text-sm lg:text-base ${
+                              isEnglish
+                                ? "text-left pl-3 lg:pl-5"
+                                : "text-right pr-3 lg:pr-5"
+                            }`}
+                          >
+                            {isEnglish ? "User" : "المستخدم"}
+                          </th>
+                        </tr>
+                      </thead>
+                    </table>
                   </div>
-                ) : activities.length > 0 ? (
-                  activities.map((activity, index) => {
+
+                  {/* Body rows */}
+                  {activities.map((activity, index) => {
                     const solvedDate = convertToUserTimezone(
                       new Date(activity.solved_at)
                     );
@@ -3901,26 +3902,26 @@ export default function EventPage() {
                         </table>
                       </div>
                     );
-                  })
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-8">
-                    <Image
-                      src="/notfound.png"
-                      height={80}
-                      width={80}
-                      alt="activities"
-                      className="w-16 h-16 sm:w-20 sm:h-20 mb-4"
-                    />
-                    <h3 className="text-lg sm:text-xl font-medium text-center">
-                      {isEnglish
-                        ? "Activities will be available soon"
-                        : "ستكون الأنشطة متاحة قريبًا"}
-                    </h3>
-                  </div>
-                )}
+                  })}
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-8">
+              <Image
+                src="/notfound.png"
+                height={80}
+                width={80}
+                alt="activities"
+                className="w-16 h-16 sm:w-20 sm:h-20 mb-4"
+              />
+              <h3 className="text-lg sm:text-xl font-medium text-center">
+                {isEnglish
+                  ? "Activities will be available soon"
+                  : "ستكون الأنشطة متاحة قريبًا"}
+              </h3>
+            </div>
+          )}
         </div>
       )}
 

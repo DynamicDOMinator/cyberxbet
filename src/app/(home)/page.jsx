@@ -532,9 +532,7 @@ export default function Home() {
                 format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                {isEnglish
-                  ? "Cryptography and Decryption"
-                  : "التشفير وفك التشفير"}
+                {isEnglish ? "Cryptography" : "التشفير"}
               </h4>
               <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
                 {isEnglish
@@ -563,7 +561,7 @@ export default function Home() {
                 format="webp"
               />
               <h4 className="text-white text-center font-bold text-2xl lg:text-4xl font-Tajawal">
-                {isEnglish ? "Miscellaneous" : "متنوع"}
+                {isEnglish ? "Misc" : "متنوع"}
               </h4>
               <p className="text-[#BCC9DB] text-center text-lg font-Tajawal">
                 {isEnglish
@@ -634,43 +632,6 @@ export default function Home() {
                   : "تشمل التحديات تحليل الملفات، الذاكرة، الشبكات، وسجلات الأنظمة للكشف عن الأنشطة المشبوهة."}
               </p>
             </div>
-          </div>
-        </div>
-
-        {/* numbers section */}
-
-        <div className="grid md:grid-cols-3 grid-cols-1 mt-20 place-items-center max-w-7xl mx-auto gap-10 px-4">
-          <div className="w-[200px] text-center" data-aos="zoom-in">
-            <div className="h-[100px] text-white rounded-2xl relative flex items-center justify-center">
-              <NumberAnimation end={1000} />
-            </div>
-            <p className="text-white text-center font-medium mt-3 text-2xl lg:text-2xl font-Tajawal">
-              {isEnglish ? " Users" : " المستخدمين"}
-            </p>
-          </div>
-          <div
-            className="w-[200px] text-center"
-            data-aos="zoom-in"
-            data-aos-delay="200"
-          >
-            <div className="h-[100px] text-white rounded-2xl relative flex items-center justify-center">
-              <NumberAnimation end={120} />
-            </div>
-            <p className="text-white text-center font-medium mt-3 text-2xl lg:text-2xl font-Tajawal">
-              {isEnglish ? " Challenges" : "تحديات"}
-            </p>
-          </div>
-          <div
-            className="w-[200px] text-center"
-            data-aos="zoom-in"
-            data-aos-delay="400"
-          >
-            <div className="h-[100px] text-white rounded-2xl relative flex items-center justify-center">
-              <NumberAnimation end={4} />
-            </div>
-            <p className="text-white text-center mt-3 text-2xl font-medium lg:text-2xl font-Tajawal">
-              {isEnglish ? "Events" : " الفعاليات"}
-            </p>
           </div>
         </div>
 

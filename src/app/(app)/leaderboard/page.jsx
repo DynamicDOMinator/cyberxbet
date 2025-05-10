@@ -200,7 +200,7 @@ export default function Leaderboard() {
               {isEnglish ? "Challenges" : "التحديات"}
             </div>
             <div className="w-[150px] text-center">
-              {isEnglish ? "First Blood" : "البايتس الأولى"}
+              {isEnglish ? "First bytes" : "البايتس الأولى"}
             </div>
           </div>
 

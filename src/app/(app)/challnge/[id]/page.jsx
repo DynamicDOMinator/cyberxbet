@@ -1165,7 +1165,9 @@ export default function ChallengePage() {
                             height={48}
                           />
                           <p className="text-white text-[20px] text-center ">
-                            تهانينا! لقد التقط جميع الأعلام بنجاح
+                            {isEnglish
+                              ? "Congratulations! You have completed the challenge"
+                              : "تهانينا! لقد أتممت التحدي بنجاح"}
                           </p>
                         </div>
                       ) : (
@@ -1289,7 +1291,7 @@ export default function ChallengePage() {
                       </h2>
                       <p className="text-[#BCC9DB] pt-2 text-[18px]">
                         {isEnglish
-                          ? "All players who hacked the challenge"
+                          ? "All players who successfully hacked the challenge"
                           : "جميع اللاعبون الذين اخترقوا التحدي"}
                       </p>
                     </div>
@@ -1458,14 +1460,7 @@ export default function ChallengePage() {
                 onClick={() => setIsFirstBlood(false)}
                 className="blood-bg relative flex items-center w-[600px] h-[600px] justify-center overflow-hidden"
               >
-                {/* <Image
-                  src="/blooda.png"
-                  alt="Blood animation background"
-                  width={600}
-                  height={600}
-                  priority
-                  className="absolute inset-0 object-cover object-center "
-                /> */}
+             
                 <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] relative z-10 min-h-[300px] rounded-lg p-4">
                   <div>
                     <div className="flex items-center justify-center gap-4 pb-16">

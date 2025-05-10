@@ -763,7 +763,7 @@ export default function AddChallenge() {
             <p className="text-[#41C300] text-center   mt-2">
               {isEnglish
                 ? "All challenges you've created"
-                : "جميع التحديات التي قمت بها"}
+                : "جميع التحديات المرفوعة"}
             </p>
           </div>
 
@@ -785,7 +785,7 @@ export default function AddChallenge() {
               {statisticsLoading ? "..." : statistics.under_review}
             </p>
             <p className="text-[#0081D9] text-center   mt-2">
-              {isEnglish ? "In review" : "قيد المراجعة"}
+              {isEnglish ? "In review" : "بانتظار المراجعة"}
             </p>
           </div>
 
@@ -831,7 +831,7 @@ export default function AddChallenge() {
             <p className="text-[#D30E00] text-center   mt-2">
               {isEnglish
                 ? "Challenges need to be modified"
-                : "تحديات تحتاج إلى تعديل"}
+                : "تحديات تحتاج إعادة رفع"}
             </p>
           </div>
         </div>

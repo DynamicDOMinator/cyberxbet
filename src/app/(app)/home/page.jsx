@@ -188,7 +188,7 @@ export default function Home() {
             />
             <p className="text-center text-gray-500">
               {isEnglish
-                ? "No advertisements available at the moment"
+                ? "There are no ads available at this time"
                 : "لا توجد إعلانات في الوقت الحالي"}
             </p>
           </div>
@@ -201,7 +201,7 @@ export default function Home() {
             isEnglish ? "text-left" : "text-right"
           } font-semibold`}
         >
-          {isEnglish ? "Progress Level" : "مستوى التقدم"}
+          {isEnglish ? "Level Progress" : "مستوى التقدم"}
         </h2>
 
         <div className="flex lg:flex-row flex-col lg:gap-14 gap-8 items-center justify-between pt-8">
@@ -278,7 +278,7 @@ export default function Home() {
                   : "لا يوجد تصنيف"}
               </p>
               <p className="text-white text-[16px] sm:text-[18px]">
-                {isEnglish ? "Your Ranking" : "تصنيفك"}
+                {isEnglish ? "Rank" : "تصنيفك"}
               </p>
             </div>
           </div>
@@ -340,7 +340,7 @@ export default function Home() {
                   </>
                 ) : (
                   <>
-                    مستوي الصعوبة :{" "}
+                    مستوى الصعوبة :{" "}
                     <span className={getDifficultyColor(challenge.difficulty)}>
                       {challenge.difficulty}
                     </span>
@@ -363,7 +363,7 @@ export default function Home() {
             isEnglish ? "text-left" : "text-right"
           } font-semibold`}
         >
-          {isEnglish ? "Activity History" : "أحدث الانشطة"}
+          {isEnglish ? "Latest Activities" : "أحدث الانشطة"}
         </h2>
         <div className="px-4 lg:px-10 py-6 lg:py-10 bg-[#06373F26] rounded-2xl">
           <div className="overflow-x-auto">
