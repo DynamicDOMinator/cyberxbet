@@ -2587,8 +2587,8 @@ export default function EventPage() {
                         <div className="flex justify-center items-center bg-[#FFFFFF0D] p-4 rounded-md text-sm sm:text-base">
                           <p>
                             {isEnglish
-                              ? "Cannot create password until the event starts"
-                              : "لا يمكن انشاء كلمة مرور حتى بدء الفاعليه"}
+                              ? "Team registration is closed"
+                              : "أنتهت مده تسجيل الفرق"}
                           </p>
                         </div>
                       )}
