@@ -741,7 +741,7 @@ export default function ChallengePage() {
       return (
         <div
           key={index}
-          className={`flex items-center justify-between flex-wrap py-5 rounded-lg px-5 ${
+          className={`flex items-center justify-between flex-wrap py-5 rounded-2xl px-5 ${
             index % 2 === 0 ? "bg-transparent" : "bg-[#06373F]"
           }`}
         >
@@ -760,7 +760,7 @@ export default function ChallengePage() {
                 alt="profile"
                 width={32}
                 height={32}
-                className={user.profile_image ? "rounded-full" : ""}
+                className={user.profile_image ? "rounded-full w-10 h-10" : "" }
               />
               <p
                 onClick={() => router.push(`/profile/${user.user_name}`)}
@@ -941,7 +941,7 @@ export default function ChallengePage() {
                           className={
                             challenge?.flags_data?.[0]?.first_blood
                               ?.profile_image
-                              ? "rounded-full"
+                              ? "rounded-full w-7 h-7"
                               : ""
                           }
                         />

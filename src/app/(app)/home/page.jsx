@@ -3,7 +3,7 @@
 import { useLanguage } from "../../context/LanguageContext";
 import Image from "next/image";
 import LoadingPage from "@/app/components/LoadingPage";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import Link from "next/link";
@@ -18,7 +18,80 @@ export default function Home() {
   const [latestChallenges, setLatestChallenges] = useState([]);
   const [userData, setUserData] = useState(null);
   const [activities, setActivities] = useState([]);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const touchStartX = useRef(null);
+  const touchEndX = useRef(null);
   const router = useRouter();
+
+  // Slider images
+  const sliderImages = [
+    {
+      src: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=1470&auto=format&fit=crop",
+      alt: "Cyber Security",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=1470&auto=format&fit=crop",
+      alt: "Hacker",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1544890225-2f3faec4cd60?q=80&w=1525&auto=format&fit=crop",
+      alt: "Security",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?q=80&w=1534&auto=format&fit=crop",
+      alt: "Cyber",
+    },
+  ];
+
+  // Auto slide effect with longer interval
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % sliderImages.length);
+    }, 6000); // Change slide every 6 seconds (increased from 3 seconds)
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Handle manual navigation
+  const goToNextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % sliderImages.length);
+  };
+
+  const goToPrevSlide = () => {
+    setCurrentSlide(
+      (prev) => (prev - 1 + sliderImages.length) % sliderImages.length
+    );
+  };
+
+  // Handle touch events for swiping
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+
+    const diffX = touchStartX.current - touchEndX.current;
+    const threshold = 50; // minimum distance to be considered a swipe
+
+    if (Math.abs(diffX) > threshold) {
+      if (diffX > 0) {
+        // Swiped left, go to next slide
+        goToNextSlide();
+      } else {
+        // Swiped right, go to previous slide
+        goToPrevSlide();
+      }
+    }
+
+    // Reset values
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
 
   // Function to fetch activities data
   const fetchActivities = async () => {
@@ -168,8 +241,8 @@ export default function Home() {
 
   return isLoaded ? (
     <div className="max-w-[2000px] mx-auto pb-10 mt-20">
-      {/* ads section  */}
-      <div className="lg:pt-28 pt-12 lg:px-16 px-5  ">
+      {/* Automated Image Slider */}
+      <div className="lg:pt-28 pt-12 lg:px-16 px-5">
         <h1
           className={`${
             isEnglish ? "text-left" : "text-right"
@@ -178,19 +251,47 @@ export default function Home() {
           {isEnglish ? "Advertisements" : "الاعلانات"}
         </h1>
 
-        <div className="bg-white/3 backdrop-blur-xl mt-8 rounded-2xl p-4 lg:h-[400px] w-full ">
-          <div className="flex flex-col  items-center justify-center lg:h-[400px] h-[200px] gap-4">
-            <Image
-              src="/ads.png"
-              alt="Advertisement 1"
-              width={120}
-              height={120}
-            />
-            <p className="text-center text-gray-500">
-              {isEnglish
-                ? "There are no ads available at this time"
-                : "لا توجد إعلانات في الوقت الحالي"}
-            </p>
+        <div className="bg-white/3 backdrop-blur-xl mt-8 rounded-2xl  lg:h-[400px] w-full overflow-hidden">
+          <div
+            className="relative w-full h-full"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {sliderImages.map((image, index) => (
+              <div
+                key={index}
+                className={`absolute top-0 left-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
+                  currentSlide === index ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                <div
+                  className="relative w-full h-full cursor-pointer"
+                  onClick={(e) => {
+                    // Determine if click is on left or right side
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const width = rect.width;
+
+                    // If clicked on left side, go to previous slide, otherwise go to next slide
+                    if (x < width / 2) {
+                      goToPrevSlide();
+                    } else {
+                      goToNextSlide();
+                    }
+                  }}
+                >
+                  <Image
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    className="object-cover rounded-xl"
+                    priority={index === 0}
+                    draggable={false}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

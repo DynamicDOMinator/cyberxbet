@@ -4070,6 +4070,18 @@ export default function EventPage() {
                                   >
                                     {activity.user_name}
                                   </span>
+
+                                  <span
+                                    className="cursor-pointer"
+                                    onClick={() =>
+                                      setSelectedTeamUuid(activity?.team_uuid)
+                                    }
+                                  >
+                                    {" "}
+                                    {isEnglish ? "from" : "من"}{" "}
+                                    {activity?.team_name}
+                                  </span>
+
                                   <span className="text-white text-sm lg:text-base">
                                     {isEnglish
                                       ? activity.is_first_blood
