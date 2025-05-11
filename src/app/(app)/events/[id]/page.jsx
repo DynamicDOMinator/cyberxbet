@@ -1,6 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, memo } from "react";
 import axios from "axios";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { MdKeyboardArrowLeft } from "react-icons/md";
@@ -27,17 +27,31 @@ import TeamDetailsModal from "@/app/components/TeamDetailsModal";
 import { BiLoaderAlt } from "react-icons/bi";
 
 // Add a separate component for the freeze notification to reduce re-renders
-const LeaderboardFreezeNotification = ({ isLeaderboardFrozen, isEnglish }) => {
-  if (!isLeaderboardFrozen) return null;
+const LeaderboardFreezeNotification = memo(
+  ({ isLeaderboardFrozen, isEnglish, isReady, activeTab }) => {
+    // Don't show anything if we're not ready (haven't received both API responses) or not frozen
+    // Or if we're not on the leaderboard tab
+    if (!isLeaderboardFrozen || !isReady || activeTab !== "leaderboard")
+      return null;
 
-  return (
-    <div className="text-red-500 text-lg border border-red-500 rounded-md px-3 py-1 mr-4">
-      {isEnglish
-        ? "Leaderboard temporarily frozen"
-        : "تم تجميد قائمة المتصدرين مؤقتاً"}
-    </div>
-  );
-};
+    console.log("[NOTIFICATION] Rendering freeze notification", {
+      isLeaderboardFrozen,
+      isReady,
+      activeTab,
+    });
+
+    return (
+      <div className="text-red-500 text-lg border border-red-500 bg-red-500/10 rounded-md px-4 py-2 mr-4 font-bold flex items-center gap-2">
+        <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+        {isEnglish
+          ? "Leaderboard temporarily frozen"
+          : "تم تجميد قائمة المتصدرين مؤقتاً"}
+      </div>
+    );
+  }
+);
+
+LeaderboardFreezeNotification.displayName = "LeaderboardFreezeNotification";
 
 export default function EventPage() {
   const { isEnglish } = useLanguage();
@@ -106,10 +120,51 @@ export default function EventPage() {
   // Add a frozen state ref at component level to track current state
   const frozenStateRef = useRef(false);
 
+  // Add a ref to track the latest freeze API response
+  const freezeApiResponseRef = useRef(null);
+
+  // Add a ref to track the latest scoreboard API response
+  const scoreboardApiResponseRef = useRef(null);
+
+  // Add state for tracking API responses
+  const [freezeApiResponded, setFreezeApiResponded] = useState(false);
+  const [scoreboardApiResponded, setScoreboardApiResponded] = useState(false);
+  const [isFreezeNotificationReady, setIsFreezeNotificationReady] =
+    useState(false);
+
   // Add an effect to keep the ref updated with the latest state value
   useEffect(() => {
     frozenStateRef.current = isLeaderboardFrozen;
   }, [isLeaderboardFrozen]);
+
+  // Add an effect to check if both APIs have responded and update the UI accordingly
+  useEffect(() => {
+    if (freezeApiResponded && scoreboardApiResponded) {
+      console.log("[FREEZE] Both APIs have responded, determining final state");
+
+      const freezeApiState = freezeApiResponseRef.current;
+      const scoreboardApiState = scoreboardApiResponseRef.current;
+
+      console.log(
+        `[FREEZE] Freeze API state: ${freezeApiState}, Scoreboard API state: ${scoreboardApiState}`
+      );
+
+      // If both APIs agree, update the state
+      if (freezeApiState === scoreboardApiState) {
+        console.log(`[FREEZE] APIs agree on state: ${freezeApiState}`);
+        setIsLeaderboardFrozen(freezeApiState);
+      } else {
+        // If they disagree, prioritize the scoreboard API as it's the source of truth
+        console.log(
+          `[FREEZE] APIs disagree, using scoreboard state: ${scoreboardApiState}`
+        );
+        setIsLeaderboardFrozen(scoreboardApiState);
+      }
+
+      // Mark the notification as ready
+      setIsFreezeNotificationReady(true);
+    }
+  }, [freezeApiResponded, scoreboardApiResponded]);
 
   // New effect to refresh team data when leaderboard is frozen
   useEffect(() => {
@@ -1274,7 +1329,7 @@ export default function EventPage() {
     eventScoreBoard();
   }, []);
 
-  // Enhance the updateScoreboardWithNewPoints function to handle data more accurately
+  // Add the updateScoreboardWithNewPoints function
   const updateScoreboardWithNewPoints = (
     username,
     newPoints,
@@ -1372,7 +1427,25 @@ export default function EventPage() {
     });
   };
 
-  // Enhance the eventScoreBoard function to better handle data updates
+  // Create a more robust freeze state update function
+  const updateFreezeState = (newState, source) => {
+    console.log(
+      `[FREEZE] Received freeze state update: ${newState} from ${source}`
+    );
+
+    // Track API responses separately
+    if (source === "api-check" || source === "websocket-event") {
+      freezeApiResponseRef.current = newState;
+      setFreezeApiResponded(true);
+    } else if (source === "scoreboard-api") {
+      scoreboardApiResponseRef.current = newState;
+      setScoreboardApiResponded(true);
+    }
+
+    // Don't update the actual state here, let the effect handle it
+  };
+
+  // Modify the eventScoreBoard function to use the updated function
   const eventScoreBoard = async () => {
     // Prevent multiple simultaneous calls
     if (window._isLoadingScoreboard) {
@@ -1393,22 +1466,20 @@ export default function EventPage() {
 
       // Always check if the API response includes frozen status
       if (res.data.hasOwnProperty("frozen")) {
-        const newFrozenState = res.data.frozen;
-        const currentFrozenState = frozenStateRef.current;
+        // Update our scoreboard API response tracking
+        scoreboardApiResponseRef.current = res.data.frozen;
+        setScoreboardApiResponded(true);
 
-        // Only update the state if it's different to prevent multiple re-renders
-        if (newFrozenState !== currentFrozenState) {
-          console.log(
-            `[LEADERBOARD] API reports frozen status changed: ${newFrozenState}`
-          );
-          setIsLeaderboardFrozen(newFrozenState);
-        } else {
-          console.log(
-            `[LEADERBOARD] Frozen status unchanged: ${newFrozenState}`
-          );
-        }
+        // IMPORTANT FIX: Directly update the freeze state as well
+        setIsLeaderboardFrozen(res.data.frozen);
+        setIsFreezeNotificationReady(true);
+
+        console.log(
+          `[LEADERBOARD] Scoreboard API reports frozen status: ${res.data.frozen}`
+        );
       }
 
+      // Process scoreboard data
       if (res.data.data.length > 0) {
         // Save previous data for comparison
         const previousData = scoreboardData;
@@ -1568,22 +1639,187 @@ export default function EventPage() {
     return cleanup;
   }, [id, isEventScoreBoard]);
 
-  useEffect(() => {
-    // If we're in team tab, we're marked as in a team, but don't have team data
-    // This is a safety mechanism to handle race conditions
-    if (activeTab === "team" && isInTeam && !teams) {
-      getTeams().catch((err) => {
-        console.error("Failed to load team data after retry:", err);
-        // If still failing after a retry, notify user
-        toast.error(
-          isEnglish
-            ? "Could not load team data. Please refresh the page."
-            : "تعذر تحميل بيانات الفريق. يرجى تحديث الصفحة."
-        );
-      });
-    }
-  }, [activeTab, isInTeam, teams]);
+  // Rest of the component code...
 
+  // Add a direct broadcast function to handle flag submissions
+  const broadcastActivity = async (data) => {
+    try {
+      console.log("Broadcasting activity directly:", data);
+
+      // Prepare the payload
+      const payload = {
+        eventId: id,
+        challengeId: data.challenge_id || data.challengeId,
+        challenge_id: data.challenge_id || data.challengeId,
+        username: data.username || data.user_name,
+        user_name: data.username || data.user_name,
+        teamUuid: data.teamUuid,
+        teamName: data.teamName,
+        points: data.points,
+        isFirstBlood: data.isFirstBlood || false,
+        challenge_name: data.challenge_name,
+        profile_image: data.profile_image,
+        timestamp: Date.now(),
+        broadcast_id: Math.random().toString(36).substring(2, 15),
+      };
+
+      // Post to our broadcast API
+      const response = await fetch("/api/broadcast-activity", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${Cookies.get("token")}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        console.error("Failed to broadcast activity:", await response.text());
+      } else {
+        console.log("Activity broadcast successful");
+      }
+
+      // Also update our local state immediately
+      handleRealTimeActivity(payload);
+    } catch (error) {
+      console.error("Error broadcasting activity:", error);
+    }
+  };
+
+  // Modify the WebSocket freeze listener to use the updated API response tracking
+  useEffect(() => {
+    if (!id) return;
+
+    // Check initial freeze state and then fetch scoreboard
+    const checkFreezeState = async () => {
+      try {
+        console.log(`[FREEZE] Checking freeze state for event ${id}`);
+        const response = await fetch(`/api/freeze?eventId=${id}`);
+        const data = await response.json();
+
+        if (data && typeof data.frozen === "boolean") {
+          // Update our freeze API response tracking
+          freezeApiResponseRef.current = data.frozen;
+          setFreezeApiResponded(true);
+          console.log(`[FREEZE] Initial freeze state from API: ${data.frozen}`);
+
+          // After freeze API responds, always fetch scoreboard to get the definitive state
+          // This ensures we don't show UI based on just the freeze API response
+          console.log(`[FREEZE] Fetching scoreboard to verify freeze state`);
+          await eventScoreBoard();
+        }
+      } catch (error) {
+        console.error("[FREEZE] Error checking freeze state:", error);
+      }
+    };
+
+    checkFreezeState();
+
+    // Listen for system freeze updates that affect this event
+    const handleFreezeUpdate = (event) => {
+      const { frozen, eventId, isGlobal } = event.detail;
+
+      // Apply freeze state if it's for this specific event or it's global
+      if ((eventId && eventId === id) || isGlobal) {
+        // Update our freeze API response tracking
+        freezeApiResponseRef.current = frozen;
+        setFreezeApiResponded(true);
+        console.log(`[FREEZE] WebSocket freeze update: ${frozen}`);
+
+        // After freeze API broadcasts an update, fetch scoreboard to get the definitive state
+        console.log(
+          `[FREEZE] Fetching scoreboard to verify freeze state after broadcast`
+        );
+        eventScoreBoard();
+      }
+    };
+
+    // Add event listener
+    window.addEventListener("system_freeze_update", handleFreezeUpdate);
+
+    // Clean up
+    return () => {
+      window.removeEventListener("system_freeze_update", handleFreezeUpdate);
+    };
+  }, [id]); // eventScoreBoard is not in deps to avoid loop
+
+  // Update the effect that determines final state to prioritize scoreboard API
+  useEffect(() => {
+    if (scoreboardApiResponded) {
+      console.log(
+        "[FREEZE] Scoreboard API has responded, determining final state"
+      );
+
+      // The scoreboard API is always the source of truth
+      const scoreboardApiState = scoreboardApiResponseRef.current;
+      console.log(`[FREEZE] Using scoreboard API state: ${scoreboardApiState}`);
+
+      // Update the state
+      setIsLeaderboardFrozen(scoreboardApiState);
+
+      // Mark the notification as ready
+      setIsFreezeNotificationReady(true);
+    }
+  }, [scoreboardApiResponded]); // Only depend on scoreboard API responses
+
+  // Add a debug effect to log state changes for notification visibility
+  useEffect(() => {
+    console.log("[DEBUG] Freeze notification state:", {
+      isLeaderboardFrozen,
+      isFreezeNotificationReady,
+    });
+  }, [isLeaderboardFrozen, isFreezeNotificationReady]);
+
+  // Add a global listener for flag submissions
+  useEffect(() => {
+    // Define event handler for flag submissions
+    const handleGlobalFlagSubmit = (event) => {
+      // Check if this event is relevant to us
+      if (event && event.detail && event.detail.eventId === id) {
+        console.log("Caught global flag submission event:", event.detail);
+        broadcastActivity(event.detail);
+      }
+    };
+
+    // Add global event listener
+    if (typeof window !== "undefined") {
+      window.addEventListener("flag_submitted", handleGlobalFlagSubmit);
+    }
+
+    // Clean up
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("flag_submitted", handleGlobalFlagSubmit);
+      }
+    };
+  }, [id]);
+
+  // Introduce a testing function that simulates a flag submission (for development)
+  const simulateSubmission = () => {
+    const simulatedData = {
+      challenge_id: `sim-${Math.random().toString(36).substring(2, 7)}`,
+      username: Cookies.get("username") || "TestUser",
+      user_name: Cookies.get("username") || "TestUser",
+      eventId: id,
+      teamUuid: teams?.uuid || "test-team",
+      teamName: teams?.name || "Test Team",
+      points: Math.floor(Math.random() * 100) + 1,
+      isFirstBlood: Math.random() > 0.8,
+      challenge_name: "Test Challenge",
+      profile_image: "/icon1.png",
+      timestamp: new Date().toISOString(),
+    };
+
+    // Dispatch a DOM event that will be caught by our listener
+    if (typeof window !== "undefined") {
+      const event = new CustomEvent("flag_submitted", {
+        detail: simulatedData,
+      });
+      window.dispatchEvent(event);
+    }
+  };
+
+  // Add the function inside the component
   // Function to determine difficulty color
   const getDifficultyColor = (difficulty) => {
     if (
@@ -1599,6 +1835,8 @@ export default function EventPage() {
       return "text-[#38FFE5]"; // Easy
     }
   };
+
+  // Add these functions before the return statement
 
   // Update the fetchActivities function to support real-time updates
   const fetchActivities = async () => {
@@ -1630,70 +1868,6 @@ export default function EventPage() {
       setIsActivitiesLoading(false);
     }
   };
-
-  // Add a dedicated effect to handle real-time updates for activities
-  useEffect(() => {
-    if (!id || !socket) return;
-
-    console.log(
-      `[ACTIVITIES] Setting up real-time listeners for activities in event ${id}`
-    );
-
-    // Function to handle new activity updates
-    const handleNewActivity = (data) => {
-      // Skip if not for this event
-      if (data.eventId !== id && data.event_id !== id) return;
-
-      console.log(`[ACTIVITIES] Received new activity for event ${id}:`, data);
-
-      // Process the activity
-      handleRealTimeActivity(data);
-    };
-
-    // Register event listeners for activities
-    socket.on("flagSubmitted", handleNewActivity);
-    socket.on("teamUpdate", handleNewActivity);
-    socket.on("activityUpdate", handleNewActivity);
-
-    // Also set up a DOM event listener for flag submissions
-    if (typeof window !== "undefined") {
-      window.addEventListener("flag_submitted", (event) =>
-        handleNewActivity(event.detail)
-      );
-      window.addEventListener("team_update", (event) =>
-        handleNewActivity(event.detail)
-      );
-    }
-
-    // Clean up on unmount
-    return () => {
-      console.log(
-        `[ACTIVITIES] Cleaning up activity listeners for event ${id}`
-      );
-
-      if (socket) {
-        socket.off("flagSubmitted", handleNewActivity);
-        socket.off("teamUpdate", handleNewActivity);
-        socket.off("activityUpdate", handleNewActivity);
-      }
-
-      if (typeof window !== "undefined") {
-        window.removeEventListener("flag_submitted", (event) =>
-          handleNewActivity(event.detail)
-        );
-        window.removeEventListener("team_update", (event) =>
-          handleNewActivity(event.detail)
-        );
-      }
-    };
-  }, [id, socket]);
-
-  // Add back the useEffect to load activities when tab changes
-  useEffect(() => {
-    if (activeTab === "activities") {
-      fetchActivities();
-    }
-  }, [activeTab, id]);
 
   // Update the handleRealTimeActivity function to better handle activities
   const handleRealTimeActivity = (data) => {
@@ -1823,7 +1997,65 @@ export default function EventPage() {
     }
   };
 
-  // Add back the useEffects for fetching activities and scoreboard
+  // Add these useEffect hooks after the flag submission listener
+
+  // Add a dedicated effect to handle real-time updates for activities
+  useEffect(() => {
+    if (!id || !socket) return;
+
+    console.log(
+      `[ACTIVITIES] Setting up real-time listeners for activities in event ${id}`
+    );
+
+    // Function to handle new activity updates
+    const handleNewActivity = (data) => {
+      // Skip if not for this event
+      if (data.eventId !== id && data.event_id !== id) return;
+
+      console.log(`[ACTIVITIES] Received new activity for event ${id}:`, data);
+
+      // Process the activity
+      handleRealTimeActivity(data);
+    };
+
+    // Register event listeners for activities
+    socket.on("flagSubmitted", handleNewActivity);
+    socket.on("teamUpdate", handleNewActivity);
+    socket.on("activityUpdate", handleNewActivity);
+
+    // Also set up a DOM event listener for flag submissions
+    if (typeof window !== "undefined") {
+      window.addEventListener("flag_submitted", (event) =>
+        handleNewActivity(event.detail)
+      );
+      window.addEventListener("team_update", (event) =>
+        handleNewActivity(event.detail)
+      );
+    }
+
+    // Clean up on unmount
+    return () => {
+      console.log(
+        `[ACTIVITIES] Cleaning up activity listeners for event ${id}`
+      );
+
+      if (socket) {
+        socket.off("flagSubmitted", handleNewActivity);
+        socket.off("teamUpdate", handleNewActivity);
+        socket.off("activityUpdate", handleNewActivity);
+      }
+
+      if (typeof window !== "undefined") {
+        window.removeEventListener("flag_submitted", (event) =>
+          handleNewActivity(event.detail)
+        );
+        window.removeEventListener("team_update", (event) =>
+          handleNewActivity(event.detail)
+        );
+      }
+    };
+  }, [id, socket]);
+
   // Add an effect to fetch activities when switching to the activities tab
   useEffect(() => {
     if (activeTab === "activities") {
@@ -1831,160 +2063,22 @@ export default function EventPage() {
     }
   }, [activeTab, id]);
 
-  // Additional effect to trigger scoreboard fetch when switching to leaderboard tab
+  // Add a reset mechanism when event ID changes
   useEffect(() => {
-    if (activeTab === "leaderboard" && isEventScoreBoard) {
-      eventScoreBoard();
-    }
-  }, [activeTab, isEventScoreBoard]);
+    console.log(`[FREEZE] Event ID changed to ${id}, resetting state`);
 
-  // Add a direct broadcast function to handle flag submissions
-  const broadcastActivity = async (data) => {
-    try {
-      console.log("Broadcasting activity directly:", data);
+    // Reset API response tracking
+    setFreezeApiResponded(false);
+    setScoreboardApiResponded(false);
+    setIsFreezeNotificationReady(false);
 
-      // Prepare the payload
-      const payload = {
-        eventId: id,
-        challengeId: data.challenge_id || data.challengeId,
-        challenge_id: data.challenge_id || data.challengeId,
-        username: data.username || data.user_name,
-        user_name: data.username || data.user_name,
-        teamUuid: data.teamUuid,
-        teamName: data.teamName,
-        points: data.points,
-        isFirstBlood: data.isFirstBlood || false,
-        challenge_name: data.challenge_name,
-        profile_image: data.profile_image,
-        timestamp: Date.now(),
-        broadcast_id: Math.random().toString(36).substring(2, 15),
-      };
+    // Reset refs
+    freezeApiResponseRef.current = null;
+    scoreboardApiResponseRef.current = null;
 
-      // Post to our broadcast API
-      const response = await fetch("/api/broadcast-activity", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${Cookies.get("token")}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        console.error("Failed to broadcast activity:", await response.text());
-      } else {
-        console.log("Activity broadcast successful");
-      }
-
-      // Also update our local state immediately
-      handleRealTimeActivity(payload);
-    } catch (error) {
-      console.error("Error broadcasting activity:", error);
-    }
-  };
-
-  // Add a global listener for flag submissions
-  useEffect(() => {
-    // Define event handler for flag submissions
-    const handleGlobalFlagSubmit = (event) => {
-      // Check if this event is relevant to us
-      if (event && event.detail && event.detail.eventId === id) {
-        console.log("Caught global flag submission event:", event.detail);
-        broadcastActivity(event.detail);
-      }
-    };
-
-    // Add global event listener
-    if (typeof window !== "undefined") {
-      window.addEventListener("flag_submitted", handleGlobalFlagSubmit);
-    }
-
-    // Clean up
-    return () => {
-      if (typeof window !== "undefined") {
-        window.removeEventListener("flag_submitted", handleGlobalFlagSubmit);
-      }
-    };
+    // Ensure leaderboard frozen state is initially false
+    setIsLeaderboardFrozen(false);
   }, [id]);
-
-  // Introduce a testing function that simulates a flag submission (for development)
-  const simulateSubmission = () => {
-    const simulatedData = {
-      challenge_id: `sim-${Math.random().toString(36).substring(2, 7)}`,
-      username: Cookies.get("username") || "TestUser",
-      user_name: Cookies.get("username") || "TestUser",
-      eventId: id,
-      teamUuid: teams?.uuid || "test-team",
-      teamName: teams?.name || "Test Team",
-      points: Math.floor(Math.random() * 100) + 1,
-      isFirstBlood: Math.random() > 0.8,
-      challenge_name: "Test Challenge",
-      profile_image: "/icon1.png",
-      timestamp: new Date().toISOString(),
-    };
-
-    // Dispatch a DOM event that will be caught by our listener
-    if (typeof window !== "undefined") {
-      const event = new CustomEvent("flag_submitted", {
-        detail: simulatedData,
-      });
-      window.dispatchEvent(event);
-    }
-  };
-
-  // Add back the WebSocket freeze event listener
-  useEffect(() => {
-    if (!id) return;
-
-    // Check initial freeze state
-    const checkFreezeState = async () => {
-      try {
-        const response = await fetch(`/api/freeze?eventId=${id}`);
-        const data = await response.json();
-
-        // Only update if the actual value is different from current state
-        if (
-          data &&
-          typeof data.frozen === "boolean" &&
-          data.frozen !== frozenStateRef.current
-        ) {
-          console.log(
-            `[FREEZE] Setting leaderboard freeze state to: ${data.frozen}`
-          );
-          setIsLeaderboardFrozen(data.frozen);
-        }
-      } catch (error) {
-        console.error("[FREEZE] Error checking freeze state:", error);
-      }
-    };
-
-    checkFreezeState();
-
-    // Listen for system freeze updates that affect this event
-    const handleFreezeUpdate = (event) => {
-      const { frozen, eventId, isGlobal } = event.detail;
-
-      // Apply freeze state if it's for this specific event or it's global
-      // AND it's different from the current state
-      if (
-        ((eventId && eventId === id) || isGlobal) &&
-        frozen !== frozenStateRef.current
-      ) {
-        console.log(
-          `[FREEZE] Leaderboard freeze state updated for event ${id}: ${frozen}`
-        );
-        setIsLeaderboardFrozen(frozen);
-      }
-    };
-
-    // Add event listener
-    window.addEventListener("system_freeze_update", handleFreezeUpdate);
-
-    // Clean up
-    return () => {
-      window.removeEventListener("system_freeze_update", handleFreezeUpdate);
-    };
-  }, [id]); // Remove isLeaderboardFrozen from dependency array
 
   return isLoading ? (
     <LoadingPage />
@@ -2343,6 +2437,8 @@ export default function EventPage() {
           <LeaderboardFreezeNotification
             isLeaderboardFrozen={isLeaderboardFrozen}
             isEnglish={isEnglish}
+            isReady={isFreezeNotificationReady}
+            activeTab={activeTab}
           />
         </div>
       </div>
@@ -3097,8 +3193,6 @@ export default function EventPage() {
               </div>
             </div>
           )}
-
-          {/* Remove the status indicator for leaderboard */}
 
           {/* Top 3 Users Display */}
           <div className="flex flex-col md:flex-row justify-center items-center gap-4 sm:gap-8 md:gap-16 lg:gap-24 mb-10 mt-4">
