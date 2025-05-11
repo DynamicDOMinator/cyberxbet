@@ -108,10 +108,19 @@ export default function EventPage() {
             },
           });
 
+          // Check if the API says the leaderboard is still frozen
+          if (res.data.hasOwnProperty("frozen")) {
+            // Update our frozen state to match the API
+            setIsLeaderboardFrozen(res.data.frozen);
+            console.log(
+              `[LEADERBOARD] API reports frozen status: ${res.data.frozen}`
+            );
+          }
+
           // Update the scoreboard data directly
           if (res.data.data && res.data.data.length > 0) {
             setScoreboardData(res.data.data);
-            console.log("[LEADERBOARD FROZEN] Scoreboard data refreshed");
+            console.log("[LEADERBOARD] Scoreboard data refreshed");
           }
         } catch (error) {
           console.error("[LEADERBOARD] Error fetching scoreboard:", error);
@@ -1321,13 +1330,6 @@ export default function EventPage() {
 
   // Enhance the eventScoreBoard function to better handle data updates
   const eventScoreBoard = async () => {
-    if (isLeaderboardFrozen) {
-      console.log(
-        "[LEADERBOARD] Skipping scoreboard refresh - board is frozen"
-      );
-      return;
-    }
-
     try {
       console.log(`[LEADERBOARD] Fetching scoreboard for event ${id}`);
       const api = process.env.NEXT_PUBLIC_API_URL;
@@ -1337,18 +1339,16 @@ export default function EventPage() {
         },
       });
 
-      // Check if the API response includes frozen status
+      // Always check if the API response includes frozen status
       if (res.data.hasOwnProperty("frozen")) {
         // Update the frozen state based on API response
         setIsLeaderboardFrozen(res.data.frozen);
 
-        if (res.data.frozen) {
-          console.log(
-            `[LEADERBOARD] Scoreboard is frozen according to API. Freeze time: ${
-              res.data.freeze_time || "not specified"
-            }`
-          );
-        }
+        console.log(
+          `[LEADERBOARD] API reports frozen status: ${res.data.frozen}`
+        );
+
+        // If we're frozen, we'll still process the data
       }
 
       if (res.data.data.length > 0) {
