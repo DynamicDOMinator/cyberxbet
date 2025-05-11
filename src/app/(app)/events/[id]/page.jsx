@@ -89,13 +89,17 @@ export default function EventPage() {
 
   // New effect to refresh team data when leaderboard is frozen
   useEffect(() => {
-    if (isLeaderboardFrozen && teams?.uuid) {
+    if (isLeaderboardFrozen) {
       // When leaderboard is frozen, refresh team data
-      console.log("[LEADERBOARD FROZEN] Refreshing team data");
-      getTeams();
+      console.log("[LEADERBOARD FROZEN] Refreshing team data and scoreboard");
 
-      // Ensure we keep displaying the frozen message
-      const checkFrozenStatus = async () => {
+      // Refresh team data if we have a team
+      if (teams?.uuid) {
+        getTeams();
+      }
+
+      // Also refresh the scoreboard data ignoring the frozen check
+      const fetchScoreboard = async () => {
         try {
           const api = process.env.NEXT_PUBLIC_API_URL;
           const res = await axios.get(`${api}/${id}/scoreboard`, {
@@ -104,24 +108,18 @@ export default function EventPage() {
             },
           });
 
-          // If API no longer says frozen but we still think it is, update our state
-          if (
-            res.data.hasOwnProperty("frozen") &&
-            !res.data.frozen &&
-            isLeaderboardFrozen
-          ) {
-            setIsLeaderboardFrozen(false);
-            console.log("[LEADERBOARD] Scoreboard unfrozen according to API");
+          // Update the scoreboard data directly
+          if (res.data.data && res.data.data.length > 0) {
+            setScoreboardData(res.data.data);
+            console.log("[LEADERBOARD FROZEN] Scoreboard data refreshed");
           }
         } catch (error) {
-          console.error("[LEADERBOARD] Error checking frozen status:", error);
+          console.error("[LEADERBOARD] Error fetching scoreboard:", error);
         }
       };
 
-      // Check every 30 seconds if the frozen status has changed
-      const interval = setInterval(checkFrozenStatus, 30000);
-
-      return () => clearInterval(interval);
+      // Call the scoreboard API
+      fetchScoreboard();
     }
   }, [isLeaderboardFrozen, id, teams?.uuid]);
 
@@ -2464,7 +2462,7 @@ export default function EventPage() {
                 dir={isEnglish ? "ltr" : "rtl"}
                 className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5"
               >
-                <div className="bg-[#FFFFFF0D] py-2 sm:py-3 flex items-center gap-3 sm:gap-5 rounded-md px-3 sm:px-4">
+                <div className="bg-[#FFFFFF0D] py-2 sm:py-3 flex items-center gap-3 sm:gap-5 rounded-2xl px-3 sm:px-4">
                   <Image
                     src="/blood.png"
                     height={32}
@@ -2484,7 +2482,7 @@ export default function EventPage() {
                   </div>
                 </div>
 
-                <div className="bg-[#FFFFFF0D] py-2 sm:py-3 flex items-center gap-3 sm:gap-5 rounded-md px-3 sm:px-4">
+                <div className="bg-[#FFFFFF0D] py-2 sm:py-3 flex items-center gap-3 sm:gap-5 rounded-2xl px-3 sm:px-4">
                   <Image
                     src="/ranking.png"
                     height={32}
@@ -2502,7 +2500,7 @@ export default function EventPage() {
                   </div>
                 </div>
 
-                <div className="bg-[#FFFFFF0D] py-2 sm:py-3 flex items-center gap-3 sm:gap-5 rounded-md px-3 sm:px-4">
+                <div className="bg-[#FFFFFF0D] py-2 sm:py-3 flex items-center gap-3 sm:gap-5 rounded-2xl px-3 sm:px-4">
                   <Image
                     src="/byte.png"
                     height={32}
@@ -2556,7 +2554,7 @@ export default function EventPage() {
                       dir={isEnglish ? "ltr" : "rtl"}
                       className="grid grid-cols-1 sm:grid-cols-2 mt-3 sm:my-5 gap-4 sm:gap-10"
                     >
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-[#FFFFFF0D] p-4 sm:px-8 md:px-12 rounded-md">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-[#FFFFFF0D] p-4 sm:px-8 md:px-12 rounded-2xl">
                         <div className="py-2 sm:py-3 flex items-center gap-3 sm:gap-5 mb-3 sm:mb-0">
                           <Image
                             src="/creat.png"
@@ -2580,7 +2578,7 @@ export default function EventPage() {
 
                         <div className="text-xs sm:text-sm md:text-base">
                           <p>
-                            {isEnglish ? "Team of" : "فريق من"}{" "}
+                            {isEnglish ? "Team of" : "فريق  مكون من"}{" "}
                             {teams?.event?.team_minimum_members}-
                             {teams?.event?.team_maximum_members}{" "}
                             {isEnglish ? "Members" : "أعضاء"}
@@ -2588,7 +2586,7 @@ export default function EventPage() {
                         </div>
                       </div>
                       {showRegisterButton ? (
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-[#FFFFFF0D] p-4 sm:px-8 md:px-12 rounded-md">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center bg-[#FFFFFF0D] p-4 sm:px-8 md:px-12 rounded-2xl">
                           <div className="py-2 sm:py-3 flex items-center gap-3 sm:gap-5 mb-3 sm:mb-0">
                             <Image
                               src="/lock3.png"
@@ -2636,7 +2634,7 @@ export default function EventPage() {
                           </div>
                         </div>
                       ) : (
-                        <div className="flex justify-center items-center bg-[#FFFFFF0D] p-4 rounded-md text-sm sm:text-base">
+                        <div className="flex justify-center items-center bg-[#FFFFFF0D] p-4 rounded-2xl text-sm sm:text-base">
                           <p>
                             {isEnglish
                               ? "Team registration is closed"
@@ -2653,7 +2651,7 @@ export default function EventPage() {
                         <div
                           key={member.uuid}
                           dir={isEnglish ? "ltr" : "rtl"}
-                          className={`mt-2 flex justify-between items-center px-4 sm:px-6 md:px-10 py-3 sm:py-5 ${
+                          className={`mt-2 flex justify-between items-center px-4 sm:px-6 md:px-10 py-3 sm:py-5 rounded-2xl ${
                             index % 2 === 0 ? "bg-[#06373F]" : "bg-transparent"
                           }`}
                         >
@@ -2681,8 +2679,8 @@ export default function EventPage() {
                             )}
                           </div>
 
-                          <div className="flex items-center gap-1 basis-1/3 justify-center">
-                            <p className="text-sm sm:text-base">
+                          <div className="flex items-center gap-3 basis-1/3 justify-center">
+                            <p className="text-sm sm:text-base min-w-[35px] text-left">
                               {member.total_bytes || 0}
                             </p>
                             <Image
