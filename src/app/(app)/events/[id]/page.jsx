@@ -86,29 +86,49 @@ export default function EventPage() {
 
   // Add state for freeze status
   const [isLeaderboardFrozen, setIsLeaderboardFrozen] = useState(false);
-  // Add a state to track the last displayed frozen state to prevent UI flashing
-  const [displayedFrozenState, setDisplayedFrozenState] = useState(false);
-
-  // Update displayed frozen state when actual state changes, with slight delay
-  useEffect(() => {
-    // Use a timeout to ensure smooth transition
-    const timer = setTimeout(() => {
-      setDisplayedFrozenState(isLeaderboardFrozen);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [isLeaderboardFrozen]);
 
   // New effect to refresh team data when leaderboard is frozen
   useEffect(() => {
     if (isLeaderboardFrozen) {
       // When leaderboard is frozen, refresh team data
-      console.log("[LEADERBOARD FROZEN] Refreshing team data");
+      console.log("[LEADERBOARD FROZEN] Refreshing team data and scoreboard");
 
       // Refresh team data if we have a team
       if (teams?.uuid) {
         getTeams();
       }
+
+      // Also refresh the scoreboard data ignoring the frozen check
+      const fetchScoreboard = async () => {
+        try {
+          const api = process.env.NEXT_PUBLIC_API_URL;
+          const res = await axios.get(`${api}/${id}/scoreboard`, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("token")}`,
+            },
+          });
+
+          // Check if the API says the leaderboard is still frozen
+          if (res.data.hasOwnProperty("frozen")) {
+            // Update our frozen state to match the API
+            setIsLeaderboardFrozen(res.data.frozen);
+            console.log(
+              `[LEADERBOARD] API reports frozen status: ${res.data.frozen}`
+            );
+          }
+
+          // Update the scoreboard data directly
+          if (res.data.data && res.data.data.length > 0) {
+            setScoreboardData(res.data.data);
+            console.log("[LEADERBOARD] Scoreboard data refreshed");
+          }
+        } catch (error) {
+          console.error("[LEADERBOARD] Error fetching scoreboard:", error);
+        }
+      };
+
+      // Call the scoreboard API
+      fetchScoreboard();
     }
   }, [isLeaderboardFrozen, id, teams?.uuid]);
 
@@ -1321,13 +1341,14 @@ export default function EventPage() {
 
       // Always check if the API response includes frozen status
       if (res.data.hasOwnProperty("frozen")) {
-        // Only update if the state has actually changed to avoid unnecessary rerenders
-        if (res.data.frozen !== isLeaderboardFrozen) {
-          console.log(
-            `[LEADERBOARD] API reports frozen status: ${res.data.frozen}`
-          );
-          setIsLeaderboardFrozen(res.data.frozen);
-        }
+        // Update the frozen state based on API response
+        setIsLeaderboardFrozen(res.data.frozen);
+
+        console.log(
+          `[LEADERBOARD] API reports frozen status: ${res.data.frozen}`
+        );
+
+        // If we're frozen, we'll still process the data
       }
 
       if (res.data.data.length > 0) {
@@ -1857,11 +1878,7 @@ export default function EventPage() {
       try {
         const response = await fetch(`/api/freeze?eventId=${id}`);
         const data = await response.json();
-        if (
-          data &&
-          typeof data.frozen === "boolean" &&
-          data.frozen !== isLeaderboardFrozen
-        ) {
+        if (data && typeof data.frozen === "boolean") {
           setIsLeaderboardFrozen(data.frozen);
         }
       } catch (error) {
@@ -1876,11 +1893,7 @@ export default function EventPage() {
       const { frozen, eventId, isGlobal } = event.detail;
 
       // Apply freeze state if it's for this specific event or it's global
-      // Only update if the state is actually changing
-      if (
-        ((eventId && eventId === id) || isGlobal) &&
-        frozen !== isLeaderboardFrozen
-      ) {
+      if ((eventId && eventId === id) || isGlobal) {
         setIsLeaderboardFrozen(frozen);
         console.log(
           `Leaderboard freeze state updated for event ${id}: ${frozen}`
@@ -1895,7 +1908,7 @@ export default function EventPage() {
     return () => {
       window.removeEventListener("system_freeze_update", handleFreezeUpdate);
     };
-  }, [id, isLeaderboardFrozen]);
+  }, [id]);
 
   return isLoading ? (
     <LoadingPage />
@@ -2251,7 +2264,7 @@ export default function EventPage() {
             </h2>
           </div>
 
-          {displayedFrozenState && activeTab === "leaderboard" && (
+          {isLeaderboardFrozen && activeTab === "leaderboard" && (
             <div>
               <p className="text-red-500 text-lg border border-red-500 rounded-md px-2 py-1">
                 تم تجميد قائمة المتصدرين مؤقتاً
