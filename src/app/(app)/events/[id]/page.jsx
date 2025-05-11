@@ -1,6 +1,6 @@
 "use client";
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useLanguage } from "@/app/context/LanguageContext";
 import { MdKeyboardArrowLeft } from "react-icons/md";
@@ -25,6 +25,19 @@ import LoadingPage from "@/app/components/LoadingPage";
 import { useRouter } from "next/navigation";
 import TeamDetailsModal from "@/app/components/TeamDetailsModal";
 import { BiLoaderAlt } from "react-icons/bi";
+
+// Add a separate component for the freeze notification to reduce re-renders
+const LeaderboardFreezeNotification = ({ isLeaderboardFrozen, isEnglish }) => {
+  if (!isLeaderboardFrozen) return null;
+
+  return (
+    <div className="text-red-500 text-lg border border-red-500 rounded-md px-3 py-1 mr-4">
+      {isEnglish
+        ? "Leaderboard temporarily frozen"
+        : "تم تجميد قائمة المتصدرين مؤقتاً"}
+    </div>
+  );
+};
 
 export default function EventPage() {
   const { isEnglish } = useLanguage();
@@ -87,15 +100,52 @@ export default function EventPage() {
   // Add state for freeze status
   const [isLeaderboardFrozen, setIsLeaderboardFrozen] = useState(false);
 
+  // Add a ref at component level for tracking frozen refresh state
+  const hasRefreshedLeaderboardRef = useRef(false);
+
+  // Add a frozen state ref at component level to track current state
+  const frozenStateRef = useRef(false);
+
+  // Add an effect to keep the ref updated with the latest state value
+  useEffect(() => {
+    frozenStateRef.current = isLeaderboardFrozen;
+  }, [isLeaderboardFrozen]);
+
   // New effect to refresh team data when leaderboard is frozen
   useEffect(() => {
-    if (isLeaderboardFrozen) {
-      // When leaderboard is frozen, refresh team data
+    if (isLeaderboardFrozen && !hasRefreshedLeaderboardRef.current) {
+      // When leaderboard is frozen, refresh team data once
       console.log("[LEADERBOARD FROZEN] Refreshing team data and scoreboard");
+      hasRefreshedLeaderboardRef.current = true;
 
       // Refresh team data if we have a team
       if (teams?.uuid) {
-        getTeams();
+        // Use local function call instead of dependency
+        try {
+          const api = process.env.NEXT_PUBLIC_API_URL;
+          axios
+            .get(`${api}/${id}/my-team`, {
+              headers: {
+                Authorization: `Bearer ${Cookies.get("token")}`,
+              },
+            })
+            .then((res) => {
+              setTeams(res.data.data);
+              setNewTeamName(res.data.data?.name || "");
+              setHasCheckedTeam(true);
+              setIsInTeam(true);
+
+              // Reset removed state if we successfully get team data
+              if (isRemovedFromTeam) {
+                setIsRemovedFromTeam(false);
+              }
+            })
+            .catch((error) => {
+              console.error("Error fetching teams:", error);
+            });
+        } catch (error) {
+          console.error("Error refreshing team data:", error);
+        }
       }
 
       // Also refresh the scoreboard data ignoring the frozen check
@@ -107,15 +157,6 @@ export default function EventPage() {
               Authorization: `Bearer ${Cookies.get("token")}`,
             },
           });
-
-          // Check if the API says the leaderboard is still frozen
-          if (res.data.hasOwnProperty("frozen")) {
-            // Update our frozen state to match the API
-            setIsLeaderboardFrozen(res.data.frozen);
-            console.log(
-              `[LEADERBOARD] API reports frozen status: ${res.data.frozen}`
-            );
-          }
 
           // Update the scoreboard data directly
           if (res.data.data && res.data.data.length > 0) {
@@ -129,8 +170,11 @@ export default function EventPage() {
 
       // Call the scoreboard API
       fetchScoreboard();
+    } else if (!isLeaderboardFrozen) {
+      // Reset the refresh flag when unfrozen
+      hasRefreshedLeaderboardRef.current = false;
     }
-  }, [isLeaderboardFrozen, id, teams?.uuid]);
+  }, [isLeaderboardFrozen, id, teams?.uuid]); // Removed getTeams from dependency array
 
   // Update the socket and event listener setup
   useEffect(() => {
@@ -1330,6 +1374,14 @@ export default function EventPage() {
 
   // Enhance the eventScoreBoard function to better handle data updates
   const eventScoreBoard = async () => {
+    // Prevent multiple simultaneous calls
+    if (window._isLoadingScoreboard) {
+      console.log("[LEADERBOARD] Already fetching scoreboard, skipping");
+      return null;
+    }
+
+    window._isLoadingScoreboard = true;
+
     try {
       console.log(`[LEADERBOARD] Fetching scoreboard for event ${id}`);
       const api = process.env.NEXT_PUBLIC_API_URL;
@@ -1341,14 +1393,20 @@ export default function EventPage() {
 
       // Always check if the API response includes frozen status
       if (res.data.hasOwnProperty("frozen")) {
-        // Update the frozen state based on API response
-        setIsLeaderboardFrozen(res.data.frozen);
+        const newFrozenState = res.data.frozen;
+        const currentFrozenState = frozenStateRef.current;
 
-        console.log(
-          `[LEADERBOARD] API reports frozen status: ${res.data.frozen}`
-        );
-
-        // If we're frozen, we'll still process the data
+        // Only update the state if it's different to prevent multiple re-renders
+        if (newFrozenState !== currentFrozenState) {
+          console.log(
+            `[LEADERBOARD] API reports frozen status changed: ${newFrozenState}`
+          );
+          setIsLeaderboardFrozen(newFrozenState);
+        } else {
+          console.log(
+            `[LEADERBOARD] Frozen status unchanged: ${newFrozenState}`
+          );
+        }
       }
 
       if (res.data.data.length > 0) {
@@ -1439,9 +1497,14 @@ export default function EventPage() {
 
         setIsEventScoreBoard(true);
       }
+
+      return res.data;
     } catch (error) {
       console.error("[LEADERBOARD] Error fetching scoreboard:", error);
       return null;
+    } finally {
+      // Ensure the loading flag is reset even if there's an error
+      window._isLoadingScoreboard = false;
     }
   };
 
@@ -1878,11 +1941,20 @@ export default function EventPage() {
       try {
         const response = await fetch(`/api/freeze?eventId=${id}`);
         const data = await response.json();
-        if (data && typeof data.frozen === "boolean") {
+
+        // Only update if the actual value is different from current state
+        if (
+          data &&
+          typeof data.frozen === "boolean" &&
+          data.frozen !== frozenStateRef.current
+        ) {
+          console.log(
+            `[FREEZE] Setting leaderboard freeze state to: ${data.frozen}`
+          );
           setIsLeaderboardFrozen(data.frozen);
         }
       } catch (error) {
-        console.error("Error checking freeze state:", error);
+        console.error("[FREEZE] Error checking freeze state:", error);
       }
     };
 
@@ -1893,11 +1965,15 @@ export default function EventPage() {
       const { frozen, eventId, isGlobal } = event.detail;
 
       // Apply freeze state if it's for this specific event or it's global
-      if ((eventId && eventId === id) || isGlobal) {
-        setIsLeaderboardFrozen(frozen);
+      // AND it's different from the current state
+      if (
+        ((eventId && eventId === id) || isGlobal) &&
+        frozen !== frozenStateRef.current
+      ) {
         console.log(
-          `Leaderboard freeze state updated for event ${id}: ${frozen}`
+          `[FREEZE] Leaderboard freeze state updated for event ${id}: ${frozen}`
         );
+        setIsLeaderboardFrozen(frozen);
       }
     };
 
@@ -1908,7 +1984,7 @@ export default function EventPage() {
     return () => {
       window.removeEventListener("system_freeze_update", handleFreezeUpdate);
     };
-  }, [id]);
+  }, [id]); // Remove isLeaderboardFrozen from dependency array
 
   return isLoading ? (
     <LoadingPage />
@@ -2264,44 +2340,41 @@ export default function EventPage() {
             </h2>
           </div>
 
-          {isLeaderboardFrozen && activeTab === "leaderboard" && (
-            <div>
-              <p className="text-red-500 text-lg border border-red-500 rounded-md px-2 py-1">
-                تم تجميد قائمة المتصدرين مؤقتاً
+          <LeaderboardFreezeNotification
+            isLeaderboardFrozen={isLeaderboardFrozen}
+            isEnglish={isEnglish}
+          />
+        </div>
+      </div>
+
+      {isEventStarted && !eventHasEnded && activeTab === "challenges" && (
+        <div className="w-full h-full">
+          <div className="flex flex-col w-full h-full justify-center items-center gap-2">
+            <Image src="/lock.png" alt="lock" width={160} height={160} />
+
+            <div dir className="flex flex-col items-center text-center my-4 ">
+              {isEnglish ? (
+                <h3 className="text-2xl font-bold text-white">
+                  {timeRemaining.days.toString().padStart(2, "0")}d :
+                  {timeRemaining.hours.toString().padStart(2, "0")}h :
+                  {timeRemaining.minutes.toString().padStart(2, "0")}m :
+                  {timeRemaining.seconds.toString().padStart(2, "0")}s
+                </h3>
+              ) : (
+                <h3 className="text-2xl  font-bold text-white">
+                  ي {timeRemaining.days.toString().padStart(2, "0")} : س{" "}
+                  {timeRemaining.hours.toString().padStart(2, "0")} : د{" "}
+                  {timeRemaining.minutes.toString().padStart(2, "0")} : ث{" "}
+                  {timeRemaining.seconds.toString().padStart(2, "0")}
+                </h3>
+              )}
+              <p className="mt-2 text-white text-lg">
+                {isEnglish ? "Left" : "متبقي"}
               </p>
             </div>
-          )}
-        </div>
-
-        {isEventStarted && !eventHasEnded && activeTab === "challenges" && (
-          <div className="w-full h-full">
-            <div className="flex flex-col w-full h-full justify-center items-center gap-2">
-              <Image src="/lock.png" alt="lock" width={160} height={160} />
-
-              <div dir className="flex flex-col items-center text-center my-4 ">
-                {isEnglish ? (
-                  <h3 className="text-2xl font-bold text-white">
-                    {timeRemaining.days.toString().padStart(2, "0")}d :
-                    {timeRemaining.hours.toString().padStart(2, "0")}h :
-                    {timeRemaining.minutes.toString().padStart(2, "0")}m :
-                    {timeRemaining.seconds.toString().padStart(2, "0")}s
-                  </h3>
-                ) : (
-                  <h3 className="text-2xl  font-bold text-white">
-                    ي {timeRemaining.days.toString().padStart(2, "0")} : س{" "}
-                    {timeRemaining.hours.toString().padStart(2, "0")} : د{" "}
-                    {timeRemaining.minutes.toString().padStart(2, "0")} : ث{" "}
-                    {timeRemaining.seconds.toString().padStart(2, "0")}
-                  </h3>
-                )}
-                <p className="mt-2 text-white text-lg">
-                  {isEnglish ? "Left" : "متبقي"}
-                </p>
-              </div>
-            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {activeTab === "challenges" && isChallengesStarted && (
         <div
