@@ -87,6 +87,44 @@ export default function EventPage() {
   // Add state for freeze status
   const [isLeaderboardFrozen, setIsLeaderboardFrozen] = useState(false);
 
+  // New effect to refresh team data when leaderboard is frozen
+  useEffect(() => {
+    if (isLeaderboardFrozen && teams?.uuid) {
+      // When leaderboard is frozen, refresh team data
+      console.log("[LEADERBOARD FROZEN] Refreshing team data");
+      getTeams();
+
+      // Ensure we keep displaying the frozen message
+      const checkFrozenStatus = async () => {
+        try {
+          const api = process.env.NEXT_PUBLIC_API_URL;
+          const res = await axios.get(`${api}/${id}/scoreboard`, {
+            headers: {
+              Authorization: `Bearer ${Cookies.get("token")}`,
+            },
+          });
+
+          // If API no longer says frozen but we still think it is, update our state
+          if (
+            res.data.hasOwnProperty("frozen") &&
+            !res.data.frozen &&
+            isLeaderboardFrozen
+          ) {
+            setIsLeaderboardFrozen(false);
+            console.log("[LEADERBOARD] Scoreboard unfrozen according to API");
+          }
+        } catch (error) {
+          console.error("[LEADERBOARD] Error checking frozen status:", error);
+        }
+      };
+
+      // Check every 30 seconds if the frozen status has changed
+      const interval = setInterval(checkFrozenStatus, 30000);
+
+      return () => clearInterval(interval);
+    }
+  }, [isLeaderboardFrozen, id, teams?.uuid]);
+
   // Update the socket and event listener setup
   useEffect(() => {
     if (!id) return;
@@ -1300,6 +1338,20 @@ export default function EventPage() {
           Authorization: `Bearer ${Cookies.get("token")}`,
         },
       });
+
+      // Check if the API response includes frozen status
+      if (res.data.hasOwnProperty("frozen")) {
+        // Update the frozen state based on API response
+        setIsLeaderboardFrozen(res.data.frozen);
+
+        if (res.data.frozen) {
+          console.log(
+            `[LEADERBOARD] Scoreboard is frozen according to API. Freeze time: ${
+              res.data.freeze_time || "not specified"
+            }`
+          );
+        }
+      }
 
       if (res.data.data.length > 0) {
         // Save previous data for comparison
@@ -2723,7 +2775,6 @@ export default function EventPage() {
                                   </th>
                                 </tr>
                               </thead>
-                             
                             </table>
                           </div>
 
