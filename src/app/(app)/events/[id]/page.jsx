@@ -86,28 +86,6 @@ export default function EventPage() {
 
   // Add state for freeze status
   const [isLeaderboardFrozen, setIsLeaderboardFrozen] = useState(false);
-  // Add a stable reference for freeze updates to prevent UI flashing
-  const [isUpdatingFreezeState, setIsUpdatingFreezeState] = useState(false);
-
-  // Function to update freeze state with debounce to prevent UI flashing
-  const updateFreezeState = (newState) => {
-    // If we're already in the middle of updating, skip
-    if (isUpdatingFreezeState) return;
-
-    // If there's no actual change, don't do anything
-    if (newState === isLeaderboardFrozen) return;
-
-    console.log(`[LEADERBOARD] Setting freeze state to: ${newState}`);
-
-    // Mark that we're updating
-    setIsUpdatingFreezeState(true);
-
-    // Slight delay to batch potential rapid updates
-    setTimeout(() => {
-      setIsLeaderboardFrozen(newState);
-      setIsUpdatingFreezeState(false);
-    }, 300);
-  };
 
   // New effect to refresh team data when leaderboard is frozen
   useEffect(() => {
@@ -132,8 +110,8 @@ export default function EventPage() {
 
           // Check if the API says the leaderboard is still frozen
           if (res.data.hasOwnProperty("frozen")) {
-            // Update our frozen state to match the API using our debounce function
-            updateFreezeState(res.data.frozen);
+            // Update our frozen state to match the API
+            setIsLeaderboardFrozen(res.data.frozen);
             console.log(
               `[LEADERBOARD] API reports frozen status: ${res.data.frozen}`
             );
@@ -1363,8 +1341,8 @@ export default function EventPage() {
 
       // Always check if the API response includes frozen status
       if (res.data.hasOwnProperty("frozen")) {
-        // Update the frozen state based on API response using our debounce function
-        updateFreezeState(res.data.frozen);
+        // Update the frozen state based on API response
+        setIsLeaderboardFrozen(res.data.frozen);
 
         console.log(
           `[LEADERBOARD] API reports frozen status: ${res.data.frozen}`
@@ -1901,7 +1879,7 @@ export default function EventPage() {
         const response = await fetch(`/api/freeze?eventId=${id}`);
         const data = await response.json();
         if (data && typeof data.frozen === "boolean") {
-          updateFreezeState(data.frozen);
+          setIsLeaderboardFrozen(data.frozen);
         }
       } catch (error) {
         console.error("Error checking freeze state:", error);
@@ -1916,7 +1894,7 @@ export default function EventPage() {
 
       // Apply freeze state if it's for this specific event or it's global
       if ((eventId && eventId === id) || isGlobal) {
-        updateFreezeState(frozen);
+        setIsLeaderboardFrozen(frozen);
         console.log(
           `Leaderboard freeze state updated for event ${id}: ${frozen}`
         );
