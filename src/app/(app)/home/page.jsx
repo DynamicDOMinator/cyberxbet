@@ -27,8 +27,6 @@ export default function Home() {
   const [advertisements, setAdvertisements] = useState([]);
   const router = useRouter();
 
- 
-
   // Function to fetch activities data
   const fetchActivities = async () => {
     try {
@@ -198,12 +196,12 @@ export default function Home() {
         </h1>
 
         {advertisements.length > 0 ? (
-          <div className="bg-white/3 backdrop-blur-xl mt-8 rounded-2xl lg:h-[420px] w-full overflow-hidden p-4">
+          <div className="bg-white/3 backdrop-blur-xl mt-8 rounded-2xl h-[250px] sm:h-[300px] md:h-[350px] lg:h-[420px] w-full overflow-hidden p-4">
             <Swiper
               effect={"coverflow"}
               grabCursor={true}
               centeredSlides={true}
-              slidesPerView={3}
+              slidesPerView={1}
               initialSlide={0}
               loop={true}
               speed={800}
@@ -214,28 +212,54 @@ export default function Home() {
               coverflowEffect={{
                 rotate: 0,
                 stretch: 0,
-                depth: 200,
-                modifier: 2,
+                depth: 100,
+                modifier: 1.5,
                 slideShadows: false,
+              }}
+              breakpoints={{
+                640: {
+                  slidesPerView: 2,
+                  coverflowEffect: {
+                    depth: 150,
+                    modifier: 1.5,
+                  },
+                },
+                768: {
+                  slidesPerView: 2,
+                  coverflowEffect: {
+                    depth: 150,
+                    modifier: 1.8,
+                  },
+                },
+                1024: {
+                  slidesPerView: 3,
+                  coverflowEffect: {
+                    depth: 200,
+                    modifier: 2,
+                  },
+                },
               }}
               modules={[EffectCoverflow, Autoplay]}
               className="h-full w-full home-coverflow-slider"
             >
               {advertisements.map((ad) => (
-                <SwiperSlide key={ad.id} className="h-full w-full">
+                <SwiperSlide
+                  key={ad.id}
+                  className="h-full w-full flex items-center justify-center"
+                >
                   <Link
                     href={ad.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="relative w-full h-full mx-auto block"
+                    className="relative w-[90%] h-[90%] mx-auto block"
                   >
                     <Image
-                      src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${ad.image}`}
+                      src={ad.image}
                       alt={`Advertisement ${ad.id}`}
                       fill
                       className="object-cover rounded-2xl"
                       priority={ad.id === advertisements[0].id}
-                      sizes="(max-width: 768px) 100vw, 33vw"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   </Link>
                 </SwiperSlide>
