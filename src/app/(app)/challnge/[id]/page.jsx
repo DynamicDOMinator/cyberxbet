@@ -1467,7 +1467,7 @@ export default function ChallengePage() {
                   <div>
                     <div className="flex items-center justify-center gap-4 pb-16">
                       <h3 className="text-white text-xl md:text-2xl font-semibold">
-                        {isEnglish ? "First Blood" : "الدم الأول"}
+                        {isEnglish ? "First bytes" :"البايتس الأول "}
                       </h3>
                       <Image
                         src="/blood.png"
