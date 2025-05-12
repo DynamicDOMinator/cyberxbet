@@ -2204,7 +2204,7 @@ export default function EventPage() {
 
         <div className="flex flex-col h-full justify-end pb-4 sm:pb-6 md:pb-8 lg:pb-10">
           <div className="flex flex-col md:flex-row items-center p-3 sm:p-4 md:p-6">
-            <div className="basis-full md:basis-1/2 lg:basis-2/3 mb-4 sm:mb-6 md:mb-0">
+            <div className="basis-full md:basis-1/2 lg:basis-2/3 mb-4 sm:mb-6 md:mb-0 ">
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[40px] font-bold text-center md:text-left">
                 {event.title}
               </h2>
@@ -2213,8 +2213,8 @@ export default function EventPage() {
                 {event.description}
               </p>
             </div>
-            <div className="basis-full md:basis-1/2 pt-2 sm:pt-4 md:pt-8 lg:pt-16">
-              <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row-reverse items-center gap-3 sm:gap-4 lg:gap-6 xl:gap-10 pt-3 sm:pt-4 md:pt-6 lg:pt-8 justify-center">
+            <div className="basis-full md:basis-1/2 pt-2 relative sm:pt-4 md:pt-8 lg:pt-16  flex flex-col items-center justify-center ">
+              <div className="flex  relative flex-col sm:flex-row md:flex-col lg:flex-row-reverse items-center gap-3 sm:gap-4 lg:gap-6 xl:gap-10 pt-3 sm:pt-4 md:pt-6 lg:pt-8 justify-center">
                 <p
                   className={`flex items-center ${
                     isEnglish ? "flex-row-reverse" : ""
@@ -2284,65 +2284,62 @@ export default function EventPage() {
                   </span>
                 </p>
               </div>
-              <div>
-                <div className="flex flex-col sm:flex-row items-center justify-between sm:justify-end gap-4 sm:gap-8 md:gap-12 lg:gap-44 lg:pr-10 pt-4 sm:pt-6 md:pt-8 lg:pt-10">
-                  <div>
-                    <p className="text-sm sm:text-base md:text-[18px] justify-center flex items-center  gap-2">
-                      أعضاء
-                      <span>
-                        {event.team_maximum_members}-
-                        {event.team_minimum_members}
-                      </span>
-                      فريق من
-                      <span className="text-[#38FFE5] text-lg sm:text-xl md:text-2xl lg:text-[24px] font-bold">
-                        <HiOutlineUsers />
-                      </span>
-                    </p>
-                  </div>
-                  <div className="w-full sm:w-auto">
-                    {showRegisterButton && (
-                      <button
-                        onClick={() => {
-                          if (
-                            (buttonText === "انضمام" ||
-                              buttonText === "Join Team" ||
-                              currentPhase === "team_formation") &&
-                            !isInTeam
-                          ) {
-                            setIsModalOpen(true);
-                          } else if (isRegistering) {
-                            registerNow();
-                          }
-                        }}
-                        disabled={
-                          (currentPhase === "team_formation" && isInTeam) ||
-                          (!isRegistering && currentPhase !== "team_formation")
-                        }
-                        className={`${
-                          (isRegistering && !isInTeam) ||
-                          (currentPhase === "team_formation" && !isInTeam)
-                            ? "bg-[#38FFE5] hover:bg-[#38FFE5]/90"
-                            : "bg-[#38FFE5] "
-                        } cursor-${
-                          (isRegistering && !isInTeam) ||
-                          (currentPhase === "team_formation" && !isInTeam)
-                            ? "pointer"
-                            : "not-allowed"
-                        } text-[#06373F] font-bold px-4 sm:px-6 py-2 rounded-md transition-colors w-full sm:w-auto`}
-                      >
-                        {currentPhase === "team_formation"
-                          ? isInTeam
-                            ? isEnglish
-                              ? "Already in Team"
-                              : "تم الانضمام"
-                            : isEnglish
-                            ? "Join Team"
-                            : "انضمام"
-                          : buttonText}
-                      </button>
-                    )}
-                  </div>
+              <div className="flex flex-col  sm:flex-row items-center justify-center gap-4 sm:gap-8 md:gap-12 lg:gap-44 lg:pr-10 pt-4 sm:pt-6 md:pt-8 lg:pt-10">
+                <div className="flex justify-center">
+                  <p className="text-sm sm:text-base md:text-[18px] flex items-center gap-2">
+                    أعضاء
+                    <span>
+                      {event.team_maximum_members}-{event.team_minimum_members}
+                    </span>
+                    {isEnglish ? "Team from" : "فريق من"}
+                    <span className="text-[#38FFE5] text-lg sm:text-xl md:text-2xl lg:text-[24px] font-bold">
+                      <HiOutlineUsers />
+                    </span>
+                  </p>
                 </div>
+                {showRegisterButton && (
+                  <div className="w-full sm:w-auto">
+                    <button
+                      onClick={() => {
+                        if (
+                          (buttonText === "انضمام" ||
+                            buttonText === "Join Team" ||
+                            currentPhase === "team_formation") &&
+                          !isInTeam
+                        ) {
+                          setIsModalOpen(true);
+                        } else if (isRegistering) {
+                          registerNow();
+                        }
+                      }}
+                      disabled={
+                        (currentPhase === "team_formation" && isInTeam) ||
+                        (!isRegistering && currentPhase !== "team_formation")
+                      }
+                      className={`${
+                        (isRegistering && !isInTeam) ||
+                        (currentPhase === "team_formation" && !isInTeam)
+                          ? "bg-[#38FFE5] hover:bg-[#38FFE5]/90"
+                          : "bg-[#38FFE5] "
+                      } cursor-${
+                        (isRegistering && !isInTeam) ||
+                        (currentPhase === "team_formation" && !isInTeam)
+                          ? "pointer"
+                          : "not-allowed"
+                      } text-[#06373F] font-bold px-4 sm:px-6 py-2 rounded-md transition-colors w-full sm:w-auto`}
+                    >
+                      {currentPhase === "team_formation"
+                        ? isInTeam
+                          ? isEnglish
+                            ? "Already in Team"
+                            : "تم الانضمام"
+                          : isEnglish
+                          ? "Join Team"
+                          : "انضمام"
+                        : buttonText}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -2583,7 +2580,7 @@ export default function EventPage() {
             <>
               <div
                 dir={isEnglish ? "ltr" : "rtl"}
-                className="bg-[#FFFFFF0D] p-3 sm:p-4 rounded-lg mb-5 sm:mb-10"
+                className="bg-[#FFFFFF0D] p-3 sm:p-4 rounded-2xl mb-5 sm:mb-10"
               >
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-3 sm:gap-5">
@@ -3542,12 +3539,12 @@ export default function EventPage() {
           </div>
 
           {/* Responsive Table Container */}
-          <div className="w-full overflow-x-auto bg-[#06373F26] p-5">
+          <div className="w-full overflow-x-auto bg-[#06373F26] rounded-2xl p-5">
             <div className="min-w-[700px]">
               {/* Table Header */}
               <div
                 dir={isEnglish ? "ltr" : "rtl"}
-                className="grid grid-cols-5 place-items-start px-4 md:px-10 gap-4 mb-9 bg-[#38FFE50D] py-3 rounded-md"
+                className="grid grid-cols-5 place-items-start px-4 md:px-10 gap-4 mb-9 bg-[#38FFE50D] py-3 rounded-2xl"
               >
                 <div className="col-span-2 text-sm md:text-base text-center text-white font-semibold flex flex-wrap justify-center items-center">
                   <span
@@ -3577,7 +3574,7 @@ export default function EventPage() {
                 <div
                   dir={isEnglish ? "ltr" : "rtl"}
                   key={index}
-                  className={`rounded-lg mb-3 px-4 md:px-10 py-3 ${
+                  className={`rounded-2xl mb-3 px-4 md:px-10 py-3 ${
                     index % 2 === 0 ? "bg-[#06373F]" : "bg-transparent"
                   }`}
                 >

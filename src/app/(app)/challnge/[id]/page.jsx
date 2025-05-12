@@ -752,6 +752,7 @@ export default function ChallengePage() {
                 alt="flag"
                 width={32}
                 height={32}
+                className="w-7 h-9"
               />
             </div>
             <div className="flex items-center gap-4">
@@ -839,7 +840,7 @@ export default function ChallengePage() {
                         alt="First Blood"
                         width={32}
                         height={32}
-                        className="md:w-[32px] md:h-[38px]"
+                       className="w-7 h-9"
                       />
                     </div>
                     <div>
@@ -876,7 +877,7 @@ export default function ChallengePage() {
                         alt="Challenge Bytes"
                         width={32}
                         height={32}
-                        className="md:w-[32px] md:h-[38px]"
+                       className="w-9 h-9"
                       />
                     </div>
                     <div>
@@ -897,6 +898,7 @@ export default function ChallengePage() {
                         alt="Hacks"
                         width={32}
                         height={32}
+                        className="w-9 h-10"
                       />
                     </div>
                     <div>
@@ -923,7 +925,7 @@ export default function ChallengePage() {
                       alt="First Blood"
                       width={32}
                       height={32}
-                      className="md:w-[32px] md:h-[40px]"
+                      className="w-7 h-9"
                     />
                   </div>
                   <div>
@@ -971,7 +973,7 @@ export default function ChallengePage() {
                       alt="Challenge Bytes"
                       width={32}
                       height={32}
-                      className="md:w-[32px] md:h-[38px]"
+                  className="w-9 h-9"
                     />
                   </div>
                   <div>
@@ -990,7 +992,7 @@ export default function ChallengePage() {
                       alt="Hacks"
                       width={32}
                       height={32}
-                      className="md:w-[32px] md:h-[40px]"
+                      className="w-9 h-10"
                     />
                   </div>
                   <div>
@@ -1298,7 +1300,7 @@ export default function ChallengePage() {
 
                     <div
                       dir={isEnglish ? "ltr" : "rtl"}
-                      className="mb-5 pb-5 mt-10 bg-[#06373F26] px-5"
+                      className="mb-5 pb-5 mt-10 bg-[#06373F26] rounded-2xl px-5"
                     >
                       {renderActivityList()}
                     </div>
@@ -1473,6 +1475,7 @@ export default function ChallengePage() {
                         width={32}
                         height={32}
                         priority
+                        className="w-7 h-9"
                       />
                     </div>
 

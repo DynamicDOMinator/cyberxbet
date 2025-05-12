@@ -609,7 +609,7 @@ export default function AddChallenge() {
   const labelStyle = `text-white font-medium `;
 
   const inputStyle =
-    "w-full bg-[#0B0D0F] rounded-md mt-4 px-4 py-3 text-[#BCC9DB]  focus:outline-none focus:ring-1 focus:ring-[#38FFE5]";
+    "w-full bg-[#0B0D0F] rounded-2xl mt-4 px-4 py-3 text-[#BCC9DB]  focus:outline-none focus:ring-1 focus:ring-[#38FFE5]";
 
   // Helper function to render the file upload area
   const renderFileUpload = (
@@ -623,7 +623,7 @@ export default function AddChallenge() {
     handleRemove,
     title
   ) => (
-    <div className="bg-[#131619] rounded-lg p-6 mb-6">
+    <div className="bg-[#131619] rounded-2xl p-6 mb-6">
       <div
         dir={isEnglish ? "ltr" : "rtl"}
         className="flex justify-between items-center mb-4"
@@ -637,7 +637,7 @@ export default function AddChallenge() {
         </h3>
       </div>
       <div
-        className={`relative rounded-lg transition-all ${
+        className={`relative rounded-2xl transition-all ${
           dragActive
             ? "border-[#38FFE5] bg-[#131619]"
             : "border-gray-600 hover:border-gray-500"
@@ -657,7 +657,7 @@ export default function AddChallenge() {
         {!isUploaded ? (
           <div
             dir={isEnglish ? "ltr" : "rtl"}
-            className="text-center bg-[#0B0D0F] py-12 rounded-lg gap-2 flex justify-center items-center "
+            className="text-center bg-[#0B0D0F] py-12 rounded-2xl gap-2 flex justify-center items-center "
           >
             <p className="mt-2 text-sm text-[#BCC9DB]">
               {isEnglish
@@ -673,7 +673,7 @@ export default function AddChallenge() {
             </button>
           </div>
         ) : (
-          <div className="bg-[#0B0D0F] py-6 rounded-lg">
+          <div className="bg-[#0B0D0F] py-6 rounded-2xl">
             <div className="flex items-center justify-between px-4">
               <div className="flex items-center">
                 <div className="mr-3">
@@ -731,7 +731,7 @@ export default function AddChallenge() {
   return (
     <div className="w-full max-w-[2000px] mt-28 mx-auto px-10">
       {/* Statistics Section */}
-      <div className="bg-[#0B0D0F] px-4 py-6 rounded-lg mb-8">
+      <div className="bg-[#0B0D0F] px-4 py-6 rounded-2xl mb-8">
         <h2
           dir={isEnglish ? "ltr" : "rtl"}
           className="text-[#BCC9DB] mb-6 font-bold text-xl"
@@ -741,10 +741,10 @@ export default function AddChallenge() {
 
         <div
           dir={isEnglish ? "ltr" : "rtl"}
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 border-b-2 border-[#06373F] pb-10"
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 "
         >
           {/* Total Challenges */}
-          <div className="bg-[#FFFFFF0D] rounded-lg p-4 relative overflow-hidden">
+          <div className="bg-[#FFFFFF0D] rounded-2xl p-4 relative overflow-hidden">
             <div className="flex items-center gap-1 ">
               <Image
                 src="/uploaded.png"
@@ -753,22 +753,22 @@ export default function AddChallenge() {
                 height={24}
               />
               <h3 className="text-[#BCC9DB] text-sm mb-2">
-                {isEnglish ? "Total Challenges" : "جميع التحديات"}
+                {isEnglish ? "Total Challenges" : " التحديات المقبولة"}
               </h3>
             </div>
 
             <p className="text-[#BCC9DB] text-center text-4xl font-bold">
-              {statisticsLoading ? "..." : statistics.total}
+              {statisticsLoading ? "..." : statistics.approved}
             </p>
-            <p className="text-[#41C300] text-center   mt-2">
+            <p className="text-[#00C3AC] text-center   mt-2">
               {isEnglish
                 ? "All challenges you've created"
-                : "جميع التحديات المرفوعة"}
+                : " التحديات المقبولة"}
             </p>
           </div>
 
           {/* Under Review */}
-          <div className="bg-[#FFFFFF0D] rounded-lg p-4 relative overflow-hidden">
+          <div className="bg-[#FFFFFF0D] rounded-2xl p-4 relative overflow-hidden">
             <div className="flex items-center gap-1 ">
               <Image
                 src="/wating.png"
@@ -782,7 +782,7 @@ export default function AddChallenge() {
             </div>
 
             <p className="text-[#BCC9DB] text-center text-4xl font-bold">
-              {statisticsLoading ? "..." : statistics.under_review}
+              {statisticsLoading ? "..." : statistics.pending}
             </p>
             <p className="text-[#0081D9] text-center   mt-2">
               {isEnglish ? "In review" : "بانتظار المراجعة"}
@@ -790,7 +790,7 @@ export default function AddChallenge() {
           </div>
 
           {/* Approved Challenges */}
-          <div className="bg-[#FFFFFF0D] rounded-lg p-4 relative overflow-hidden">
+          <div className="bg-[#FFFFFF0D] rounded-2xl p-4 relative overflow-hidden">
             <div className="flex items-center gap-1 ">
               <Image
                 src="/reviewing.png"
@@ -804,15 +804,15 @@ export default function AddChallenge() {
             </div>
 
             <p className="text-[#BCC9DB] text-center text-4xl font-bold">
-              {statisticsLoading ? "..." : statistics.approved}
+              {statisticsLoading ? "..." : statistics.under_review}
             </p>
             <p className="text-[#EC007E] text-center   mt-2">
-              {isEnglish ? "Approved challenges" : "التحديات المعتمدة"}
+              {isEnglish ? "Approved challenges" : "قيد المراجعة"}
             </p>
           </div>
 
           {/* Rejected Challenges */}
-          <div className="bg-[#FFFFFF0D] rounded-lg p-4  relative overflow-hidden">
+          <div className="bg-[#FFFFFF0D] rounded-2xl p-4  relative overflow-hidden">
             <div className="flex items-center gap-1 ">
               <Image
                 src="/rejected.png"
@@ -835,10 +835,37 @@ export default function AddChallenge() {
             </p>
           </div>
         </div>
+
+
+
+  {/* Approved Challenges */}
+  <div className="bg-[#FFFFFF0D] rounded-2xl relative  p-4 mt-5">
+            <div dir={isEnglish ? "ltr" : "rtl"} className="flex items-center justify-center gap-1 ">
+              <Image
+                src="/uploaded.png"
+                alt="Approved Challenges"
+                width={24}
+                height={24}
+              />
+              <h3 className="text-[#BCC9DB] text-sm mb-2">
+                {isEnglish ? "All  Challenges" : "جميع التحديات "}
+              </h3>
+            </div>
+
+            <p className="text-[#BCC9DB] text-center text-4xl font-bold">
+              {statisticsLoading ? "..." : statistics.total}
+            </p>
+            <p className="text-[#41C300] text-center   mt-2">
+              {isEnglish ? "All uploaded challenges" : " جميع التحديات المرفوعة"}
+            </p>
+          </div>
+
+   <hr className="text-[#06373F] mt-10" />
+
       </div>
 
       {/* Challenges List Section */}
-      <div className=" px-4 py-6 mx-4 bg-[#131619] rounded-lg mb-8">
+      <div className=" px-4 py-6 mx-4 bg-[#131619] rounded-2xl mb-8">
         <div
           dir={isEnglish ? "ltr" : "rtl"}
           className="flex flex-col items-start mb-6 gap-4"
@@ -897,7 +924,7 @@ export default function AddChallenge() {
               <button
                 onClick={fetchTerms}
                 disabled={docsLoading}
-                className="flex items-center cursor-pointer gap-1 bg-[#131619] hover:bg-[#1c2025] text-[#BCC9DB] px-3 py-2 rounded-md transition-colors"
+                className="flex items-center cursor-pointer gap-1 bg-[#131619] hover:bg-[#1c2025] text-[#BCC9DB] px-3 py-2 rounded-2xl transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -924,7 +951,7 @@ export default function AddChallenge() {
               <button
                 onClick={fetchPrivacy}
                 disabled={docsLoading}
-                className="flex items-center cursor-pointer gap-1 bg-[#131619] hover:bg-[#1c2025] text-[#BCC9DB] px-3 py-2 rounded-md transition-colors"
+                className="flex items-center cursor-pointer gap-1 bg-[#131619] hover:bg-[#1c2025] text-[#BCC9DB] px-3 py-2 rounded-2xl transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -957,7 +984,7 @@ export default function AddChallenge() {
               placeholder={isEnglish ? "Challenge name" : "اسم التحدي"}
               value={searchTerm}
               onChange={handleSearchChange}
-              className="bg-transparent text-[#BCC9DB] px-4 py-2 rounded-md pr-10 rtl:pl-10 w-full  focus:outline-none "
+              className="bg-transparent text-[#BCC9DB] px-4 py-2 rounded-2xl pr-10 rtl:pl-10 w-full  focus:outline-none "
               dir={isEnglish ? "ltr" : "rtl"}
             />
             <div
@@ -1086,7 +1113,7 @@ export default function AddChallenge() {
           {showErrorNotification && errorMessage && (
             <div className="w-full h-full fixed inset-0 z-50">
               <div className="absolute bottom-4 right-4 w-fit z-50">
-                <div className="bg-[#131619] border border-red-500 rounded-lg p-4 shadow-lg slide-in-animation">
+                <div className="bg-[#131619] border border-red-500 rounded-2xl p-4 shadow-lg slide-in-animation">
                   <div className="flex items-center gap-3">
                     <div>
                       <h3
@@ -1122,7 +1149,7 @@ export default function AddChallenge() {
           {showSuccessMessage && successMessage && (
             <div className="w-full h-full fixed inset-0 z-50">
               <div className="absolute bottom-4 right-4 w-fit z-50">
-                <div className="bg-[#131619] border border-[#38FFE5] rounded-lg p-4 shadow-lg slide-in-animation">
+                <div className="bg-[#131619] border border-[#38FFE5] rounded-2xl p-4 shadow-lg slide-in-animation">
                   <div className="flex items-center gap-3">
                     <div>
                       <h3
@@ -1197,7 +1224,7 @@ export default function AddChallenge() {
 
         <form onSubmit={handleSubmit} className="w-full">
           {/* Main Challenge Details */}
-          <div className="bg-[#131619] rounded-lg p-6 mb-6">
+          <div className="bg-[#131619] rounded-2xl p-6 mb-6">
             <div className="mb-4 ">
               <div
                 dir={isEnglish ? "ltr" : "rtl"}
@@ -1236,7 +1263,7 @@ export default function AddChallenge() {
                 name="description"
                 value={challengeData.description}
                 onChange={handleInputChange}
-                className="w-full bg-[#0B0D0F] rounded-md px-4 py-3 text-[#BCC9DB] mt-4 focus:outline-none focus:ring-1 focus:ring-[#38FFE5] min-h-[120px]"
+                className="w-full bg-[#0B0D0F] rounded-2xl px-4 py-3 text-[#BCC9DB] mt-4 focus:outline-none focus:ring-1 focus:ring-[#38FFE5] min-h-[120px]"
                 dir={isEnglish ? "ltr" : "rtl"}
                 placeholder={isEnglish ? "Enter description" : "أدخل الوصف"}
               />
@@ -1292,7 +1319,7 @@ export default function AddChallenge() {
                 </div>
 
                 {isDropdownOpen && !categoriesLoading && (
-                  <div className="absolute z-10 w-full mt-1 bg-[#0B0D0F] border border-gray-700 rounded-md shadow-lg max-h-60 overflow-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-[#0B0D0F] border border-gray-700 rounded-2xl shadow-lg max-h-60 overflow-auto">
                     {categories && categories.length > 0 ? (
                       categories.map((category) => (
                         <div
@@ -1428,7 +1455,7 @@ export default function AddChallenge() {
           </div>
 
           {/* Flag Section */}
-          <div className="bg-[#131619] rounded-lg p-6 mb-6">
+          <div className="bg-[#131619] rounded-2xl p-6 mb-6">
             <div
               dir={isEnglish ? "ltr" : "rtl"}
               className="flex justify-between items-center mb-4"
@@ -1467,7 +1494,7 @@ export default function AddChallenge() {
             <button
               type="button"
               onClick={addFlag}
-              className="mt-3 text-black cursor-pointer px-4 py-2 bg-[#38FFE5] rounded-md hover:bg-[#2de0c8] focus:outline-none"
+              className="mt-3 text-black cursor-pointer px-4 py-2 bg-[#38FFE5] rounded-2xl hover:bg-[#2de0c8] focus:outline-none"
             >
               {isEnglish ? "Add Flag" : "إضافة علم"}
             </button>
@@ -1498,7 +1525,7 @@ export default function AddChallenge() {
           )}
 
           {/* Notes/Remarks Section */}
-          <div className="bg-[#131619] rounded-lg p-6 mb-6">
+          <div className="bg-[#131619] rounded-2xl p-6 mb-6">
             <div dir={isEnglish ? "ltr" : "rtl"} className="flex justify-start">
               <label className={labelStyle}>
                 {isEnglish ? "Notes" : "الملاحظات"}
@@ -1508,7 +1535,7 @@ export default function AddChallenge() {
               name="notes"
               value={challengeData.notes || ""}
               onChange={handleInputChange}
-              className="w-full bg-[#0B0D0F] rounded-md px-4 py-3 text-[#BCC9DB] mt-4 focus:outline-none focus:ring-1 focus:ring-[#38FFE5] min-h-[120px]"
+              className="w-full bg-[#0B0D0F] rounded-2xl px-4 py-3 text-[#BCC9DB] mt-4 focus:outline-none focus:ring-1 focus:ring-[#38FFE5] min-h-[120px]"
               dir={isEnglish ? "ltr" : "rtl"}
               placeholder={
                 isEnglish
@@ -1523,7 +1550,7 @@ export default function AddChallenge() {
             <button
               type="submit"
               disabled={uploading}
-              className="mt-6 text-black px-7 cursor-pointer py-2 bg-[#38FFE5] rounded-md hover:bg-[#2de0c8] focus:outline-none flex items-center justify-center"
+              className="mt-6 text-black px-7 cursor-pointer py-2 bg-[#38FFE5] rounded-2xl hover:bg-[#2de0c8] focus:outline-none flex items-center justify-center"
             >
               {uploading ? (
                 <>

@@ -127,27 +127,33 @@ export default function ProfileSettings() {
   }, []);
 
   const countrySelectStyles = {
-    control: (styles, { isFocused }) => ({
+    control: (styles) => ({
       ...styles,
       backgroundColor: "#0B0D0F",
-      borderColor: isFocused ? "#00D8C8" : "transparent",
-      boxShadow: isFocused
-        ? "0px 0px 0px 1px #00D8C8, 0px 0px 10px 0px #00D8C8"
-        : "none",
+      borderColor: "transparent",
+      boxShadow: "none",
       padding: "6px",
       borderRadius: "0.75rem",
       "&:hover": {
         borderColor: "#00D8C8",
+        boxShadow: "0px 0px 0px 1px #00D8C8, 0px 0px 10px 0px #00D8C8",
+      },
+      "&:focus": {
+        borderColor: "transparent",
+        boxShadow: "none",
       },
     }),
     menu: (styles) => ({
       ...styles,
       backgroundColor: "#131619",
     }),
-    option: (styles, { isFocused }) => ({
+    option: (styles) => ({
       ...styles,
-      backgroundColor: isFocused ? "#2a2e32" : "#131619",
+      backgroundColor: "transparent",
       color: "white",
+      "&:hover": {
+        backgroundColor: "#2a2e32",
+      },
     }),
     singleValue: (styles) => ({
       ...styles,
@@ -163,31 +169,51 @@ export default function ProfileSettings() {
       ...styles,
       color: "white",
       textAlign: isEnglish ? "left" : "right",
+    }),
+    indicatorSeparator: () => ({
+      display: "none",
+    }),
+    dropdownIndicator: (styles) => ({
+      ...styles,
+      color: "gray",
+      "&:hover": {
+        color: "#00D8C8",
+      },
+    }),
+    menuList: (styles) => ({
+      ...styles,
+      padding: "0",
     }),
   };
 
   const timeZoneSelectStyles = {
-    control: (styles, { isFocused }) => ({
+    control: (styles) => ({
       ...styles,
       backgroundColor: "#0B0D0F",
-      borderColor: isFocused ? "#00D8C8" : "transparent",
-      boxShadow: isFocused
-        ? "0px 0px 0px 1px #00D8C8, 0px 0px 10px 0px #00D8C8"
-        : "none",
+      borderColor: "transparent",
+      boxShadow: "none",
       padding: "6px",
       borderRadius: "0.75rem",
       "&:hover": {
         borderColor: "#00D8C8",
+        boxShadow: "0px 0px 0px 1px #00D8C8, 0px 0px 10px 0px #00D8C8",
+      },
+      "&:focus": {
+        borderColor: "transparent",
+        boxShadow: "none",
       },
     }),
     menu: (styles) => ({
       ...styles,
       backgroundColor: "#131619",
     }),
-    option: (styles, { isFocused }) => ({
+    option: (styles) => ({
       ...styles,
-      backgroundColor: isFocused ? "#2a2e32" : "#131619",
+      backgroundColor: "transparent",
       color: "white",
+      "&:hover": {
+        backgroundColor: "#2a2e32",
+      },
     }),
     singleValue: (styles) => ({
       ...styles,
@@ -203,6 +229,20 @@ export default function ProfileSettings() {
       ...styles,
       color: "white",
       textAlign: isEnglish ? "left" : "right",
+    }),
+    indicatorSeparator: () => ({
+      display: "none",
+    }),
+    dropdownIndicator: (styles) => ({
+      ...styles,
+      color: "gray",
+      "&:hover": {
+        color: "#00D8C8",
+      },
+    }),
+    menuList: (styles) => ({
+      ...styles,
+      padding: "0",
     }),
   };
 
@@ -1421,7 +1461,7 @@ export default function ProfileSettings() {
                           value={newEmail}
                           dir={isEnglish ? "ltr" : "rtl"}
                           onChange={(e) => setNewEmail(e.target.value)}
-                          className="bg-[#0B0D0F]  rounded-xl rounded-r-none p-3 text-right w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300"
+                          className="bg-[#0B0D0F]  rounded-xl  p-3 text-right w-full focus:outline-none focus:border-[#00D8C8] focus:ring-1 focus:ring-[#00D8C8] focus:shadow-[0px_0px_10px_0px_#00D8C8] border border-transparent transition-all duration-300"
                           style={{ textAlign: isEnglish ? "left" : "right" }}
                         />
                         <div className="flex gap-2">
@@ -1622,7 +1662,6 @@ export default function ProfileSettings() {
                           : "رابط حسابك في ديسكورد"
                         : ""
                     }
-                   
                     style={{ textAlign: isEnglish ? "left" : "right" }}
                   />
                   {validationErrors.discord && (

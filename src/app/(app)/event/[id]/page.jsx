@@ -1429,6 +1429,7 @@ export default function ChallengePage() {
                         alt="First Blood"
                         width={32}
                         height={32}
+                        className="w-7 h-9"
                       />
                     </div>
                     <div>
@@ -1472,6 +1473,7 @@ export default function ChallengePage() {
                         alt="Challenge Bytes"
                         width={32}
                         height={32}
+                        className="w-9 h-9"
                       />
                     </div>
                     <div>
@@ -1492,6 +1494,7 @@ export default function ChallengePage() {
                         alt="Hacks"
                         width={32}
                         height={32}
+                        className="w-9 h-10"
                       />
                     </div>
                     <div>
@@ -1518,6 +1521,7 @@ export default function ChallengePage() {
                       alt="First Blood"
                       width={32}
                       height={32}
+                      className="w-7 h-9"
                     />
                   </div>
                   <div>
@@ -1559,6 +1563,7 @@ export default function ChallengePage() {
                       alt="Challenge Bytes"
                       width={32}
                       height={32}
+                      className="w-9 h-9"
                     />
                   </div>
                   <div>
@@ -1577,6 +1582,7 @@ export default function ChallengePage() {
                       alt="Hacks"
                       width={32}
                       height={32}
+                      className="w-9 h-10"
                     />
                   </div>
                   <div>
@@ -1635,7 +1641,7 @@ export default function ChallengePage() {
                   {challenge.keywords.map((keyword, index) => (
                     <span
                       key={index}
-                      className="bg-black/50 text-white text-sm p-2 rounded-full"
+                      className="bg-zinc-800 text-white text-sm px-4 py-2 rounded-full w-fit"
                     >
                       {keyword}
                     </span>
@@ -1885,7 +1891,7 @@ export default function ChallengePage() {
                 {activitiesData && activitiesData.length > 0 ? (
                   <div
                     dir={isEnglish ? "ltr" : "rtl"}
-                    className="mx-10 mb-5 pb-5 mt-10 bg-[#06373F26] px-5"
+                    className="mx-10 mb-5 pb-5 mt-10 bg-[#06373F26] px-5 rounded-2xl"
                   >
                     {activitiesData.map((user, index) => {
                       // Generate a guaranteed unique key that won't be NaN
@@ -1989,7 +1995,7 @@ export default function ChallengePage() {
                       return (
                         <div
                           key={userKey}
-                          className={`flex items-center justify-between flex-wrap py-5 rounded-lg px-5 ${
+                          className={`flex items-center justify-between flex-wrap py-5 rounded-2xl px-5 ${
                             index % 2 === 0 ? "bg-transparent" : "bg-[#06373F]"
                           }`}
                         >
@@ -2004,6 +2010,7 @@ export default function ChallengePage() {
                                 alt="flag"
                                 width={32}
                                 height={32}
+                                className="w-7 h-9"
                               />
                             </div>
                             <div
@@ -2178,6 +2185,7 @@ export default function ChallengePage() {
                         width={32}
                         height={32}
                         priority
+                        className="w-7 h-9"
                       />
                     </div>
 
