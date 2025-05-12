@@ -4,6 +4,7 @@ import { FaTiktok } from "react-icons/fa6";
 import { Tab, TabGroup, TabList, TabPanel, TabPanels } from "@headlessui/react";
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
+import Flag from "react-world-flags";
 
 import { FaInstagram } from "react-icons/fa6";
 import { FaLinkedin } from "react-icons/fa";
@@ -78,6 +79,18 @@ const formatDate = (dateString, isEnglish) => {
   }
 };
 
+// Country code to emoji function
+const countryToFlag = (isoCode) => {
+  if (!isoCode) return "🏳️";
+  return typeof String.fromCodePoint !== "undefined"
+    ? isoCode
+        .toUpperCase()
+        .replace(/./g, (char) =>
+          String.fromCodePoint(char.charCodeAt(0) + 127397)
+        )
+    : isoCode;
+};
+
 export default function Profile() {
   const { isEnglish } = useLanguage();
   const [activeTab, setActiveTab] = useState(0);
@@ -85,6 +98,7 @@ export default function Profile() {
   const [youSelected, setYouSelected] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [skillsVisible, setSkillsVisible] = useState(false);
+  const [flagError, setFlagError] = useState(false);
   const [socialAccounts, setSocialAccounts] = useState({
     discord: { linked: false },
     instagram: { linked: false },
@@ -362,7 +376,32 @@ export default function Profile() {
             height={88}
           />
         </div>
-
+        <div>
+          {userData.country && (
+            <div
+              className="flex items-center justify-center  overflow-hidden"
+              style={{ width: "30px", height: "30px" }}
+            >
+              {flagError ? (
+                <span className="text-xl p-1">
+                  {countryToFlag(userData.country)}
+                </span>
+              ) : (
+                <Flag
+                  code={userData.country}
+                  height={32}
+                  width={48}
+                  onError={() => setFlagError(true)}
+                  fallback={
+                    <span className="text-xl p-1">
+                      {countryToFlag(userData.country)}
+                    </span>
+                  }
+                />
+              )}
+            </div>
+          )}
+        </div>
         <div>
           <h1 className="text-2xl sm:text-4xl font-semibold flex items-center gap-2">
             {userData.user_name}

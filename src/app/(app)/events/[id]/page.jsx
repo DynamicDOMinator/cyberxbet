@@ -2189,7 +2189,7 @@ export default function EventPage() {
           <div className="absolute flex flex-co rounded-xl  items-center justify-center w-full h-full bg-[#040405CC]">
             <div>
               <p className="text-xl sm:text-[33px] font-bold flex items-center gap-4">
-                تقام حالياً
+                {isEnglish ? "Running Now" : "تقام حالياً"}
                 <span
                   style={{
                     animation: "pulse 3s ease-in-out infinite",
@@ -2285,9 +2285,9 @@ export default function EventPage() {
                 </p>
               </div>
               <div className="flex flex-col  sm:flex-row items-center justify-center gap-4 sm:gap-8 md:gap-12 lg:gap-44 lg:pr-10 pt-4 sm:pt-6 md:pt-8 lg:pt-10">
-                <div className="flex justify-center">
+                <div dir={isEnglish ? "rtl" : "ltr"} className="flex justify-center">
                   <p className="text-sm sm:text-base md:text-[18px] flex items-center gap-2">
-                    أعضاء
+                    {isEnglish ? "Members" : "أعضاء"}
                     <span>
                       {event.team_maximum_members}-{event.team_minimum_members}
                     </span>
@@ -2676,7 +2676,7 @@ export default function EventPage() {
                   />
                   <div>
                     <p className="text-sm sm:text-base">
-                      {isEnglish ? "Challenges Bytes" : "بايتس التحدي"}
+                      {isEnglish ? "Total Bytes" : " مجموع البايتس"}
                     </p>
                     <div className="flex items-center gap-2 pt-1 sm:pt-3">
                       <p className="flex items-center gap-1 text-sm sm:text-base">
@@ -2974,7 +2974,7 @@ export default function EventPage() {
                                 key={`activity-row-${rowIndex}`}
                                 className={`${
                                   rowIndex % 2 === 0
-                                    ? "bg-[#06373F] rounded-lg"
+                                    ? "bg-[#06373F] rounded-2xl"
                                     : ""
                                 } mb-2`}
                               >

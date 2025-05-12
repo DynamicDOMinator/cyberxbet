@@ -37,6 +37,7 @@
     "react-select": "^5.10.1",
     "react-select-country-list": "^2.2.3",
     "react-toastify": "^11.0.5",
+    "react-world-flags": "^1.6.0",
     "sharp": "^0.33.5",
     "socket.io": "^4.7.2",
     "socket.io-client": "^4.8.1",

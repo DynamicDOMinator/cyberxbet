@@ -24,23 +24,10 @@ export default function Home() {
   const [latestChallenges, setLatestChallenges] = useState([]);
   const [userData, setUserData] = useState(null);
   const [activities, setActivities] = useState([]);
+  const [advertisements, setAdvertisements] = useState([]);
   const router = useRouter();
 
-  // Slider images
-  const sliderImages = [
-    {
-      src: "/3.png",
-      alt: "Cyber Security 2",
-    },
-    {
-      src: "/4.png",
-      alt: "Hacker 2",
-    },
-    {
-      src: "/5.png",
-      alt: "Security 2",
-    },
-  ];
+ 
 
   // Function to fetch activities data
   const fetchActivities = async () => {
@@ -86,6 +73,16 @@ export default function Home() {
 
         if (challengesResponse.data.status === "success") {
           setLatestChallenges(challengesResponse.data.data);
+        }
+
+        // Fetch advertisements
+        const adsResponse = await axios.get(`${apiUrl}/ads`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (adsResponse.data) {
+          setAdvertisements(adsResponse.data);
         }
 
         // Fetch user data - using the same endpoint as user-profile page
@@ -200,45 +197,68 @@ export default function Home() {
           {isEnglish ? "Advertisements" : "الاعلانات"}
         </h1>
 
-        <div className="bg-white/3 backdrop-blur-xl mt-8 rounded-2xl lg:h-[420px] w-full overflow-hidden p-4">
-          <Swiper
-            effect={"coverflow"}
-            grabCursor={true}
-            centeredSlides={true}
-            slidesPerView={3}
-            initialSlide={2}
-            loop={true}
-            speed={800}
-            autoplay={{
-              delay: 6000,
-              disableOnInteraction: false,
-            }}
-            coverflowEffect={{
-              rotate: 0,
-              stretch: 0,
-              depth: 200,
-              modifier: 2,
-              slideShadows: false,
-            }}
-            modules={[EffectCoverflow, Autoplay]}
-            className="h-full w-full home-coverflow-slider"
-          >
-            {sliderImages.map((image, index) => (
-              <SwiperSlide key={index} className="h-full w-full">
-                <div className="relative w-[150%] h-full mx-auto">
-                  <Image
-                    src={image.src}
-                    alt={image.alt}
-                    fill
-                    className="object-cover rounded-2xl "
-                    priority={index === 0}
-                    // sizes="(max-width: 768px) 100vw, 33vw"
-                  />
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
+        {advertisements.length > 0 ? (
+          <div className="bg-white/3 backdrop-blur-xl mt-8 rounded-2xl lg:h-[420px] w-full overflow-hidden p-4">
+            <Swiper
+              effect={"coverflow"}
+              grabCursor={true}
+              centeredSlides={true}
+              slidesPerView={3}
+              initialSlide={0}
+              loop={true}
+              speed={800}
+              autoplay={{
+                delay: 6000,
+                disableOnInteraction: false,
+              }}
+              coverflowEffect={{
+                rotate: 0,
+                stretch: 0,
+                depth: 200,
+                modifier: 2,
+                slideShadows: false,
+              }}
+              modules={[EffectCoverflow, Autoplay]}
+              className="h-full w-full home-coverflow-slider"
+            >
+              {advertisements.map((ad) => (
+                <SwiperSlide key={ad.id} className="h-full w-full">
+                  <Link
+                    href={ad.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="relative w-full h-full mx-auto block"
+                  >
+                    <Image
+                      src={`${process.env.NEXT_PUBLIC_API_URL}/storage/${ad.image}`}
+                      alt={`Advertisement ${ad.id}`}
+                      fill
+                      className="object-cover rounded-2xl"
+                      priority={ad.id === advertisements[0].id}
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                    />
+                  </Link>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          </div>
+        ) : (
+          <div className="bg-white/3 backdrop-blur-xl mt-8 rounded-lg p-4 lg:h-[400px] w-full">
+            <div className="flex flex-col items-center justify-center lg:h-[400px] h-[200px] gap-4">
+              <Image
+                src="/ads.png"
+                alt="Advertisement"
+                width={120}
+                height={120}
+              />
+              <p className="text-center text-gray-500">
+                {isEnglish
+                  ? "No advertisements available at the moment"
+                  : "لا توجد إعلانات في الوقت الحالي"}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="lg:px-16 pt-20 px-5 ">

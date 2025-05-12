@@ -799,7 +799,7 @@ export default function AddChallenge() {
                 height={24}
               />
               <h3 className="text-[#BCC9DB] text-sm mb-2">
-                {isEnglish ? "Approved Challenges" : "التحديات المعتمدة"}
+                {isEnglish ? "Challenges Under Review" : "تحديات تحت المراجعة"}
               </h3>
             </div>
 
@@ -807,7 +807,7 @@ export default function AddChallenge() {
               {statisticsLoading ? "..." : statistics.under_review}
             </p>
             <p className="text-[#EC007E] text-center   mt-2">
-              {isEnglish ? "Approved challenges" : "قيد المراجعة"}
+              {isEnglish ? "Challenges Under Review" : "تحديات تحت المراجعة"}
             </p>
           </div>
 
@@ -836,32 +836,32 @@ export default function AddChallenge() {
           </div>
         </div>
 
-
-
-  {/* Approved Challenges */}
-  <div className="bg-[#FFFFFF0D] rounded-2xl relative  p-4 mt-5">
-            <div dir={isEnglish ? "ltr" : "rtl"} className="flex items-center justify-center gap-1 ">
-              <Image
-                src="/uploaded.png"
-                alt="Approved Challenges"
-                width={24}
-                height={24}
-              />
-              <h3 className="text-[#BCC9DB] text-sm mb-2">
-                {isEnglish ? "All  Challenges" : "جميع التحديات "}
-              </h3>
-            </div>
-
-            <p className="text-[#BCC9DB] text-center text-4xl font-bold">
-              {statisticsLoading ? "..." : statistics.total}
-            </p>
-            <p className="text-[#41C300] text-center   mt-2">
-              {isEnglish ? "All uploaded challenges" : " جميع التحديات المرفوعة"}
-            </p>
+        {/* Approved Challenges */}
+        <div className="bg-[#FFFFFF0D] rounded-2xl relative  p-4 mt-5">
+          <div
+            dir={isEnglish ? "ltr" : "rtl"}
+            className="flex items-center justify-center gap-1 "
+          >
+            <Image
+              src="/uploaded.png"
+              alt="Approved Challenges"
+              width={24}
+              height={24}
+            />
+            <h3 className="text-[#BCC9DB] text-sm mb-2">
+              {isEnglish ? "All  Challenges" : "جميع التحديات "}
+            </h3>
           </div>
 
-   <hr className="text-[#06373F] mt-10" />
+          <p className="text-[#BCC9DB] text-center text-4xl font-bold">
+            {statisticsLoading ? "..." : statistics.total}
+          </p>
+          <p className="text-[#41C300] text-center   mt-2">
+            {isEnglish ? "All uploaded challenges" : " جميع التحديات المرفوعة"}
+          </p>
+        </div>
 
+        <hr className="text-[#06373F] mt-10" />
       </div>
 
       {/* Challenges List Section */}
@@ -1209,6 +1209,7 @@ export default function AddChallenge() {
           .custom-scrollbar::-webkit-scrollbar-thumb {
             background: #38ffe5;
             border-radius: 10px;
+            
           }
 
           .custom-scrollbar::-webkit-scrollbar-thumb:hover {
@@ -1494,7 +1495,7 @@ export default function AddChallenge() {
             <button
               type="button"
               onClick={addFlag}
-              className="mt-3 text-black cursor-pointer px-4 py-2 bg-[#38FFE5] rounded-2xl hover:bg-[#2de0c8] focus:outline-none"
+              className="mt-3 text-black cursor-pointer px-4 py-2 bg-[#38FFE5] rounded-lg hover:bg-[#2de0c8] focus:outline-none"
             >
               {isEnglish ? "Add Flag" : "إضافة علم"}
             </button>
@@ -1550,7 +1551,7 @@ export default function AddChallenge() {
             <button
               type="submit"
               disabled={uploading}
-              className="mt-6 text-black px-7 cursor-pointer py-2 bg-[#38FFE5] rounded-2xl hover:bg-[#2de0c8] focus:outline-none flex items-center justify-center"
+              className="mt-6 text-black px-7 cursor-pointer py-2 bg-[#38FFE5] rounded-lg hover:bg-[#2de0c8] focus:outline-none flex items-center justify-center"
             >
               {uploading ? (
                 <>

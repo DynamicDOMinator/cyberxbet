@@ -567,7 +567,7 @@ export default function Events() {
                 <div className="absolute flex flex-col items-center justify-center w-full h-full bg-black/80">
                   <div>
                     <p className="text-2xl font-bold flex items-center gap-4">
-                      تقام حالياً
+                      {isEnglish ? "Running Now" : "تقام حالياً"}
                       <span
                         style={{
                           animation: "pulse 3s ease-in-out infinite",
