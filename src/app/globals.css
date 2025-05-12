@@ -153,6 +153,7 @@
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   filter: brightness(0.7);
+   
 }
 
 .mySwiper .swiper-slide-active {
@@ -161,6 +162,7 @@
   opacity: 1;
   box-shadow: 0 10px 30px rgba(56, 255, 229, 0.2);
   filter: brightness(1.1);
+  
 }
 
 .mySwiper .swiper-slide-active .slide-content {

@@ -3836,7 +3836,7 @@ export default function EventPage() {
                 type="text"
                 value={newTeamName}
                 onChange={(e) => setNewTeamName(e.target.value)}
-                className="w-full px-3 py-3 bg-black/30 border border-gray-800 rounded-md focus:outline-none focus:border-[#38FFE5]"
+                className="w-full px-3 py-3 bg-black/30 border border-gray-800 rounded-2xl focus:outline-none focus:border-[#38FFE5]"
                 maxLength={50}
                 placeholder={isEnglish ? "Enter team name" : "أدخل اسم الفريق"}
               />
@@ -3845,7 +3845,7 @@ export default function EventPage() {
             <button
               onClick={updateTeam}
               disabled={isUpdating}
-              className="w-full py-3 bg-[#38FFE5] text-[#06373F] rounded-md hover:bg-[#38FFE5]/90 transition font-bold text-base"
+              className="w-full py-3 bg-[#38FFE5] text-[#06373F] rounded-2xl hover:bg-[#38FFE5]/90 transition font-bold text-base"
             >
               {isUpdating
                 ? isEnglish
@@ -3858,7 +3858,7 @@ export default function EventPage() {
 
             <button
               onClick={() => setIsEditModalOpen(false)}
-              className="w-full py-3 mt-2 border border-gray-700 bg-transparent rounded-md hover:bg-white/5 transition text-sm"
+              className="w-full py-3 mt-2 border border-gray-700 bg-transparent rounded-2xl hover:bg-white/5 transition text-sm"
             >
               {isEnglish ? "Back" : "الرجوع للخلف"}
             </button>

@@ -30,18 +30,6 @@ export default function Home() {
   const sliderImages = [
     {
       src: "/3.png",
-      alt: "Cyber Security 1",
-    },
-    {
-      src: "/4.png",
-      alt: "Hacker 1",
-    },
-    {
-      src: "/5.png",
-      alt: "Security 1",
-    },
-    {
-      src: "/3.png",
       alt: "Cyber Security 2",
     },
     {
@@ -236,15 +224,15 @@ export default function Home() {
             className="h-full w-full home-coverflow-slider"
           >
             {sliderImages.map((image, index) => (
-              <SwiperSlide key={index} className="h-full">
-                <div className="relative w-full h-full">
+              <SwiperSlide key={index} className="h-full w-full">
+                <div className="relative w-[150%] h-full mx-auto">
                   <Image
                     src={image.src}
                     alt={image.alt}
                     fill
-                    className="object-cover rounded-xl"
+                    className="object-cover rounded-2xl "
                     priority={index === 0}
-                    sizes="(max-width: 768px) 100vw, 33vw"
+                    // sizes="(max-width: 768px) 100vw, 33vw"
                   />
                 </div>
               </SwiperSlide>

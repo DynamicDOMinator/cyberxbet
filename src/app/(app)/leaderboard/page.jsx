@@ -244,7 +244,8 @@ export default function Leaderboard() {
                     alt="user avatar"
                     width={30}
                     height={30}
-                    className="rounded-full"
+                    className="rounded-full w-[30px] h-[30px]"
+                  
                   />
                   <span className="text-white text-sm md:text-xl font-bold">
                     {user.username}
