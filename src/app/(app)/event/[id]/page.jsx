@@ -49,6 +49,7 @@ export default function ChallengePage() {
   const [pendingActivitiesCount, setPendingActivitiesCount] = useState(0);
   const [userData, setUserData] = useState(null);
   const [toast, setToast] = useState(null);
+  const [notFound, setNotFound] = useState(false);
 
   const { id } = useParams();
   const { isEnglish } = useLanguage();
@@ -606,80 +607,15 @@ export default function ChallengePage() {
     }
   };
 
-  // Memoize fetch functions to prevent recreations
-  const fetchInitialData = useCallback(async () => {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      const token = Cookies.get("token");
-
-      // Function to fetch challenge data
-      const fetchChallengeData = async () => {
-        try {
-          const challengeResponse = await axios.get(
-            `${apiUrl}/event-challenges/${id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-          setChallenge(challengeResponse.data.data);
-        } catch (error) {
-          console.error("Error fetching challenge data:", error);
-        }
-      };
-
-      // Initial fetch
-      await fetchChallengeData();
-
-      // Step 2: Fetch team data (if challenge data contains event_uuid)
-      if (challenge?.event_uuid) {
-        try {
-          const teamResponse = await axios.get(
-            `${apiUrl}/${challenge.event_uuid}/my-team`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
-          if (teamResponse.data.data) {
-            setTeamData(teamResponse.data.data);
-          }
-        } catch (teamError) {
-          console.error("Error fetching team data:", teamError);
-        }
-      }
-
-      // Step 3: Fetch solved flags data
-      try {
-        const solvedResponse = await axios.get(
-          `${apiUrl}/challenges/${id}/check`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-      } catch (error) {
-        console.error("Error checking solved flags:", error);
-      }
-    } catch (error) {
-      console.error("Error fetching initial data:", error);
-    } finally {
-      setLoadingPage(false);
-    }
-  }, [id]);
-
   // Initial data fetch with polling
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
     const token = Cookies.get("token");
 
-    // Function to fetch challenge data
-    const fetchChallengeData = async () => {
+    // Single function to fetch challenge data and associated data
+    const fetchAllData = async () => {
       try {
+        // Step 1: Fetch challenge data
         const challengeResponse = await axios.get(
           `${apiUrl}/event-challenges/${id}`,
           {
@@ -688,23 +624,86 @@ export default function ChallengePage() {
             },
           }
         );
-        setChallenge(challengeResponse.data.data);
+
+        const challengeData = challengeResponse.data.data;
+        setChallenge(challengeData);
+        setNotFound(false);
+
+        // Step 2: Fetch team data (if challenge data contains event_uuid)
+        if (challengeData?.event_uuid) {
+          try {
+            const teamResponse = await axios.get(
+              `${apiUrl}/${challengeData.event_uuid}/my-team`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+
+            if (teamResponse.data.data) {
+              setTeamData(teamResponse.data.data);
+            }
+          } catch (teamError) {
+            console.error("Error fetching team data:", teamError);
+          }
+        }
+
+        // Step 3: Fetch solved flags data
+        try {
+          const solvedResponse = await axios.get(
+            `${apiUrl}/challenges/${id}/check`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+        } catch (error) {
+          console.error("Error checking solved flags:", error);
+        }
       } catch (error) {
         console.error("Error fetching challenge data:", error);
+        // If we get a 404 or any error, set notFound to true
+        setNotFound(true);
+      } finally {
+        // ALWAYS set loading page to false when we're done
+        setLoadingPage(false);
       }
     };
 
-    // Initial fetch
-    fetchInitialData();
+    // Initial fetch - this will set loadingPage to false when done
+    fetchAllData();
 
-    // Set up interval for polling
-    const intervalId = setInterval(fetchChallengeData, 5000);
+    // Setup polling for just the challenge data (not the complete data)
+    const pollChallengeData = async () => {
+      try {
+        const response = await axios.get(`${apiUrl}/event-challenges/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setChallenge(response.data.data);
+      } catch (error) {
+        console.error("Error polling challenge data:", error);
+      }
+    };
+
+    // Set up interval for polling (just the challenge, not all data)
+    const intervalId = setInterval(pollChallengeData, 5000);
 
     // Cleanup function
     return () => {
       clearInterval(intervalId);
     };
-  }, [fetchInitialData, id]);
+  }, [id]);
+
+  // Redirect to not-found page when challenge doesn't exist
+  useEffect(() => {
+    if (notFound && !loadingPage) {
+      router.push("/not-found");
+    }
+  }, [notFound, router, loadingPage]);
 
   const checkSolvedFlags = async () => {
     try {
