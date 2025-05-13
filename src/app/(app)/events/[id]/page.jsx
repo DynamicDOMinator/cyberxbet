@@ -2180,7 +2180,7 @@ export default function EventPage() {
         </h1>
       </div>
       <div
-        className={`bg-cover bg-no-repeat bg-center relative  rounded-xl mt-6 md:mt-8 lg:mt-12 h-[350px] sm:h-[400px] md:h-[450px] lg:h-[500px] w-full`}
+        className={`bg-cover bg-no-repeat bg-cover/center relative  rounded-2xl mt-6 md:mt-8 lg:mt-12 h-[350px] sm:h-[400px] md:h-[450px] lg:h-[500px] w-full`}
         style={{
           backgroundImage: `url(${event.background_image})`,
         }}
