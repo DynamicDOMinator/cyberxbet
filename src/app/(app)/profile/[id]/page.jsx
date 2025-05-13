@@ -1134,7 +1134,9 @@ export default function Profile() {
                                 >
                                   <td
                                     dir={isEnglish ? "ltr" : "rtl"}
-                                    className={`py-2 lg:py-3 text-white/70 w-[25%] text-sm lg:text-base ${
+                                    className={`py-2 lg:py-3 pl-10 ${
+                                      isEnglish ? "text-right pr-10" : "text-left"
+                                    } text-white/70 w-[25%] text-sm lg:text-base ${
                                       isEnglish
                                         ? "pl-3 lg:pl-5"
                                         : "pr-3 lg:pr-5"
@@ -1149,11 +1151,29 @@ export default function Profile() {
                                         isEnglish ? "pl-0" : "pr-0"
                                       }`}
                                     >
-                                      <span className="text-white text-sm lg:text-base min-w-[40px] text-left">
-                                        {item.is_first_blood
-                                          ? item.first_blood_bytes
-                                          : item.total_bytes}
-                                      </span>
+                                      <div className="flex flex-row-reverse items-center gap-1 w-[120px]">
+                                        <span className="text-white text-sm lg:text-base">
+                                          {item.is_first_blood
+                                            ? item.first_blood_bytes
+                                            : item.bytes}
+                                        </span>
+
+                                        <span className="text-red-500 text-sm">
+                                          {item.is_first_blood &&
+                                          item.first_blood_bytes > item.bytes
+                                            ? `
+                                            
+                                            
+                                            ${isEnglish ? "bytes" : "بايتس"}
+                                            
+                                            +${
+                                              item.first_blood_bytes -
+                                              item.bytes
+                                            } `
+                                            : ""}
+                                        </span>
+                                      </div>
+
                                       <Image
                                         src={
                                           item.is_first_blood
@@ -1199,7 +1219,7 @@ export default function Profile() {
                                             ? `got first bytes in ${item.challenge_title}`
                                             : `got bytes in ${item.challenge_title}`
                                           : item.is_first_blood
-                                          ? `حصلت على البايتس الأولي في ${item.challenge_title}`
+                                          ? `حصلت على البايتس الأول في ${item.challenge_title}`
                                           : `حصلت على بايتس في ${item.challenge_title}`}
                                       </span>
                                     </div>
