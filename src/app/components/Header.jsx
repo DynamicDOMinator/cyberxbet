@@ -60,20 +60,28 @@ export default function Header() {
   useEffect(() => {
     let socketInstance = null;
     let pollInterval = null;
+    let reconnectTimeout = null;
+    let isReconnecting = false;
+    let lastKnownCount = 1; // Start with at least 1 online player (yourself)
 
     const fetchOnlineCountFallback = async () => {
       try {
         // Fallback to API endpoint if socket fails
         const response = await axios.get("/api/socket");
         if (response.data && typeof response.data.online === "number") {
-          setOnlinePlayers(Math.max(1, response.data.online));
+          // Set a minimum value to avoid showing 0 players
+          const count = Math.max(1, response.data.online);
+          lastKnownCount = count; // Store last known good count
+          setOnlinePlayers(count);
         } else {
           // If API fails too, set default count
-          setOnlinePlayers(1);
+          console.warn("API returned invalid online count");
+          setOnlinePlayers(lastKnownCount);
         }
       } catch (error) {
         console.error("Error fetching online count:", error);
-        setOnlinePlayers(1);
+        // Always show at least 1 online player (the current user)
+        setOnlinePlayers(lastKnownCount);
       }
     };
 
@@ -81,33 +89,59 @@ export default function Header() {
       try {
         // Only create socket connection when we have a username
         if (userName) {
+          // Clear any existing reconnect timeout
+          if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout);
+            reconnectTimeout = null;
+          }
+
           // Try to get the socket instance
           socketInstance = createSocket(userName);
 
           // Set up event listeners for online player count
           socketInstance.on("onlinePlayers", (count) => {
             if (typeof count === "number" && count >= 0) {
-              setOnlinePlayers(Math.max(1, count));
+              const validCount = Math.max(1, count);
+              lastKnownCount = validCount;
+              setOnlinePlayers(validCount);
             }
           });
 
           // Also listen for onlineCount event (for backward compatibility)
           socketInstance.on("onlineCount", (count) => {
             if (typeof count === "number" && count >= 0) {
-              setOnlinePlayers(Math.max(1, count));
+              const validCount = Math.max(1, count);
+              lastKnownCount = validCount;
+              setOnlinePlayers(validCount);
             }
           });
 
           // When connected, emit userConnected event to ensure proper tracking
           socketInstance.on("connect", () => {
             console.log("Socket connected in Header component");
+            isReconnecting = false;
             socketInstance.emit("userConnected", { userName });
           });
 
           // Handle connection errors
           socketInstance.on("connect_error", (error) => {
             console.error("Socket connection error:", error.message);
-            fetchOnlineCountFallback();
+
+            // Don't immediately fall back to API, try reconnection first
+            if (!isReconnecting) {
+              isReconnecting = true;
+              reconnectTimeout = setTimeout(() => {
+                // Only fallback if socket is still not connected after timeout
+                if (!socketInstance || !socketInstance.connected) {
+                  fetchOnlineCountFallback();
+
+                  // Try to re-initialize socket after a failure
+                  console.log("Attempting to re-initialize socket connection");
+                  initializeSocket();
+                }
+                isReconnecting = false;
+              }, 3000);
+            }
           });
         } else {
           // If we don't have a username yet, try to get the count via API
@@ -122,15 +156,23 @@ export default function Header() {
     // Initialize socket
     initializeSocket();
 
-    // Set up polling as backup for online count
+    // Set up polling as backup for online count - less frequent but still reliable
     pollInterval = setInterval(() => {
-      fetchOnlineCountFallback();
-    }, 60000); // Poll every minute as backup
+      // Only use API fallback if socket isn't connected
+      if (!socketInstance || !socketInstance.connected) {
+        fetchOnlineCountFallback();
+      }
+    }, 30000); // Poll every 30 seconds as backup
 
     return () => {
       // Clear polling interval
       if (pollInterval) {
         clearInterval(pollInterval);
+      }
+
+      // Clear reconnect timeout if it exists
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
       }
 
       // Remove event listeners but don't disconnect the socket
@@ -152,7 +194,13 @@ export default function Header() {
       // First, properly disconnect the socket to update online count
       try {
         console.log("Disconnecting socket before logout");
-        disconnectSocket();
+        if (typeof window !== "undefined") {
+          // Ensure we're disconnecting the socket properly with user info
+          disconnectSocket();
+
+          // Add a small delay to allow the disconnection to complete
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        }
       } catch (socketError) {
         console.error("Socket disconnect error:", socketError);
       }
@@ -170,13 +218,11 @@ export default function Header() {
         // Continue with logout even if API call fails
       }
 
-      // Clear cookie and redirect
+      // Clear cookie
       Cookies.remove("token");
 
-      // Force a small delay to ensure socket disconnection completes
-      setTimeout(() => {
-        router.push("/");
-      }, 300);
+      // Redirect after ensuring socket is disconnected
+      router.push("/");
     } catch (error) {
       console.error("Error during logout:", error);
       // Fallback: Remove cookie and redirect anyway

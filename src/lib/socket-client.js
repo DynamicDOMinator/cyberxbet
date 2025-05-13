@@ -169,30 +169,31 @@ export const disconnectSocket = () => {
 
     // Store username before clearing the instance
     const userName = socketInstance._userName;
+    const tabId = generateTabId();
 
-    if (typeof socketInstance.disconnect === "function") {
+    // First try to explicitly notify the server about disconnection
+    try {
       // For real socket.io connections
-      try {
+      if (typeof socketInstance.emit === "function") {
         // First emit a manual disconnect event to ensure server gets it
         socketInstance.emit("userDisconnected", {
           userName: userName,
-          tabId: generateTabId(),
+          tabId: tabId,
         });
+        console.log(`Emitted userDisconnected event for ${userName}`);
+      }
+    } catch (emitError) {
+      console.warn("Error emitting disconnect event:", emitError);
+    }
 
-        // Then actually disconnect
+    // Then actually disconnect the socket
+    try {
+      if (typeof socketInstance.disconnect === "function") {
         socketInstance.disconnect();
         console.log("Socket.IO connection terminated");
-      } catch (error) {
-        console.error("Error disconnecting socket:", error);
       }
-    } else if (typeof socketInstance.emit === "function") {
-      // For virtual socket, emit disconnect
-      try {
-        socketInstance.emit("disconnect");
-        console.log("Virtual socket disconnect event emitted");
-      } catch (error) {
-        console.error("Error with virtual socket disconnect:", error);
-      }
+    } catch (disconnectError) {
+      console.error("Error disconnecting socket:", disconnectError);
     }
 
     // Also make an HTTP request to ensure the server knows about the disconnect
@@ -207,19 +208,13 @@ export const disconnectSocket = () => {
           action: "disconnect",
           userName: userName,
           id: socketInstance.id,
-          tabId: generateTabId(),
+          tabId: tabId,
         }),
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          console.log("Disconnect notification acknowledged:", data);
-        })
-        .catch((error) => {
-          console.error("Error sending disconnect notification:", error);
-        });
-    } catch (e) {
-      // Silently fail on fetch error
-      console.error("Error with fetch for disconnect:", e);
+      }).catch((fetchError) => {
+        console.error("Error with fetch for disconnect:", fetchError);
+      });
+    } catch (fetchSetupError) {
+      console.error("Error setting up fetch for disconnect:", fetchSetupError);
     }
 
     // Clear the singleton instance

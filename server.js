@@ -53,6 +53,9 @@ const getUniqueUserCount = () => {
   return onlineUsers.size + anonymousConnections.size;
 };
 
+// Make the function available globally for API routes
+global.getUniqueUserCount = getUniqueUserCount;
+
 // Function to get users in a challenge room
 const getChallengeRoomUsers = (challengeId) => {
   return challengeRooms.has(challengeId)

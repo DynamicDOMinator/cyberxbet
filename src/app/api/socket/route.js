@@ -8,8 +8,15 @@ export const dynamic = "force-dynamic";
 let onlineUsers = [];
 let onlineCount = 0;
 
-// Track system state
+// Track system state - synchronize with global value if available
 let systemFrozen = false;
+try {
+  // Try to access the global value
+  systemFrozen = global.systemFrozen || false;
+} catch (e) {
+  // Ignore errors accessing global
+}
+
 // Track event-specific freeze states
 const eventFreezeStates = new Map();
 
@@ -200,6 +207,38 @@ function disconnectUser(userName, metadata = {}) {
   return removed;
 }
 
+// Get the true online count from the Socket.IO server if available
+function getTrueOnlineCount() {
+  try {
+    // Try to get count from the global server instance
+    if (global.server && global.server.io) {
+      // Use the server's count function if available
+      const serverCount = global.getUniqueUserCount
+        ? global.getUniqueUserCount()
+        : onlineUsers.length + anonymousUsers.size;
+
+      return Math.max(1, serverCount); // Ensure at least 1 user
+    }
+  } catch (e) {
+    console.warn("Error getting global online count:", e.message);
+  }
+
+  // Fall back to our local count
+  return Math.max(1, onlineUsers.length + anonymousUsers.size);
+}
+
+// Check the server for more accurate frozen state
+function getServerFrozenState() {
+  try {
+    if (global.systemFrozen !== undefined) {
+      return global.systemFrozen;
+    }
+  } catch (e) {
+    // Ignore errors accessing global
+  }
+  return systemFrozen;
+}
+
 // GET handler for polling
 export async function GET(req) {
   // Clean up stale connections
@@ -219,7 +258,8 @@ export async function GET(req) {
   // Handle debug request to see connection stats
   if (debugParam === "true") {
     return NextResponse.json({
-      total: onlineCount,
+      total: getTrueOnlineCount(),
+      local: onlineCount,
       registered: onlineUsers.length,
       anonymous: anonymousUsers.size,
       users: onlineUsers,
@@ -297,11 +337,12 @@ export async function GET(req) {
     });
   }
 
-  // Return general online count data
-  console.log("GET /api/socket - returning online count:", onlineCount);
+  // Return general online count data - always use the most accurate count available
+  const trueOnlineCount = getTrueOnlineCount();
+  console.log("GET /api/socket - returning online count:", trueOnlineCount);
   return NextResponse.json({
-    online: onlineCount,
-    frozen: systemFrozen,
+    online: trueOnlineCount,
+    frozen: getServerFrozenState(),
     message: "Socket.IO serverless endpoint active",
   });
 }
