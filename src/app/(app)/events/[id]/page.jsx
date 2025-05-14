@@ -34,11 +34,12 @@ const LeaderboardFreezeNotification = memo(
     if (!isLeaderboardFrozen || !isReady || activeTab !== "leaderboard")
       return null;
 
-    console.log("[NOTIFICATION] Rendering freeze notification", {
-      isLeaderboardFrozen,
-      isReady,
-      activeTab,
-    });
+    "[NOTIFICATION] Rendering freeze notification",
+      {
+        isLeaderboardFrozen,
+        isReady,
+        activeTab,
+      };
 
     return (
       <div className="text-red-500 text-lg border border-red-500 bg-red-500/10 rounded-md px-4 py-2 mr-4 font-bold flex items-center gap-2">
@@ -140,24 +141,20 @@ export default function EventPage() {
   // Add an effect to check if both APIs have responded and update the UI accordingly
   useEffect(() => {
     if (freezeApiResponded && scoreboardApiResponded) {
-      console.log("[FREEZE] Both APIs have responded, determining final state");
+      ("[FREEZE] Both APIs have responded, determining final state");
 
       const freezeApiState = freezeApiResponseRef.current;
       const scoreboardApiState = scoreboardApiResponseRef.current;
 
-      console.log(
-        `[FREEZE] Freeze API state: ${freezeApiState}, Scoreboard API state: ${scoreboardApiState}`
-      );
+      `[FREEZE] Freeze API state: ${freezeApiState}, Scoreboard API state: ${scoreboardApiState}`;
 
       // If both APIs agree, update the state
       if (freezeApiState === scoreboardApiState) {
-        console.log(`[FREEZE] APIs agree on state: ${freezeApiState}`);
+        `[FREEZE] APIs agree on state: ${freezeApiState}`;
         setIsLeaderboardFrozen(freezeApiState);
       } else {
         // If they disagree, prioritize the scoreboard API as it's the source of truth
-        console.log(
-          `[FREEZE] APIs disagree, using scoreboard state: ${scoreboardApiState}`
-        );
+        `[FREEZE] APIs disagree, using scoreboard state: ${scoreboardApiState}`;
         setIsLeaderboardFrozen(scoreboardApiState);
       }
 
@@ -170,7 +167,7 @@ export default function EventPage() {
   useEffect(() => {
     if (isLeaderboardFrozen && !hasRefreshedLeaderboardRef.current) {
       // When leaderboard is frozen, refresh team data once
-      console.log("[LEADERBOARD FROZEN] Refreshing team data and scoreboard");
+      ("[LEADERBOARD FROZEN] Refreshing team data and scoreboard");
       hasRefreshedLeaderboardRef.current = true;
 
       // Refresh team data if we have a team
@@ -216,7 +213,7 @@ export default function EventPage() {
           // Update the scoreboard data directly
           if (res.data.data && res.data.data.length > 0) {
             setScoreboardData(res.data.data);
-            console.log("[LEADERBOARD] Scoreboard data refreshed");
+            ("[LEADERBOARD] Scoreboard data refreshed");
           }
         } catch (error) {
           console.error("[LEADERBOARD] Error fetching scoreboard:", error);
@@ -234,7 +231,7 @@ export default function EventPage() {
   // Update the socket and event listener setup
   useEffect(() => {
     if (!id) return;
-    console.log(`[SOCKET] Initializing socket connection for event ${id}`);
+    `[SOCKET] Initializing socket connection for event ${id}`;
 
     // Use user name from cookies for a consistent connection
     const userName = Cookies.get("username");
@@ -243,12 +240,12 @@ export default function EventPage() {
 
     if (newSocket) {
       // Set up connection and event listeners
-      console.log(`[SOCKET] Socket created, joining team room for event ${id}`);
+      `[SOCKET] Socket created, joining team room for event ${id}`;
       newSocket.emit("joinTeamRoom", id);
 
       // Set up flag submission handler with better debugging
       const handleFlagSubmission = (data) => {
-        console.log(`[SOCKET] Received flag submission event:`, data);
+        `[SOCKET] Received flag submission event:`, data;
 
         // Only process events for this event
         if (data.eventId === id || data.event_id === id) {
@@ -269,7 +266,7 @@ export default function EventPage() {
 
       // Set up team update handler with better debugging
       const handleTeamUpdate = (data) => {
-        console.log(`[SOCKET] Received team update event:`, data);
+        `[SOCKET] Received team update event:`, data;
 
         // Only process events for this event
         if (data.eventId === id || data.event_id === id) {
@@ -303,19 +300,19 @@ export default function EventPage() {
 
       // Add connect/disconnect handlers
       newSocket.on("connect", () => {
-        console.log(`[SOCKET] Socket connected successfully`);
+        `[SOCKET] Socket connected successfully`;
         // Re-join room on reconnect
         newSocket.emit("joinTeamRoom", id);
       });
 
       // Also set up window event listener for flag submissions
       if (typeof window !== "undefined") {
-        console.log("[DOM] Setting up flag_submitted event listener");
+        ("[DOM] Setting up flag_submitted event listener");
 
         // Function to handle DOM flag_submitted events
         const handleDomFlagEvent = (event) => {
           const data = event.detail;
-          console.log("[DOM] Received flag_submitted event:", data);
+          "[DOM] Received flag_submitted event:", data;
 
           // Only process events for this event
           if ((data.eventId === id || data.event_id === id) && !data.testMode) {
@@ -338,7 +335,7 @@ export default function EventPage() {
 
         // Return cleanup function
         return () => {
-          console.log(`[SOCKET+DOM] Cleaning up event listeners for ${id}`);
+          `[SOCKET+DOM] Cleaning up event listeners for ${id}`;
 
           // Remove socket event listeners
           if (newSocket) {
@@ -354,7 +351,7 @@ export default function EventPage() {
 
       // If window is not defined (SSR), just return socket cleanup
       return () => {
-        console.log(`[SOCKET] Cleaning up socket event listeners for ${id}`);
+        `[SOCKET] Cleaning up socket event listeners for ${id}`;
         if (newSocket) {
           newSocket.off("flagSubmitted", handleFlagSubmission);
           newSocket.off("teamUpdate", handleTeamUpdate);
@@ -368,9 +365,7 @@ export default function EventPage() {
   useEffect(() => {
     if (!id || typeof window === "undefined") return;
 
-    console.log(
-      `[SSE] Setting up Server-Sent Events connection for event ${id}`
-    );
+    `[SSE] Setting up Server-Sent Events connection for event ${id}`;
     let eventSource = null;
     let reconnectAttempt = 0;
     const maxReconnectAttempts = 5;
@@ -382,7 +377,7 @@ export default function EventPage() {
           eventSource.close();
         }
 
-        console.log(`[SSE] Creating new SSE connection for event ${id}`);
+        `[SSE] Creating new SSE connection for event ${id}`;
 
         // Create a new connection with a random parameter to avoid caching
         eventSource = new EventSource(
@@ -390,22 +385,20 @@ export default function EventPage() {
         );
 
         eventSource.onopen = () => {
-          console.log(`[SSE] Connection opened successfully for event ${id}`);
+          `[SSE] Connection opened successfully for event ${id}`;
           reconnectAttempt = 0; // Reset reconnect counter on successful connection
         };
 
         eventSource.onmessage = (event) => {
           try {
             const data = JSON.parse(event.data);
-            console.log(`[SSE] Received message for event ${id}:`, data);
+            `[SSE] Received message for event ${id}:`, data;
 
             if (data.type === "connection") {
-              console.log(
-                `[SSE] Connection established with client ID: ${data.clientId}`
-              );
+              `[SSE] Connection established with client ID: ${data.clientId}`;
             } else {
               // Process activity data
-              console.log(`[SSE] Processing activity data:`, data);
+              `[SSE] Processing activity data:`, data;
               handleRealTimeActivity(data);
             }
           } catch (error) {
@@ -418,22 +411,20 @@ export default function EventPage() {
 
           // Close current connection
           eventSource.close();
-          console.log(`[SSE] Closed errored connection`);
+          `[SSE] Closed errored connection`;
 
           // Attempt to reconnect with backoff
           if (reconnectAttempt < maxReconnectAttempts) {
             reconnectAttempt++;
             const delay = Math.min(1000 * Math.pow(2, reconnectAttempt), 30000);
-            console.log(
-              `[SSE] Reconnecting in ${delay}ms (attempt ${reconnectAttempt}/${maxReconnectAttempts})`
-            );
+            `[SSE] Reconnecting in ${delay}ms (attempt ${reconnectAttempt}/${maxReconnectAttempts})`;
 
             setTimeout(() => {
-              console.log(`[SSE] Attempting to reconnect...`);
+              `[SSE] Attempting to reconnect...`;
               setupSSE();
             }, delay);
           } else {
-            console.log(`[SSE] Max reconnect attempts reached, giving up`);
+            `[SSE] Max reconnect attempts reached, giving up`;
           }
         };
       } catch (error) {
@@ -446,13 +437,13 @@ export default function EventPage() {
 
     // Also add a periodic reconnect to ensure connection stays fresh
     const reconnectInterval = setInterval(() => {
-      console.log(`[SSE] Performing scheduled reconnect for event ${id}`);
+      `[SSE] Performing scheduled reconnect for event ${id}`;
       setupSSE();
     }, 5 * 60 * 1000); // Every 5 minutes
 
     // Clean up on unmount
     return () => {
-      console.log(`[SSE] Cleaning up SSE connection for event ${id}`);
+      `[SSE] Cleaning up SSE connection for event ${id}`;
       if (eventSource) {
         eventSource.close();
       }
@@ -462,7 +453,7 @@ export default function EventPage() {
 
   // Define the event handler functions
   const handleTeamUpdate = (data) => {
-    console.log("Received team update:", data);
+    "Received team update:", data;
     // Force refresh team data for any team update for this event
     if (data.eventId === id) {
       // Add small delay to ensure database has updated
@@ -511,7 +502,7 @@ export default function EventPage() {
   };
 
   const handleFlagSubmission = (data) => {
-    console.log("Received flag submission:", data);
+    "Received flag submission:", data;
 
     // Ensure we have the eventId
     if (!data.eventId && data.event_id) {
@@ -563,7 +554,7 @@ export default function EventPage() {
   };
 
   const handleFirstBlood = (data) => {
-    console.log("Received first blood:", data);
+    "Received first blood:", data;
 
     // Ensure we have the eventId
     if (!data.eventId && data.event_id) {
@@ -620,7 +611,7 @@ export default function EventPage() {
   };
 
   const handleLeaderboardUpdate = (data) => {
-    console.log("Received leaderboard update:", data);
+    "Received leaderboard update:", data;
 
     // Ensure we have the eventId
     if (!data.eventId && data.event_id) {
@@ -780,14 +771,12 @@ export default function EventPage() {
         // Use a ref to prevent multiple API calls
         if (!window.hasRequestedChallenges) {
           window.hasRequestedChallenges = true;
-          console.log("[TIMER] Event timer ended, fetching challenges once");
+          ("[TIMER] Event timer ended, fetching challenges once");
 
           // Fetch challenges, event status, and scoreboard in one go
           Promise.all([getChallenges(), checkEventStatus(), eventScoreBoard()])
             .then(() => {
-              console.log(
-                "[TIMER] Successfully fetched all event data after timer ended"
-              );
+              ("[TIMER] Successfully fetched all event data after timer ended");
             })
             .catch((error) => {
               console.error("[TIMER] Error fetching event data:", error);
@@ -1353,21 +1342,17 @@ export default function EventPage() {
     teamUuid = null
   ) => {
     if (!teamUuid) {
-      console.log("[LEADERBOARD] Missing team UUID for update, skipping");
+      ("[LEADERBOARD] Missing team UUID for update, skipping");
       return;
     }
 
     newPoints = Number(newPoints);
     if (isNaN(newPoints) || newPoints <= 0) {
-      console.log(
-        `[LEADERBOARD] Invalid points value: ${newPoints}, skipping update`
-      );
+      `[LEADERBOARD] Invalid points value: ${newPoints}, skipping update`;
       return;
     }
 
-    console.log(
-      `[LEADERBOARD] Updating team ${teamUuid} with ${newPoints} points, first blood: ${isFirstBlood}`
-    );
+    `[LEADERBOARD] Updating team ${teamUuid} with ${newPoints} points, first blood: ${isFirstBlood}`;
 
     // Check if we're getting too far out of sync with backend data
     // If a team is not found or data looks significantly off, refresh the entire scoreboard
@@ -1378,9 +1363,7 @@ export default function EventPage() {
 
     if (teamIndex === -1) {
       // If team isn't in our local data at all, refresh everything
-      console.log(
-        `[LEADERBOARD] Team ${teamUuid} not found in scoreboard, refreshing all data`
-      );
+      `[LEADERBOARD] Team ${teamUuid} not found in scoreboard, refreshing all data`;
       eventScoreBoard();
       return;
     }
@@ -1390,9 +1373,7 @@ export default function EventPage() {
       !window._lastFullRefresh ||
       Date.now() - window._lastFullRefresh > 30000
     ) {
-      console.log(
-        "[LEADERBOARD] Performing periodic full refresh to ensure data accuracy"
-      );
+      ("[LEADERBOARD] Performing periodic full refresh to ensure data accuracy");
       window._lastFullRefresh = Date.now();
       eventScoreBoard();
       return;
@@ -1400,9 +1381,7 @@ export default function EventPage() {
 
     setScoreboardData((prevData) => {
       if (!prevData || prevData.length === 0) {
-        console.log(
-          "[LEADERBOARD] No existing scoreboard data, skipping update"
-        );
+        ("[LEADERBOARD] No existing scoreboard data, skipping update");
         return prevData;
       }
 
@@ -1417,9 +1396,7 @@ export default function EventPage() {
             ? Number(team.first_blood_count) + 1
             : Number(team.first_blood_count);
 
-          console.log(
-            `[LEADERBOARD] Updating team ${team.team_name} with new points: ${newPoints}, total: ${updatedPoints}`
-          );
+          `[LEADERBOARD] Updating team ${team.team_name} with new points: ${newPoints}, total: ${updatedPoints}`;
 
           return {
             ...team,
@@ -1445,9 +1422,7 @@ export default function EventPage() {
 
   // Create a more robust freeze state update function
   const updateFreezeState = (newState, source) => {
-    console.log(
-      `[FREEZE] Received freeze state update: ${newState} from ${source}`
-    );
+    `[FREEZE] Received freeze state update: ${newState} from ${source}`;
 
     // Track API responses separately
     if (source === "api-check" || source === "websocket-event") {
@@ -1465,14 +1440,14 @@ export default function EventPage() {
   const eventScoreBoard = async () => {
     // Prevent multiple simultaneous calls
     if (window._isLoadingScoreboard) {
-      console.log("[LEADERBOARD] Already fetching scoreboard, skipping");
+      ("[LEADERBOARD] Already fetching scoreboard, skipping");
       return null;
     }
 
     window._isLoadingScoreboard = true;
 
     try {
-      console.log(`[LEADERBOARD] Fetching scoreboard for event ${id}`);
+      `[LEADERBOARD] Fetching scoreboard for event ${id}`;
       const api = process.env.NEXT_PUBLIC_API_URL;
       const res = await axios.get(`${api}/${id}/scoreboard`, {
         headers: {
@@ -1490,9 +1465,7 @@ export default function EventPage() {
         setIsLeaderboardFrozen(res.data.frozen);
         setIsFreezeNotificationReady(true);
 
-        console.log(
-          `[LEADERBOARD] Scoreboard API reports frozen status: ${res.data.frozen}`
-        );
+        `[LEADERBOARD] Scoreboard API reports frozen status: ${res.data.frozen}`;
       }
 
       // Process scoreboard data
@@ -1511,9 +1484,7 @@ export default function EventPage() {
           // Check if team counts differ
           if (previousData.length !== res.data.data.length) {
             hasSignificantChanges = true;
-            console.log(
-              "[LEADERBOARD] Team count changed, full refresh needed"
-            );
+            ("[LEADERBOARD] Team count changed, full refresh needed");
           } else {
             // Check a sample of teams for data consistency
             for (let i = 0; i < Math.min(previousData.length, 5); i++) {
@@ -1530,9 +1501,7 @@ export default function EventPage() {
               // Check if points are more than 10% different
               const pointDiff = Math.abs(oldTeam.points - newTeam.points);
               if (pointDiff > Math.max(oldTeam.points, newTeam.points) * 0.1) {
-                console.log(
-                  `[LEADERBOARD] Significant point difference for team ${oldTeam.team_name}: ${oldTeam.points} vs ${newTeam.points}`
-                );
+                `[LEADERBOARD] Significant point difference for team ${oldTeam.team_name}: ${oldTeam.points} vs ${newTeam.points}`;
                 hasSignificantChanges = true;
                 break;
               }
@@ -1542,13 +1511,11 @@ export default function EventPage() {
 
         // If we detected significant changes or this is initial load, use the backend data directly
         if (hasSignificantChanges || previousData.length === 0) {
-          console.log("[LEADERBOARD] Using fresh data from backend");
+          ("[LEADERBOARD] Using fresh data from backend");
           setScoreboardData(res.data.data);
         } else {
           // For smaller updates, ensure we don't lose real-time updates by merging data
-          console.log(
-            "[LEADERBOARD] Merging backend data with real-time updates"
-          );
+          ("[LEADERBOARD] Merging backend data with real-time updates");
           setScoreboardData((prevData) => {
             const mergedData = res.data.data.map((newTeam) => {
               const existingTeam = prevData.find(
@@ -1618,16 +1585,11 @@ export default function EventPage() {
   useEffect(() => {
     if (!id || !isEventScoreBoard) return;
 
-    console.log(
-      `[FLAG-EVENTS] Setting up robust flag submission listener for event ${id}`
-    );
+    `[FLAG-EVENTS] Setting up robust flag submission listener for event ${id}`;
 
     // Set up a dedicated listener for flag submissions with data validation
     const cleanup = listenForFlagSubmissions(id, (data) => {
-      console.log(
-        `[FLAG-EVENTS] Received flag submission for leaderboard:`,
-        data
-      );
+      `[FLAG-EVENTS] Received flag submission for leaderboard:`, data;
 
       // First apply the update locally
       if (data.teamUuid || data.team_uuid) {
@@ -1643,9 +1605,7 @@ export default function EventPage() {
         // This ensures our local state eventually converges with backend state
         setTimeout(() => {
           if (activeTab === "leaderboard" && !isLeaderboardFrozen) {
-            console.log(
-              "[LEADERBOARD] Running post-submission validation check"
-            );
+            ("[LEADERBOARD] Running post-submission validation check");
             eventScoreBoard();
           }
         }, 3000); // 3 seconds after submission
@@ -1660,7 +1620,7 @@ export default function EventPage() {
   // Add a direct broadcast function to handle flag submissions
   const broadcastActivity = async (data) => {
     try {
-      console.log("Broadcasting activity directly:", data);
+      "Broadcasting activity directly:", data;
 
       // Prepare the payload
       const payload = {
@@ -1692,7 +1652,7 @@ export default function EventPage() {
       if (!response.ok) {
         console.error("Failed to broadcast activity:", await response.text());
       } else {
-        console.log("Activity broadcast successful");
+        ("Activity broadcast successful");
       }
 
       // Also update our local state immediately
@@ -1709,7 +1669,7 @@ export default function EventPage() {
     // Check initial freeze state and then fetch scoreboard
     const checkFreezeState = async () => {
       try {
-        console.log(`[FREEZE] Checking freeze state for event ${id}`);
+        `[FREEZE] Checking freeze state for event ${id}`;
         const response = await fetch(`/api/freeze?eventId=${id}`);
         const data = await response.json();
 
@@ -1717,11 +1677,11 @@ export default function EventPage() {
           // Update our freeze API response tracking
           freezeApiResponseRef.current = data.frozen;
           setFreezeApiResponded(true);
-          console.log(`[FREEZE] Initial freeze state from API: ${data.frozen}`);
+          `[FREEZE] Initial freeze state from API: ${data.frozen}`;
 
           // After freeze API responds, always fetch scoreboard to get the definitive state
           // This ensures we don't show UI based on just the freeze API response
-          console.log(`[FREEZE] Fetching scoreboard to verify freeze state`);
+          `[FREEZE] Fetching scoreboard to verify freeze state`;
           await eventScoreBoard();
         }
       } catch (error) {
@@ -1740,12 +1700,10 @@ export default function EventPage() {
         // Update our freeze API response tracking
         freezeApiResponseRef.current = frozen;
         setFreezeApiResponded(true);
-        console.log(`[FREEZE] WebSocket freeze update: ${frozen}`);
+        `[FREEZE] WebSocket freeze update: ${frozen}`;
 
         // After freeze API broadcasts an update, fetch scoreboard to get the definitive state
-        console.log(
-          `[FREEZE] Fetching scoreboard to verify freeze state after broadcast`
-        );
+        `[FREEZE] Fetching scoreboard to verify freeze state after broadcast`;
         eventScoreBoard();
       }
     };
@@ -1762,13 +1720,11 @@ export default function EventPage() {
   // Update the effect that determines final state to prioritize scoreboard API
   useEffect(() => {
     if (scoreboardApiResponded) {
-      console.log(
-        "[FREEZE] Scoreboard API has responded, determining final state"
-      );
+      ("[FREEZE] Scoreboard API has responded, determining final state");
 
       // The scoreboard API is always the source of truth
       const scoreboardApiState = scoreboardApiResponseRef.current;
-      console.log(`[FREEZE] Using scoreboard API state: ${scoreboardApiState}`);
+      `[FREEZE] Using scoreboard API state: ${scoreboardApiState}`;
 
       // Update the state
       setIsLeaderboardFrozen(scoreboardApiState);
@@ -1780,10 +1736,11 @@ export default function EventPage() {
 
   // Add a debug effect to log state changes for notification visibility
   useEffect(() => {
-    console.log("[DEBUG] Freeze notification state:", {
-      isLeaderboardFrozen,
-      isFreezeNotificationReady,
-    });
+    "[DEBUG] Freeze notification state:",
+      {
+        isLeaderboardFrozen,
+        isFreezeNotificationReady,
+      };
   }, [isLeaderboardFrozen, isFreezeNotificationReady]);
 
   // Add a global listener for flag submissions
@@ -1792,7 +1749,7 @@ export default function EventPage() {
     const handleGlobalFlagSubmit = (event) => {
       // Check if this event is relevant to us
       if (event && event.detail && event.detail.eventId === id) {
-        console.log("Caught global flag submission event:", event.detail);
+        "Caught global flag submission event:", event.detail;
         broadcastActivity(event.detail);
       }
     };
@@ -1877,9 +1834,7 @@ export default function EventPage() {
           window._lastActivitiesFetch = Date.now();
         }
 
-        console.log(
-          `[ACTIVITIES] Fetched ${res.data.activities.length} activities from API`
-        );
+        `[ACTIVITIES] Fetched ${res.data.activities.length} activities from API`;
       }
     } catch (error) {
       console.error("Error fetching activities:", error);
@@ -1898,13 +1853,13 @@ export default function EventPage() {
 
       // Set up interval for periodic updates (every 5 seconds) without loading indicator
       const intervalId = setInterval(() => {
-        console.log("[ACTIVITIES] Running 5-second interval fetch");
+        ("[ACTIVITIES] Running 5-second interval fetch");
         fetchActivities(false); // Pass false to avoid showing loading spinner
       }, 5000);
 
       // Clean up interval on unmount or tab change
       return () => {
-        console.log("[ACTIVITIES] Clearing activities fetch interval");
+        ("[ACTIVITIES] Clearing activities fetch interval");
         clearInterval(intervalId);
       };
     }
@@ -1913,17 +1868,18 @@ export default function EventPage() {
   // Update the handleRealTimeActivity function to better handle activities
   const handleRealTimeActivity = (data) => {
     if (!data) {
-      console.log("[ACTIVITIES] Skipping empty activity update");
+      ("[ACTIVITIES] Skipping empty activity update");
       return;
     }
 
     // Check if this event is for our event
     const dataEventId = data.eventId || data.event_id;
     if (!dataEventId || dataEventId !== id) {
-      console.log("[ACTIVITIES] Skipping activity update - event ID mismatch", {
-        dataEventId,
-        currentEventId: id,
-      });
+      "[ACTIVITIES] Skipping activity update - event ID mismatch",
+        {
+          dataEventId,
+          currentEventId: id,
+        };
       return;
     }
 
@@ -1934,9 +1890,7 @@ export default function EventPage() {
         data.challenge_id || data.challengeId || ""
       }_${data.timestamp || Date.now()}`;
 
-    console.log(
-      `[ACTIVITIES] Processing activity update with ID: ${activityId}`
-    );
+    `[ACTIVITIES] Processing activity update with ID: ${activityId}`;
 
     // Use session storage to track recently processed activities
     if (typeof window !== "undefined") {
@@ -1948,9 +1902,7 @@ export default function EventPage() {
 
         // Check if we've already processed this activity
         if (recentActivities.includes(activityId)) {
-          console.log(
-            `[ACTIVITIES] Skipping duplicate activity with ID: ${activityId}`
-          );
+          `[ACTIVITIES] Skipping duplicate activity with ID: ${activityId}`;
           return;
         }
 
@@ -1991,7 +1943,7 @@ export default function EventPage() {
       activity_id: activityId,
     };
 
-    console.log("[ACTIVITIES] Created new activity object:", newActivity);
+    "[ACTIVITIES] Created new activity object:", newActivity;
 
     // Add the new activity to the beginning of the list
     setActivities((prevActivities) => {
@@ -2013,13 +1965,11 @@ export default function EventPage() {
       );
 
       if (activityExists) {
-        console.log(
-          "[ACTIVITIES] Activity already exists in the list, not adding duplicate"
-        );
+        ("[ACTIVITIES] Activity already exists in the list, not adding duplicate");
         return prevActivities;
       }
 
-      console.log("[ACTIVITIES] Adding new activity to the list");
+      ("[ACTIVITIES] Adding new activity to the list");
       return [newActivity, ...prevActivities];
     });
 
@@ -2027,7 +1977,7 @@ export default function EventPage() {
     if (activeTab === "leaderboard" && isEventScoreBoard) {
       const teamUuid = data.teamUuid || data.team_uuid;
       if (teamUuid) {
-        console.log("[ACTIVITIES] Updating scoreboard based on activity");
+        ("[ACTIVITIES] Updating scoreboard based on activity");
         updateScoreboardWithNewPoints(
           data.username || data.user_name,
           pointValue,
@@ -2044,16 +1994,14 @@ export default function EventPage() {
   useEffect(() => {
     if (!id || !socket) return;
 
-    console.log(
-      `[ACTIVITIES] Setting up real-time listeners for activities in event ${id}`
-    );
+    `[ACTIVITIES] Setting up real-time listeners for activities in event ${id}`;
 
     // Function to handle new activity updates
     const handleNewActivity = (data) => {
       // Skip if not for this event
       if (data.eventId !== id && data.event_id !== id) return;
 
-      console.log(`[ACTIVITIES] Received new activity for event ${id}:`, data);
+      `[ACTIVITIES] Received new activity for event ${id}:`, data;
 
       // Process the activity
       handleRealTimeActivity(data);
@@ -2076,9 +2024,7 @@ export default function EventPage() {
 
     // Clean up on unmount
     return () => {
-      console.log(
-        `[ACTIVITIES] Cleaning up activity listeners for event ${id}`
-      );
+      `[ACTIVITIES] Cleaning up activity listeners for event ${id}`;
 
       if (socket) {
         socket.off("flagSubmitted", handleNewActivity);
@@ -2106,7 +2052,7 @@ export default function EventPage() {
 
   // Add a reset mechanism when event ID changes
   useEffect(() => {
-    console.log(`[FREEZE] Event ID changed to ${id}, resetting state`);
+    `[FREEZE] Event ID changed to ${id}, resetting state`;
 
     // Reset API response tracking
     setFreezeApiResponded(false);
@@ -2380,6 +2326,16 @@ export default function EventPage() {
                           : isEnglish
                           ? "Join Team"
                           : "انضمام"
+                        : isEnglish
+                        ? buttonText === "تم التسجيل "
+                          ? "Already Registered"
+                          : buttonText === "انضمام"
+                          ? "Join Team"
+                          : buttonText
+                        : buttonText === "Already Registered"
+                        ? "تم التسجيل "
+                        : buttonText === "Join Team"
+                        ? "انضمام"
                         : buttonText}
                     </button>
                   </div>

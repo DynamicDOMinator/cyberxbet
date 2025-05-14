@@ -125,17 +125,17 @@ export default function Home() {
 
       // Listen for events that should trigger activity refresh
       socket.on("newSolve", (data) => {
-        console.log("Received new solve event, refreshing activities");
+      
         fetchActivities();
       });
 
       socket.on("firstBlood", (data) => {
-        console.log("Received first blood event, refreshing activities");
+       
         fetchActivities();
       });
 
       socket.on("activityUpdate", (data) => {
-        console.log("Received activity update event, refreshing activities");
+      
         fetchActivities();
       });
 

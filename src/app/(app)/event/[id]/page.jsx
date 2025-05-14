@@ -59,7 +59,7 @@ export default function ChallengePage() {
         const token = Cookies.get("token");
 
         if (!token) {
-          console.log("No token found, skipping user data fetch");
+           ("No token found, skipping user data fetch");
           return;
         }
 
@@ -72,7 +72,7 @@ export default function ChallengePage() {
 
         if (response.data && response.data.user) {
           setUserData(response.data.user);
-          console.log("User data loaded:", response.data.user.user_name);
+           ("User data loaded:", response.data.user.user_name);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -87,13 +87,13 @@ export default function ChallengePage() {
     return () => {
       // Cleanup function - disconnect socket when component unmounts
       if (socket) {
-        console.log("Cleaning up socket connection");
+         ("Cleaning up socket connection");
         // First leave the challenge room
         socket.emit("leaveChallengeRoom", id);
         // If there's event data with event UUID, also leave the team room
         if (challenge?.event_uuid) {
           socket.emit("leaveTeamRoom", challenge.event_uuid);
-          console.log(`Left team room: ${challenge.event_uuid}`);
+           (`Left team room: ${challenge.event_uuid}`);
         }
         // Then disconnect the socket
         disconnectSocket();
@@ -109,24 +109,24 @@ export default function ChallengePage() {
       const socketId =
         userData.user_name ||
         `event_visitor_${Math.random().toString(36).substring(2, 10)}`;
-      console.log(`Creating new socket connection with ID: ${socketId}`);
+       (`Creating new socket connection with ID: ${socketId}`);
       const newSocket = createSocket(socketId);
 
       // Join the challenge room
       newSocket.emit("joinChallengeRoom", id);
-      console.log(`Joined challenge room: ${id}`);
+       (`Joined challenge room: ${id}`);
 
       // Store the socket
       setSocket(newSocket);
 
       // Set up listeners
       newSocket.on("connect", () => {
-        console.log("Socket connected successfully");
+         ("Socket connected successfully");
         setSocketConnected(true);
       });
 
       newSocket.on("disconnect", () => {
-        console.log("Socket disconnected");
+         ("Socket disconnected");
         setSocketConnected(false);
       });
 
@@ -164,7 +164,7 @@ export default function ChallengePage() {
 
     // Event listener for new solves - only updates challenge data, not activities
     const onNewSolve = async (data) => {
-      console.log("New solve event received:", data);
+       ("New solve event received:", data);
 
       // Show toast notification
       if (data.user_name && data.user_name !== userData?.user_name) {
@@ -195,7 +195,7 @@ export default function ChallengePage() {
 
     // Event listener for first blood - only updates challenge data, not activities
     const onFirstBlood = async (data) => {
-      console.log("First blood event received:", data);
+       ("First blood event received:", data);
 
       // Show toast notification
       if (data.user_name && data.user_name !== userData?.user_name) {
@@ -238,7 +238,7 @@ export default function ChallengePage() {
 
     // Event listener for team updates
     const onTeamUpdate = (data) => {
-      console.log("Team update received:", data);
+       ("Team update received:", data);
 
       // If we have the team data and it matches our team
       if (
@@ -270,7 +270,7 @@ export default function ChallengePage() {
 
     // Event listener for when activities data should be refreshed
     const onRefreshActivities = () => {
-      console.log("Received signal to refresh activities data");
+       ("Received signal to refresh activities data");
 
       // Only fetch if the user is currently on the activities tab
       if (activities) {
@@ -307,7 +307,7 @@ export default function ChallengePage() {
 
       if (response.data.status === "success" && response.data.data?.members) {
         setActivitiesData(response.data.data.members);
-        console.log("Activities data refreshed via direct API call");
+         ("Activities data refreshed via direct API call");
 
         // Set empty state flag if needed
         if (response.data.data.members.length === 0) {
@@ -674,7 +674,7 @@ export default function ChallengePage() {
               }
 
               // REMOVED: No longer broadcasting flag submission with data
-              console.log(
+               (
                 "[FLAG-SUBMIT] Signaling flag submission event:",
                 earnedPoints
               );
@@ -686,7 +686,7 @@ export default function ChallengePage() {
                   challengeId: id,
                   timestamp: Date.now(),
                 });
-                console.log(
+                 (
                   "Sent signal to all users to refresh activities data"
                 );
               }
@@ -797,12 +797,12 @@ export default function ChallengePage() {
     if (socket && challenge?.event_uuid) {
       // Join the team room for this event
       socket.emit("joinTeamRoom", challenge.event_uuid);
-      console.log(`Joined team room: ${challenge.event_uuid}`);
+       (`Joined team room: ${challenge.event_uuid}`);
 
       // Clean up when component unmounts or challenge changes
       return () => {
         socket.emit("leaveTeamRoom", challenge.event_uuid);
-        console.log(`Left team room: ${challenge.event_uuid}`);
+         (`Left team room: ${challenge.event_uuid}`);
       };
     }
   }, [socket, challenge?.event_uuid]);
@@ -820,7 +820,7 @@ export default function ChallengePage() {
       if (result.success && Array.isArray(result.data)) {
         // Data is already normalized with consistent field names in our API route
         setActivitiesData(result.data);
-        console.log(
+         (
           `[ACTIVITIES] Loaded ${result.data.length} activities with consistent point values`
         );
       }
@@ -846,7 +846,7 @@ export default function ChallengePage() {
 
     try {
       // Create SSE connection
-      console.log(
+       (
         `[SSE] Setting up connection for event ${challenge.event_uuid}`
       );
       eventSource = new EventSource(
@@ -854,7 +854,7 @@ export default function ChallengePage() {
       );
 
       eventSource.onopen = () => {
-        console.log(
+         (
           `[SSE] Connection established for event ${challenge.event_uuid}`
         );
       };
@@ -865,7 +865,7 @@ export default function ChallengePage() {
 
           // Skip connection establishment messages
           if (data.type === "connection_established") {
-            console.log(
+             (
               `[SSE] Connection confirmed: ${data.clientCount} clients connected`
             );
             return;
@@ -873,7 +873,7 @@ export default function ChallengePage() {
 
           // Just log the activity message but don't update state directly
           // We'll use our direct API call for that
-          console.log(`[SSE] Received activity:`, data);
+           (`[SSE] Received activity:`, data);
 
           // If we're on the activities tab, refresh activities data via API
           if (activities) {
@@ -911,7 +911,7 @@ export default function ChallengePage() {
     // Clean up the SSE connection when the component unmounts
     return () => {
       if (eventSource) {
-        console.log(
+         (
           `[SSE] Closing connection for event ${challenge.event_uuid}`
         );
         eventSource.close();

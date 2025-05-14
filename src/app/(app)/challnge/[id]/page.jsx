@@ -184,9 +184,7 @@ export default function ChallengePage() {
           success = true;
         } catch (error) {
           retryCount++;
-          console.log(
-            `Challenge leaderboard API call failed (attempt ${retryCount}/${maxRetries})`
-          );
+       
 
           // Only retry on server errors (500s) or timeouts
           if (
@@ -267,7 +265,7 @@ export default function ChallengePage() {
         const token = Cookies.get("token");
 
         if (!token) {
-          console.log("No token found, skipping user data fetch");
+      
           return;
         }
 
@@ -280,7 +278,7 @@ export default function ChallengePage() {
 
         if (response.data && response.data.user) {
           setUserData(response.data.user);
-          console.log("User data loaded:", response.data.user.user_name);
+      
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -295,7 +293,7 @@ export default function ChallengePage() {
     return () => {
       // Cleanup function - disconnect socket when component unmounts
       if (socket) {
-        console.log("Cleaning up socket connection");
+     
         // First leave the challenge room
         socket.emit("leaveChallengeRoom", id);
         // Then disconnect the socket
@@ -312,24 +310,24 @@ export default function ChallengePage() {
       const socketId =
         userData?.user_name ||
         `challenge_visitor_${Math.random().toString(36).substring(2, 10)}`;
-      console.log(`Creating new socket connection with ID: ${socketId}`);
+   
       const newSocket = createSocket(socketId);
 
       // Join the challenge room
       newSocket.emit("joinChallengeRoom", id);
-      console.log(`Joined challenge room: ${id}`);
+   
 
       // Store the socket
       setSocket(newSocket);
 
       // Set up listeners
       newSocket.on("connect", () => {
-        console.log("Socket connected successfully");
+      
         setSocketConnected(true);
       });
 
       newSocket.on("disconnect", () => {
-        console.log("Socket disconnected");
+    
         setSocketConnected(false);
       });
 
@@ -345,7 +343,7 @@ export default function ChallengePage() {
       const heartbeatInterval = setInterval(() => {
         if (newSocket.connected) {
           newSocket.emit("heartbeat");
-          console.log("Heartbeat sent");
+        
           setSocketConnected(true);
         } else {
           setSocketConnected(false);
@@ -368,7 +366,7 @@ export default function ChallengePage() {
 
     // Event listener for new solves
     const onNewSolve = (data) => {
-      console.log("New solve event received:", data);
+    
       // Log event for debugging
       setSocketEvents((prev) => [
         { type: "newSolve", data, time: new Date().toLocaleTimeString() },
@@ -385,7 +383,7 @@ export default function ChallengePage() {
 
     // Event listener for first blood
     const onFirstBlood = (data) => {
-      console.log("First blood event received:", data);
+     
       // Log event for debugging
       setSocketEvents((prev) => [
         { type: "firstBlood", data, time: new Date().toLocaleTimeString() },
@@ -488,7 +486,7 @@ export default function ChallengePage() {
         }
       );
 
-      console.log("Flag submission response:", response.data);
+   
 
       if (response.data.status === "error") {
         setError(response.data.message);
@@ -526,10 +524,7 @@ export default function ChallengePage() {
           // Notify others via socket for first blood
           if (socket) {
             try {
-              console.log("Emitting first blood event:", {
-                challenge_id: id,
-                user_name: userData?.user_name || "anonymous",
-              });
+            
 
               socket.emit("flagFirstBlood", {
                 challenge_id: id,
@@ -541,7 +536,7 @@ export default function ChallengePage() {
                 points: response.data.data.first_blood_points || 0,
               });
 
-              console.log("First blood event emitted successfully");
+            
             } catch (socketError) {
               console.error("Socket first blood error:", socketError);
               // Continue even if socket emission fails
@@ -556,10 +551,7 @@ export default function ChallengePage() {
           // Notify others via socket for regular flag submission
           if (socket) {
             try {
-              console.log("Emitting flag submitted event:", {
-                challenge_id: id,
-                user_name: userData?.user_name || "anonymous",
-              });
+          
 
               socket.emit("flagSubmitted", {
                 challenge_id: id,
@@ -571,7 +563,7 @@ export default function ChallengePage() {
                 points: response.data.data.points || 0,
               });
 
-              console.log("Flag submitted event emitted successfully");
+             
             } catch (socketError) {
               console.error("Socket flag submitted error:", socketError);
               // Continue even if socket emission fails

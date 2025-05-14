@@ -15,7 +15,6 @@ const ChallengesPage = () => {
 
   const [challenges, setChallenges] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [categoryData, setCategoryData] = useState(null);
   const [sectionData, setSectionData] = useState(null);
   const { id } = useParams();
 
@@ -78,10 +77,6 @@ const ChallengesPage = () => {
         if (response.data.status === "success") {
           setChallenges(response.data.data);
           setSectionData(response.data);
-
-          if (response.data.data.length > 0) {
-            setCategoryData(response.data.data[0].category);
-          }
         }
       } catch (error) {
         console.error("Error fetching challenges:", error);
@@ -147,7 +142,11 @@ const ChallengesPage = () => {
             <div>
               <Image
                 src={sectionData?.lab_category?.image}
-                alt={categoryData.name}
+                alt={
+                  isEnglish
+                    ? sectionData?.lab_category?.title
+                    : sectionData?.lab_category?.ar_title
+                }
                 width={100}
                 height={100}
               />
@@ -158,7 +157,11 @@ const ChallengesPage = () => {
                   isEnglish ? "items-start" : "items-end"
                 }`}
               >
-                <div className="text-xl font-bold">{categoryData?.name}</div>
+                <div className="text-xl font-bold">
+                  {isEnglish
+                    ? sectionData?.lab_category?.title
+                    : sectionData?.lab_category?.ar_title}
+                </div>
                 <p dir={isEnglish ? "ltr" : "rtl"} className="">
                   {isEnglish
                     ? `${challenges.length} Challenges`
@@ -166,7 +169,11 @@ const ChallengesPage = () => {
                 </p>
               </div>
               <div className="pt-4">
-                <p>{challenges[0]?.description}</p>
+                <p>
+                  {isEnglish
+                    ? sectionData?.lab_category?.description
+                    : sectionData?.lab_category?.ar_description}
+                </p>
               </div>
             </div>
           </div>
@@ -238,7 +245,7 @@ const ChallengesPage = () => {
       <div>
         <p
           dir={isEnglish ? "ltr" : "rtl"}
-          className="text-white text-2xl font-bold pt-10"
+          className="text-white text-2xl font-bold py-10"
         >
           {" "}
           {isEnglish ? "Challenges" : "التحديات"}

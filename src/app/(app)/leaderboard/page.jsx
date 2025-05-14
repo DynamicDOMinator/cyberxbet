@@ -43,7 +43,7 @@ export default function Leaderboard() {
           success = true;
         } catch (error) {
           retryCount++;
-          console.log(
+            (
             `Leader-board API call failed (attempt ${retryCount}/${maxRetries})`
           );
 
@@ -109,18 +109,18 @@ export default function Leaderboard() {
 
       // Listen for events that should trigger leaderboard refresh
       socket.on("leaderboardUpdate", () => {
-        console.log("Received leaderboard update event, refreshing data");
+          ("Received leaderboard update event, refreshing data");
         fetchLeaderboard();
       });
 
       // These events from challenge page might also affect leaderboard
       socket.on("newSolve", () => {
-        console.log("Received new solve event, refreshing leaderboard");
+          ("Received new solve event, refreshing leaderboard");
         fetchLeaderboard();
       });
 
       socket.on("firstBlood", () => {
-        console.log("Received first blood event, refreshing leaderboard");
+          ("Received first blood event, refreshing leaderboard");
         fetchLeaderboard();
       });
 

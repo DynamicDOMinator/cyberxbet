@@ -52,10 +52,10 @@ export default function Events() {
   // Function to explicitly check freeze state from the API
   const checkEventFreezeState = async (eventId) => {
     try {
-      console.log(`Checking freeze state for event ${eventId}`);
+        (`Checking freeze state for event ${eventId}`);
       const response = await axios.get(`/api/freeze?eventId=${eventId}`);
       const frozen = response.data.frozen;
-      console.log(`Event ${eventId} freeze state from API: ${frozen}`);
+        (`Event ${eventId} freeze state from API: ${frozen}`);
 
       if (frozen) {
         // Show toast notification for freeze
@@ -77,10 +77,10 @@ export default function Events() {
   // Check global system freeze state
   const checkGlobalFreezeState = async () => {
     try {
-      console.log("Checking global freeze state");
+        ("Checking global freeze state");
       const response = await axios.get("/api/freeze");
       const frozen = response.data.frozen;
-      console.log(`Global freeze state from API: ${frozen}`);
+        (`Global freeze state from API: ${frozen}`);
 
       if (frozen) {
         // Show toast notification for freeze
@@ -101,7 +101,7 @@ export default function Events() {
 
   // Function to handle system freeze events from socket
   const handleSystemFreezeEvent = (data) => {
-    console.log("Received system_freeze event:", data);
+      ("Received system_freeze event:", data);
 
     if (data.eventId && mainEvent && data.eventId === mainEvent.uuid) {
       // Event-specific freeze
@@ -118,14 +118,14 @@ export default function Events() {
 
   // Initialize socket and set up listeners
   useEffect(() => {
-    console.log("Initializing socket connection");
+      ("Initializing socket connection");
     const userName = Cookies.get("username");
     const socket = createSocket(userName);
     socketRef.current = socket;
 
     // Listen for system_freeze events
     if (socket) {
-      console.log("Setting up system_freeze event listener");
+        ("Setting up system_freeze event listener");
 
       socket.on("system_freeze", handleSystemFreezeEvent);
 
@@ -139,7 +139,7 @@ export default function Events() {
     // Setup window event listener for custom events (for the virtual socket implementation)
     const handleFreezeUpdate = (event) => {
       const { detail } = event;
-      console.log("Received system_freeze_update event:", detail);
+        ("Received system_freeze_update event:", detail);
 
       if (detail.isGlobal) {
         setIsFrozen(detail.frozen);
@@ -179,14 +179,14 @@ export default function Events() {
   // Effect to check event-specific freeze state when mainEvent changes
   useEffect(() => {
     if (mainEvent?.uuid) {
-      console.log(`Main event loaded: ${mainEvent.uuid}`);
+        (`Main event loaded: ${mainEvent.uuid}`);
 
       // Check event-specific freeze state
       checkEventFreezeState(mainEvent.uuid);
 
       // Join the team room for real-time updates
       if (socketRef.current) {
-        console.log(`Joining team room for event: ${mainEvent.uuid}`);
+          (`Joining team room for event: ${mainEvent.uuid}`);
         socketRef.current.emit("joinTeamRoom", mainEvent.uuid);
       }
     }
@@ -194,7 +194,7 @@ export default function Events() {
     return () => {
       // Leave the team room when component unmounts or mainEvent changes
       if (mainEvent?.uuid && socketRef.current) {
-        console.log(`Leaving team room for event: ${mainEvent.uuid}`);
+          (`Leaving team room for event: ${mainEvent.uuid}`);
         socketRef.current.emit("leaveTeamRoom", mainEvent.uuid);
       }
     };
