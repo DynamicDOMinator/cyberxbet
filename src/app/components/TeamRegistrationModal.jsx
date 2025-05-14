@@ -293,7 +293,7 @@ export default function TeamRegistrationModal({
               <div className="hidden md:block absolute left-1/2 top-1/2 -translate-y-1/2 w-[1px] h-4/5 bg-[#38FFE5]"></div>
 
               {/* Join Team Option */}
-              <div className="flex flex-col items-center gap-4 p-4 hover:bg-white/5 transition-colors rounded-lg">
+              <div className="flex flex-col items-center gap-4 p-4 hover:bg-white/5 transition-colors rounded-2xl">
                 <div className="text-[#FFB800]">
                   <Image
                     src="/join.png"
@@ -317,7 +317,7 @@ export default function TeamRegistrationModal({
               <div className="block md:hidden h-[1px] w-4/5 mx-auto bg-[#38FFE5]"></div>
 
               {/* Create Team Option */}
-              <div className="flex flex-col items-center gap-4 p-4 hover:bg-white/5 transition-colors rounded-lg">
+              <div className="flex flex-col items-center gap-4 p-4 hover:bg-white/5 transition-colors rounded-2xl">
                 <div className="text-[#38FFE5]">
                   <Image
                     src="/creat.png"
@@ -333,7 +333,7 @@ export default function TeamRegistrationModal({
                 </p>
                 <button
                   onClick={() => setCurrentStep("join")}
-                  className="bg-[#38FFE5] cursor-pointer text-[#06373F] hover:bg-[#38FFE5]/90 font-bold px-6 py-2 rounded-md transition-colors w-full"
+                  className="bg-[#38FFE5] cursor-pointer text-[#06373F] hover:bg-[#38FFE5]/90 font-bold px-6 py-2 rounded-2xl transition-colors w-full"
                 >
                   {isEnglish ? "Join Team" : "الإنضمام إلي فريق"}
                 </button>
@@ -351,7 +351,7 @@ export default function TeamRegistrationModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#131619] rounded-lg p-6 w-full max-w-xl"
+        className="bg-[#131619] rounded-2xl p-6 w-full max-w-xl"
       >
         <div dir={isEnglish ? "ltr" : "rtl"}>{renderStep()}</div>
       </div>

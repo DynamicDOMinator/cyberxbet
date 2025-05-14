@@ -761,7 +761,7 @@ export default function ChallengePage() {
                 alt="profile"
                 width={32}
                 height={32}
-                className={user.profile_image ? "rounded-full w-10 h-10" : "" }
+                className={user.profile_image ? "rounded-full w-10 h-10" : ""}
               />
               <p
                 onClick={() => router.push(`/profile/${user.user_name}`)}
@@ -840,7 +840,7 @@ export default function ChallengePage() {
                         alt="First Blood"
                         width={32}
                         height={32}
-                       className="w-7 h-9"
+                        className="w-7 h-9"
                       />
                     </div>
                     <div>
@@ -877,7 +877,7 @@ export default function ChallengePage() {
                         alt="Challenge Bytes"
                         width={32}
                         height={32}
-                       className="w-9 h-9"
+                        className="w-9 h-9"
                       />
                     </div>
                     <div>
@@ -973,7 +973,7 @@ export default function ChallengePage() {
                       alt="Challenge Bytes"
                       width={32}
                       height={32}
-                  className="w-9 h-9"
+                      className="w-9 h-9"
                     />
                   </div>
                   <div>
@@ -1462,12 +1462,11 @@ export default function ChallengePage() {
                 onClick={() => setIsFirstBlood(false)}
                 className="blood-bg relative flex items-center w-[600px] h-[600px] justify-center overflow-hidden"
               >
-             
                 <div className="flex items-center justify-center bg-[#131619] min-w-[300px] md:min-w-[600px] relative z-10 min-h-[300px] rounded-lg p-4">
                   <div>
                     <div className="flex items-center justify-center gap-4 pb-16">
                       <h3 className="text-white text-xl md:text-2xl font-semibold">
-                        {isEnglish ? "First bytes" :"البايتس الأول "}
+                        {isEnglish ? "First bytes" : "البايتس الأول "}
                       </h3>
                       <Image
                         src="/blood.png"

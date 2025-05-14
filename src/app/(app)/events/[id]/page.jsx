@@ -769,18 +769,30 @@ export default function EventPage() {
 
     const calculateTimeRemaining = () => {
       const startTime = new Date(eventStartDate).getTime();
+      // Add 10 seconds (10000 milliseconds) to the API time
+      const adjustedStartTime = startTime + 10000;
       const now = getCurrentDateInUserTimezone().getTime();
-      const difference = startTime - now;
+      const difference = adjustedStartTime - now;
 
       if (difference <= 0) {
         setIsEventStarted(false);
-        // Remove the forced reload that causes infinite loop
-        // window.location.reload();
 
-        // Instead, update state properly to reflect event has started
-        setIsEventStarted(false);
-        getChallenges();
-        checkEventStatus();
+        // Use a ref to prevent multiple API calls
+        if (!window.hasRequestedChallenges) {
+          window.hasRequestedChallenges = true;
+          console.log("[TIMER] Event timer ended, fetching challenges once");
+
+          // Fetch challenges, event status, and scoreboard in one go
+          Promise.all([getChallenges(), checkEventStatus(), eventScoreBoard()])
+            .then(() => {
+              console.log(
+                "[TIMER] Successfully fetched all event data after timer ended"
+              );
+            })
+            .catch((error) => {
+              console.error("[TIMER] Error fetching event data:", error);
+            });
+        }
 
         return;
       }
@@ -799,7 +811,11 @@ export default function EventPage() {
 
     const interval = setInterval(calculateTimeRemaining, 1000);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      // Reset the flag when component unmounts or eventStartDate changes
+      window.hasRequestedChallenges = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventStartDate, getCurrentDateInUserTimezone]); // Add getCurrentDateInUserTimezone to dependencies
 
@@ -1839,9 +1855,12 @@ export default function EventPage() {
   // Add these functions before the return statement
 
   // Update the fetchActivities function to support real-time updates
-  const fetchActivities = async () => {
+  const fetchActivities = async (showLoading = true) => {
     try {
-      setIsActivitiesLoading(true);
+      if (showLoading) {
+        setIsActivitiesLoading(true);
+      }
+
       const api = process.env.NEXT_PUBLIC_API_URL;
       const res = await axios.get(`${api}/events/activities/${id}`, {
         headers: {
@@ -1865,9 +1884,31 @@ export default function EventPage() {
     } catch (error) {
       console.error("Error fetching activities:", error);
     } finally {
-      setIsActivitiesLoading(false);
+      if (showLoading) {
+        setIsActivitiesLoading(false);
+      }
     }
   };
+
+  // Add an interval to fetch activities every 5 seconds when on activities tab
+  useEffect(() => {
+    if (activeTab === "activities") {
+      // Initial fetch with loading indicator
+      fetchActivities(true);
+
+      // Set up interval for periodic updates (every 5 seconds) without loading indicator
+      const intervalId = setInterval(() => {
+        console.log("[ACTIVITIES] Running 5-second interval fetch");
+        fetchActivities(false); // Pass false to avoid showing loading spinner
+      }, 5000);
+
+      // Clean up interval on unmount or tab change
+      return () => {
+        console.log("[ACTIVITIES] Clearing activities fetch interval");
+        clearInterval(intervalId);
+      };
+    }
+  }, [activeTab, id]);
 
   // Update the handleRealTimeActivity function to better handle activities
   const handleRealTimeActivity = (data) => {
@@ -2284,8 +2325,11 @@ export default function EventPage() {
                   </span>
                 </p>
               </div>
-              <div className="flex flex-col  sm:flex-row items-center justify-center gap-4 sm:gap-8 md:gap-12 lg:gap-44 lg:pr-10 pt-4 sm:pt-6 md:pt-8 lg:pt-10">
-                <div dir={isEnglish ? "rtl" : "ltr"} className="flex justify-center">
+              <div className="flex flex-col  lg:flex-row items-center justify-center gap-4 sm:gap-8 md:gap-12 lg:gap-44 lg:pr-10 pt-4 sm:pt-6 md:pt-8 lg:pt-10">
+                <div
+                  dir={isEnglish ? "rtl" : "ltr"}
+                  className="flex justify-center"
+                >
                   <p className="text-sm sm:text-base md:text-[18px] flex items-center gap-2">
                     {isEnglish ? "Members" : "أعضاء"}
                     <span>

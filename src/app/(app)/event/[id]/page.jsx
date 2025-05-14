@@ -10,10 +10,6 @@ import { useLanguage } from "@/app/context/LanguageContext";
 import { useUserProfile } from "@/app/context/UserProfileContext";
 import { useRouter } from "next/navigation";
 import { createSocket, disconnectSocket } from "@/lib/socket-client";
-import {
-  broadcastFlagSubmission,
-  listenForFlagSubmissions,
-} from "@/lib/flag-events";
 import { toast, Toaster } from "react-hot-toast";
 import { MdKeyboardArrowLeft } from "react-icons/md";
 import { MdKeyboardArrowRight } from "react-icons/md";
@@ -21,7 +17,6 @@ import Link from "next/link";
 import { HiOutlineUsers } from "react-icons/hi2";
 import TeamRegistrationModal from "@/app/components/TeamRegistrationModal";
 import { IoCopy } from "react-icons/io5";
-import { testFlagSubmission, debugEventListeners } from "@/lib/flag-events";
 import TeamDetailsModal from "@/app/components/TeamDetailsModal";
 import { BiLoaderAlt } from "react-icons/bi";
 
@@ -46,7 +41,6 @@ export default function ChallengePage() {
   const [showEmptyState, setShowEmptyState] = useState(false);
   const [socket, setSocket] = useState(null);
   const [socketConnected, setSocketConnected] = useState(false);
-  const [pendingActivitiesCount, setPendingActivitiesCount] = useState(0);
   const [userData, setUserData] = useState(null);
   const [toast, setToast] = useState(null);
   const [notFound, setNotFound] = useState(false);
@@ -168,16 +162,12 @@ export default function ChallengePage() {
   useEffect(() => {
     if (!socket) return;
 
-    // Event listener for new solves
+    // Event listener for new solves - only updates challenge data, not activities
     const onNewSolve = async (data) => {
       console.log("New solve event received:", data);
 
-      // Show toast notification if user is not on activities tab
-      if (
-        !activities &&
-        data.user_name &&
-        data.user_name !== userData?.user_name
-      ) {
+      // Show toast notification
+      if (data.user_name && data.user_name !== userData?.user_name) {
         setToast({
           type: "solve",
           user: data.user_name,
@@ -189,90 +179,26 @@ export default function ChallengePage() {
         setTimeout(() => setToast(null), 5000);
       }
 
-      // Update the activities data immediately with the new solve
-      if (data.user_name && data.user_name !== userData?.user_name) {
-        // Create a solver entry for the user who just solved
-        const newSolver = {
-          username: data.user_name,
-          user_name: data.user_name,
-          userName: data.user_name,
-          profile_image: data.profile_image || "/icon1.png",
-          is_first_blood: false,
-          solved_at: new Date().toISOString(),
-        };
-
-        // Update activities data to include this submission
-        setActivitiesData((prev) => {
-          // Check if this user is already in the list
-          const userExists =
-            prev &&
-            Array.isArray(prev) &&
-            prev.some(
-              (user) =>
-                (user.username &&
-                  user.username.toLowerCase() ===
-                    data.user_name.toLowerCase()) ||
-                (user.user_name &&
-                  user.user_name.toLowerCase() ===
-                    data.user_name.toLowerCase()) ||
-                (user.userName &&
-                  user.userName.toLowerCase() === data.user_name.toLowerCase())
-            );
-
-          if (userExists) {
-            // Update the existing entry
-            return prev.map((user) => {
-              const userMatches =
-                (user.username &&
-                  user.username.toLowerCase() ===
-                    data.user_name.toLowerCase()) ||
-                (user.user_name &&
-                  user.user_name.toLowerCase() ===
-                    data.user_name.toLowerCase()) ||
-                (user.userName &&
-                  user.userName.toLowerCase() === data.user_name.toLowerCase());
-
-              return userMatches
-                ? {
-                    ...user,
-                    solved_at: new Date().toISOString(),
-                  }
-                : user;
-            });
-          } else {
-            // Add the new solver to the beginning of the array
-            return Array.isArray(prev) ? [newSolver, ...prev] : [newSolver];
-          }
-        });
-      }
-
-      if (activities) {
-        // Reset counter since we're on the activities tab and updating in real-time
-        setPendingActivitiesCount(0);
-      } else {
-        // We're not on the activities tab, increment the counter
-        setPendingActivitiesCount((prev) => prev + 1);
-      }
-
-      // Refresh challenge data to update solve count
+      // Update challenge solve count only
       if (challenge?.solved_count !== undefined) {
         setChallenge((prev) => ({
           ...prev,
           solved_count: (prev.solved_count || 0) + 1,
         }));
       }
+
+      // When someone solves a flag, refresh activities data for all users
+      if (activities) {
+        fetchActivitiesDataFromAPI();
+      }
     };
 
-    // Event listener for first blood
+    // Event listener for first blood - only updates challenge data, not activities
     const onFirstBlood = async (data) => {
       console.log("First blood event received:", data);
 
-      // Show toast notification if user is not on activities tab
-      if (
-        !activities &&
-        data.user_name &&
-        data.user_name !== userData?.user_name
-      ) {
+      // Show toast notification
+      if (data.user_name && data.user_name !== userData?.user_name) {
         setToast({
           type: "firstBlood",
           user: data.user_name,
@@ -304,191 +230,9 @@ export default function ChallengePage() {
         });
       }
 
-      // Update the activities data immediately with the first blood
-      if (data.user_name && data.user_name !== userData?.user_name) {
-        // Create a solver entry for the user who just got first blood
-        const firstBloodSolver = {
-          username: data.user_name,
-          user_name: data.user_name,
-          userName: data.user_name,
-          profile_image: data.profile_image || "/icon1.png",
-          is_first_blood: true,
-          solved_at: new Date().toISOString(),
-        };
-
-        // Update activities data to include this submission
-        setActivitiesData((prev) => {
-          // Check if this user is already in the list
-          const userExists =
-            prev &&
-            Array.isArray(prev) &&
-            prev.some(
-              (user) =>
-                (user.username &&
-                  user.username.toLowerCase() ===
-                    data.user_name.toLowerCase()) ||
-                (user.user_name &&
-                  user.user_name.toLowerCase() ===
-                    data.user_name.toLowerCase()) ||
-                (user.userName &&
-                  user.userName.toLowerCase() === data.user_name.toLowerCase())
-            );
-
-          if (userExists) {
-            // Update the existing entry
-            return prev.map((user) => {
-              const userMatches =
-                (user.username &&
-                  user.username.toLowerCase() ===
-                    data.user_name.toLowerCase()) ||
-                (user.user_name &&
-                  user.user_name.toLowerCase() ===
-                    data.user_name.toLowerCase()) ||
-                (user.userName &&
-                  user.userName.toLowerCase() === data.user_name.toLowerCase());
-
-              return userMatches
-                ? {
-                    ...user,
-                    is_first_blood: true,
-                    solved_at: new Date().toISOString(),
-                  }
-                : user;
-            });
-          } else {
-            // Add the new solver to the beginning of the array
-            return Array.isArray(prev)
-              ? [firstBloodSolver, ...prev]
-              : [firstBloodSolver];
-          }
-        });
-      }
-
+      // When someone gets first blood, refresh activities data for all users
       if (activities) {
-        // Reset counter since we're on the activities tab and updating in real-time
-        setPendingActivitiesCount(0);
-      } else {
-        // We're not on the activities tab, increment the counter
-        setPendingActivitiesCount((prev) => prev + 1);
-      }
-    };
-
-    // Event listener for activity updates
-    const onActivityUpdate = async (data) => {
-      console.log("Activity update received:", data);
-
-      // Only process if we have valid data
-      if (!data || !data.username) return;
-
-      // Don't update if it's our own activity (we already handled it locally)
-      if (data.username === userData?.user_name) return;
-
-      // Create a new activity entry
-      const newActivity = {
-        username: data.username,
-        user_name: data.username,
-        userName: data.username,
-        profile_image: data.profile_image || "/icon1.png",
-        is_first_blood: data.isFirstBlood || false,
-        solved_at: data.solved_at || new Date().toISOString(),
-      };
-
-      // Show toast notification if user is not on activities tab
-      if (!activities) {
-        setToast({
-          type: data.isFirstBlood ? "firstBlood" : "solve",
-          user: data.username,
-          profileImage: data.profile_image || "/icon1.png",
-          timestamp: new Date(),
-        });
-
-        // Auto-dismiss toast after 5 seconds
-        setTimeout(() => setToast(null), 5000);
-
-        // Increment pending activities counter
-        setPendingActivitiesCount((prev) => prev + 1);
-      } else {
-        // We're on the activities tab, update the list immediately
-        setActivitiesData((prev) => {
-          // Check if this user is already in the list
-          const userExists =
-            prev &&
-            Array.isArray(prev) &&
-            prev.some(
-              (user) =>
-                (user.username &&
-                  user.username.toLowerCase() ===
-                    data.username.toLowerCase()) ||
-                (user.user_name &&
-                  user.user_name.toLowerCase() ===
-                    data.username.toLowerCase()) ||
-                (user.userName &&
-                  user.userName.toLowerCase() === data.username.toLowerCase())
-            );
-
-          if (userExists) {
-            // Update the existing entry
-            return prev.map((user) => {
-              const userMatches =
-                (user.username &&
-                  user.username.toLowerCase() ===
-                    data.username.toLowerCase()) ||
-                (user.user_name &&
-                  user.user_name.toLowerCase() ===
-                    data.username.toLowerCase()) ||
-                (user.userName &&
-                  user.userName.toLowerCase() === data.username.toLowerCase());
-
-              return userMatches
-                ? {
-                    ...user,
-                    is_first_blood: data.isFirstBlood || user.is_first_blood,
-                    solved_at: data.solved_at || new Date().toISOString(),
-                  }
-                : user;
-            });
-          } else {
-            // Add the new solver to the beginning of the array
-            return Array.isArray(prev) ? [newActivity, ...prev] : [newActivity];
-          }
-        });
-
-        // If this was an empty state before, make sure to update it
-        if (showEmptyState) {
-          setShowEmptyState(false);
-        }
-      }
-
-      // Update challenge solved count
-      if (challenge?.solved_count !== undefined) {
-        setChallenge((prev) => ({
-          ...prev,
-          solved_count: (prev.solved_count || 0) + 1,
-        }));
-      }
-
-      // Update first blood information if applicable
-      if (
-        data.isFirstBlood &&
-        challenge?.flags_data &&
-        challenge.flags_data.length > 0
-      ) {
-        setChallenge((prev) => {
-          const updatedFlags = [...prev.flags_data];
-          if (updatedFlags[0] && !updatedFlags[0].first_blood) {
-            updatedFlags[0] = {
-              ...updatedFlags[0],
-              first_blood: {
-                user_name: data.username,
-                profile_image: data.profile_image || "/icon1.png",
-              },
-            };
-          }
-          return {
-            ...prev,
-            flags_data: updatedFlags,
-          };
-        });
+        fetchActivitiesDataFromAPI();
       }
     };
 
@@ -524,20 +268,59 @@ export default function ChallengePage() {
       }
     };
 
+    // Event listener for when activities data should be refreshed
+    const onRefreshActivities = () => {
+      console.log("Received signal to refresh activities data");
+
+      // Only fetch if the user is currently on the activities tab
+      if (activities) {
+        fetchActivitiesDataFromAPI();
+      }
+    };
+
     // Set up event listeners
     socket.on("newSolve", onNewSolve);
     socket.on("firstBlood", onFirstBlood);
     socket.on("teamUpdate", onTeamUpdate);
-    socket.on("activityUpdate", onActivityUpdate);
+    socket.on("refreshActivitiesSignal", onRefreshActivities);
 
     // Clean up event listeners when component unmounts
     return () => {
       socket.off("newSolve", onNewSolve);
       socket.off("firstBlood", onFirstBlood);
       socket.off("teamUpdate", onTeamUpdate);
-      socket.off("activityUpdate", onActivityUpdate);
+      socket.off("refreshActivitiesSignal", onRefreshActivities);
     };
-  }, [id, socket, activities, teamData, userData, challenge]);
+  }, [id, socket, teamData, userData, challenge, activities]);
+
+  // Function to fetch activities data from API
+  const fetchActivitiesDataFromAPI = async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const token = Cookies.get("token");
+
+      const response = await axios.get(`${apiUrl}/challenges/${id}/team-`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.data.status === "success" && response.data.data?.members) {
+        setActivitiesData(response.data.data.members);
+        console.log("Activities data refreshed via direct API call");
+
+        // Set empty state flag if needed
+        if (response.data.data.members.length === 0) {
+          setShowEmptyState(true);
+        } else {
+          setShowEmptyState(false);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching activities data:", error);
+      setShowEmptyState(true);
+    }
+  };
 
   // Handle parsing API date strings correctly
   const parseApiDate = (dateString) => {
@@ -784,28 +567,10 @@ export default function ChallengePage() {
   // Update for fetching activities when tab becomes active
   useEffect(() => {
     if (activities) {
-      // Reset pending activities counter when switching to Activities tab
-      setPendingActivitiesCount(0);
-
       // Load activities data when the activities tab is active
-      const loadActivitiesData = async () => {
-        try {
-          const data = await fetchActivitiesData(id);
-          if (data && data.length > 0) {
-            setActivitiesData(data);
-            setShowEmptyState(false);
-          } else {
-            setShowEmptyState(true);
-          }
-        } catch (error) {
-          console.error("Error loading activities data:", error);
-          setShowEmptyState(true);
-        }
-      };
-
-      loadActivitiesData();
+      fetchActivitiesDataFromAPI();
     }
-  }, [activities, id, fetchActivitiesData]);
+  }, [activities, id]);
 
   // Fetch team information when challenge data is loaded
   useEffect(() => {
@@ -908,41 +673,23 @@ export default function ChallengePage() {
                 earnedPoints = response.data.data.points || 0;
               }
 
-              // Create payload with complete information and consistent field naming
-              const payload = {
-                eventId: eventId,
-                event_id: eventId,
-                challengeId: id,
-                challenge_id: id,
-                challengeName: challenge?.title || "Challenge",
-                challenge_name: challenge?.title || "Challenge",
-                username: username,
-                user_name: username,
-                teamUuid: teamResponse.data.data.uuid,
-                team_uuid: teamResponse.data.data.uuid,
-                teamName: teamResponse.data.data.name,
-                team_name: teamResponse.data.data.name,
-
-                // CRITICAL: Include both points AND total_bytes to ensure consistency
-                points: earnedPoints,
-                total_bytes: earnedPoints, // This ensures the value is consistent in the broadcast
-
-                isFirstBlood: isFirstBlood,
-                is_first_blood: isFirstBlood,
-                profileImage: userData?.profile_image || "/icon1.png",
-                profile_image: userData?.profile_image || "/icon1.png",
-
-                timestamp: Date.now(),
-                broadcast_id: `${username}_${id}_${Date.now()}`,
-              };
-
+              // REMOVED: No longer broadcasting flag submission with data
               console.log(
-                "[FLAG-SUBMIT] Broadcasting flag event with points:",
+                "[FLAG-SUBMIT] Signaling flag submission event:",
                 earnedPoints
               );
 
-              // Use direct payload with the updated function
-              broadcastFlagSubmission(payload);
+              // Signal to all connected clients to refresh their activities data
+              // This doesn't send the data itself, just tells everyone to make their own API call
+              if (socket && socket.connected) {
+                socket.emit("refreshActivitiesSignal", {
+                  challengeId: id,
+                  timestamp: Date.now(),
+                });
+                console.log(
+                  "Sent signal to all users to refresh activities data"
+                );
+              }
 
               // Now show appropriate notification
               if (isFirstBlood) {
@@ -953,77 +700,9 @@ export default function ChallengePage() {
                 setPoints(earnedPoints); // Use consistent point value
               }
 
-              // Update the activities list to include the current user's submission immediately
+              // Direct API call to fetch and update the activities data for the current user
               if (activities) {
-                // Create a solver entry for the current user
-                const currentUserSolver = {
-                  username: username,
-                  user_name: username,
-                  userName: username,
-                  profile_image: userData?.profile_image || "/icon1.png",
-                  is_first_blood: isFirstBlood,
-                  total_bytes: earnedPoints, // Use consistent point value
-                  points: earnedPoints, // Include both for compatibility
-                  solved_at: new Date().toISOString(),
-                };
-
-                // Update activities data to include this submission
-                setActivitiesData((prev) => {
-                  // Check if this user is already in the list with better comparison
-                  const userExists =
-                    prev &&
-                    Array.isArray(prev) &&
-                    prev.some(
-                      (user) =>
-                        (user.username &&
-                          username &&
-                          user.username.toLowerCase() ===
-                            username.toLowerCase()) ||
-                        (user.user_name &&
-                          username &&
-                          user.user_name.toLowerCase() ===
-                            username.toLowerCase()) ||
-                        (user.userName &&
-                          username &&
-                          user.userName.toLowerCase() ===
-                            username.toLowerCase())
-                    );
-
-                  if (userExists) {
-                    // Update the existing entry
-                    return prev.map((user) => {
-                      const userMatches =
-                        (user.username &&
-                          username &&
-                          user.username.toLowerCase() ===
-                            username.toLowerCase()) ||
-                        (user.user_name &&
-                          username &&
-                          user.user_name.toLowerCase() ===
-                            username.toLowerCase()) ||
-                        (user.userName &&
-                          username &&
-                          user.userName.toLowerCase() ===
-                            username.toLowerCase());
-
-                      return userMatches
-                        ? {
-                            ...user,
-                            is_first_blood: isFirstBlood,
-                            solved_at: new Date().toISOString(),
-                          }
-                        : user;
-                    });
-                  } else {
-                    // Add the new solver to the beginning of the array
-                    return Array.isArray(prev)
-                      ? [currentUserSolver, ...prev]
-                      : [currentUserSolver];
-                  }
-                });
-
-                // Show empty state if needed
-                setShowEmptyState(false);
+                fetchActivitiesDataFromAPI();
               }
 
               // Fetch updated team data after a short delay
@@ -1136,15 +815,6 @@ export default function ChallengePage() {
     try {
       setIsLoading(true);
 
-      // Use our dedicated API route to ensure consistent point values
-      const response = await fetch(
-        `/api/activities?eventId=${challenge.event_uuid}&challengeId=${id}`
-      );
-
-      if (!response.ok) {
-        return null;
-      }
-
       const result = await response.json();
 
       if (result.success && Array.isArray(result.data)) {
@@ -1155,7 +825,7 @@ export default function ChallengePage() {
         );
       }
     } catch (error) {
-      console.error("Error loading activities:", error);
+      return null;
     } finally {
       setIsLoading(false);
     }
@@ -1201,65 +871,14 @@ export default function ChallengePage() {
             return;
           }
 
-          // Skip if not for this challenge
-          if (data.challengeId !== id && data.challenge_id !== id) {
-            return;
-          }
-
+          // Just log the activity message but don't update state directly
+          // We'll use our direct API call for that
           console.log(`[SSE] Received activity:`, data);
 
-          // Use consistent point values (total_bytes as primary source)
-          const points = data.total_bytes || data.points || 0;
-
-          // Add the submission to our local activities state
-          setActivitiesData((prev) => {
-            if (!prev) return [];
-
-            // Check if this submission already exists to avoid duplicates
-            const existingIndex = prev.findIndex(
-              (a) =>
-                (a.username === data.username ||
-                  a.user_name === data.user_name) &&
-                Math.abs(
-                  new Date(a.solved_at || Date.now()) -
-                    new Date(data.timestamp || Date.now())
-                ) < 5000
-            );
-
-            if (existingIndex >= 0) {
-              // Update existing entry with consistent point values
-              const updated = [...prev];
-              updated[existingIndex] = {
-                ...updated[existingIndex],
-                total_bytes: points,
-                points: points,
-                is_first_blood:
-                  data.is_first_blood || data.isFirstBlood || false,
-                timestamp: data.timestamp,
-              };
-              return updated;
-            } else {
-              // Add new entry with normalized fields
-              return [
-                {
-                  username: data.username || data.user_name,
-                  user_name: data.username || data.user_name,
-                  profile_image:
-                    data.profile_image || data.profileImage || "/icon1.png",
-                  is_first_blood:
-                    data.is_first_blood || data.isFirstBlood || false,
-                  isFirstBlood:
-                    data.is_first_blood || data.isFirstBlood || false,
-                  total_bytes: points,
-                  points: points,
-                  solved_at: new Date(
-                    data.timestamp || Date.now()
-                  ).toISOString(),
-                },
-                ...prev,
-              ];
-            }
-          });
+          // If we're on the activities tab, refresh activities data via API
+          if (activities) {
+            fetchActivitiesDataFromAPI();
+          }
 
           // Show toast notification for other users' submissions
           if ((data.username || data.user_name) !== userData?.user_name) {
@@ -1296,96 +915,6 @@ export default function ChallengePage() {
           `[SSE] Closing connection for event ${challenge.event_uuid}`
         );
         eventSource.close();
-      }
-    };
-  }, [challenge, id, activities, userData]);
-
-  // Listen for flag submissions via DOM events
-  useEffect(() => {
-    if (!challenge?.event_uuid) return;
-
-    console.log(
-      `[FLAG-EVENTS] Setting up flag submission listener for event ${challenge.event_uuid}`
-    );
-
-    // Function to handle real-time flag submission events
-    const handleRealTimeFlagSubmission = (data) => {
-      console.log(`[FLAG-EVENTS] Received flag submission:`, data);
-
-      // Skip if not for this challenge
-      if (data.challengeId !== id && data.challenge_id !== id) {
-        console.log(`[FLAG-EVENTS] Skipping - different challenge ID`);
-        return;
-      }
-
-      // Use consistent point values (total_bytes as primary source)
-      const points = data.total_bytes || data.points || 0;
-
-      // Update notification counter if available
-      if (typeof setPendingActivitiesCount === "function") {
-        setPendingActivitiesCount((prev) => prev + 1);
-      }
-
-      // Add the submission to our local activities state
-      if (setActivitiesData && activities) {
-        setActivitiesData((prev) => {
-          if (!prev) return [];
-
-          // Check if this submission already exists to avoid duplicates
-          const existingIndex = prev.findIndex(
-            (a) =>
-              (a.username === data.username ||
-                a.user_name === data.user_name) &&
-              Math.abs(
-                new Date(a.solved_at || Date.now()) -
-                  new Date(data.timestamp || Date.now())
-              ) < 5000
-          );
-
-          if (existingIndex >= 0) {
-            // Update existing entry with consistent point values
-            const updated = [...prev];
-            updated[existingIndex] = {
-              ...updated[existingIndex],
-              total_bytes: points,
-              points: points,
-              is_first_blood: data.is_first_blood || data.isFirstBlood || false,
-              timestamp: data.timestamp,
-            };
-            return updated;
-          } else {
-            // Add new entry with normalized fields
-            return [
-              {
-                username: data.username || data.user_name,
-                user_name: data.username || data.user_name,
-                profile_image:
-                  data.profile_image || data.profileImage || "/icon1.png",
-                is_first_blood:
-                  data.is_first_blood || data.isFirstBlood || false,
-                isFirstBlood: data.is_first_blood || data.isFirstBlood || false,
-                total_bytes: points,
-                points: points,
-                solved_at: new Date(data.timestamp || Date.now()).toISOString(),
-              },
-              ...prev,
-            ];
-          }
-        });
-      }
-    };
-
-    // Use the listenForFlagSubmissions function from flag-events.js
-    const cleanup = listenForFlagSubmissions(
-      challenge.event_uuid,
-      handleRealTimeFlagSubmission
-    );
-
-    // Clean up the event listener when the component unmounts
-    return () => {
-      if (typeof cleanup === "function") {
-        cleanup();
-        console.log(`[FLAG-EVENTS] Cleaned up flag submission listener`);
       }
     };
   }, [challenge, id, activities, userData]);
@@ -1691,11 +1220,11 @@ export default function ChallengePage() {
               </button>
 
               <button
-                onClick={() => {
+                onClick={async () => {
                   setDetails(false);
                   setActivities(true);
                 }}
-                className={`text-lg font-semibold pb-2 cursor-pointer relative ${
+                className={`text-lg font-semibold pb-2 cursor-pointer ${
                   activities ? "border-b-4 border-[#38FFE5]" : ""
                 }`}
               >
