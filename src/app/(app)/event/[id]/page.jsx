@@ -1821,6 +1821,59 @@ export default function ChallengePage() {
             .slide-in-animation {
               animation: slideInFromLeft 0.5s ease-out forwards;
             }
+
+            @keyframes fadeIn {
+              from {
+                opacity: 0;
+              }
+              to {
+                opacity: 1;
+              }
+            }
+
+            @keyframes pulse {
+              0% {
+                transform: scale(1);
+              }
+              50% {
+                transform: scale(1.05);
+              }
+              100% {
+                transform: scale(1);
+              }
+            }
+
+            @keyframes scaleIn {
+              from {
+                transform: scale(0.9);
+                opacity: 0;
+              }
+              to {
+                transform: scale(1);
+                opacity: 1;
+              }
+            }
+
+            .animate-fadeIn {
+              animation: fadeIn 0.3s ease-in forwards;
+            }
+
+            .animate-pulse {
+              animation: pulse 3s infinite ease-in-out;
+            }
+
+            .animate-scaleIn {
+              animation: scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+                forwards;
+            }
+
+            .blood-bg::before {
+              content: "";
+              position: absolute;
+              inset: 0;
+              background: url("/blooda.png") center/cover no-repeat;
+              z-index: 0;
+            }
           `}</style>
         </div>
       )}
