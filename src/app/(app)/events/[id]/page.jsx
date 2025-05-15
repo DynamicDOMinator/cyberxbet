@@ -2173,7 +2173,7 @@ export default function EventPage() {
         }}
       >
         {eventIsActive && (
-          <div className="absolute flex flex-co rounded-xl  items-center justify-center w-full h-full bg-[#040405CC]">
+          <div className="absolute flex flex-co rounded-xl z-[45] items-center justify-center w-full h-full bg-[#040405CC]">
             <div>
               <p className="text-xl sm:text-[33px] font-bold flex items-center gap-4">
                 {isEnglish ? "Running Now" : "تقام حالياً"}
@@ -3202,7 +3202,7 @@ export default function EventPage() {
                     {/* Background laurel wreath image */}
                     <div className="absolute inset-0 z-10 mt-10 flex items-center justify-center">
                       <Image
-                        src="/gold.png"
+                        src="/first1.png"
                         alt="gold laurel wreath"
                         width={160}
                         height={160}
@@ -3373,7 +3373,7 @@ export default function EventPage() {
                     {/* Background laurel wreath image */}
                     <div className="absolute inset-0 z-10 mt-10 flex items-center justify-center">
                       <Image
-                        src="/gold.png"
+                        src="/first1.png"
                         alt="gold laurel wreath"
                         width={160}
                         height={160}
@@ -4039,7 +4039,7 @@ export default function EventPage() {
                               <td className="py-2 lg:py-3 w-[50%]">
                                 <div
                                   dir={isEnglish ? "ltr" : "rtl"}
-                                  className={`flex items-center gap-2 lg:gap-3 ${
+                                  className={`flex items-center gap-1 ${
                                     isEnglish ? "pl-2 lg:pl-3" : "pr-2 lg:pr-3"
                                   }`}
                                 >

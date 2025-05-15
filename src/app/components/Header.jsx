@@ -349,13 +349,13 @@ export default function Header() {
                 <div
                   className={`${
                     !profileImage ? "" : ""
-                  } rounded-full p-1 flex items-center justify-center`}
+                  } rounded-full p-1  flex items-center justify-center`}
                 >
                   <Image
                     src={profileImage || "/icon1.png"}
                     width={30}
                     height={30}
-                    className="rounded-full object-cover"
+                    className="rounded-full w-[30px] h-[30px] object-cover"
                     alt="user profile"
                   />
                 </div>

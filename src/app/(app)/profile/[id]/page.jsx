@@ -1154,7 +1154,7 @@ export default function Profile() {
                                       <div className="flex flex-row-reverse items-center gap-1 w-[120px]">
                                         <span className="text-white text-sm lg:text-base">
                                           {item.is_first_blood
-                                            ? item.first_blood_bytes
+                                            ? item.bytes
                                             : item.bytes}
                                         </span>
 
