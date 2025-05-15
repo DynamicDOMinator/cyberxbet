@@ -296,7 +296,7 @@ export default function Profile() {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
       const token = Cookies.get("token");
-      const response = await axios.get(`${apiUrl}/user-challenges/streak`, {
+      const response = await axios.get(`${apiUrl}/user-challenges/streak/${params.id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
