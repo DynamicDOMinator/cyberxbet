@@ -2347,7 +2347,7 @@ export default function EventPage() {
       </div>
 
       <TeamRegistrationModal
-        isOpen={open}
+        isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         eventTitle={event.title}
         minMembers={event.team_minimum_members}
