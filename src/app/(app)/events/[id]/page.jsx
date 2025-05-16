@@ -971,6 +971,10 @@ export default function EventPage() {
       setEvent(res.data.event);
     } catch (error) {
       console.error("Error fetching event:", error);
+      // If event not found or other error, redirect to not-found page
+      if (error.response?.status === 404 || !error.response) {
+        router.push("/not-found");
+      }
     }
   };
 
