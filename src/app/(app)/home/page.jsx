@@ -604,7 +604,7 @@ export default function Home() {
                                     : `earned bytes from ${activity.challenge_title}`
                                   : activity.is_first_blood
                                   ? `حصل على البايتس الاول في ${activity.challenge_title}`
-                                  : `حصل علي بايتس في ${activity.challenge_title}`}
+                                  : `حصل على بايتس في ${activity.challenge_title}`}
                               </span>
                             </div>
                           </td>

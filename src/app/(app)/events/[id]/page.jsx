@@ -3760,7 +3760,7 @@ export default function EventPage() {
             <h3 className="text-lg  md:text-2xl  text-center mb-4">
               {isEnglish
                 ? "You need register in this event"
-                : "لم تقم بالتسجيل في هذه الفاعلية"}
+                : "لم تقم بالتسجيل في هذه الفاعلىة"}
             </h3>
           </div>
         )}
@@ -4089,8 +4089,8 @@ export default function EventPage() {
                                         ? `got first blood from ${activity.challenge_title}`
                                         : `earned bytes from ${activity.challenge_title}`
                                       : activity.is_first_blood
-                                      ? `حصل علي البايتس الاول في ${activity.challenge_title}`
-                                      : `حصل علي بايتس في ${activity.challenge_title}`}
+                                      ? `حصل على البايتس الاول في ${activity.challenge_title}`
+                                      : `حصل على بايتس في ${activity.challenge_title}`}
                                   </span>
                                 </div>
                               </td>

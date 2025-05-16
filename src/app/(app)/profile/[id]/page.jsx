@@ -951,7 +951,7 @@ export default function Profile() {
                         </div>
                         <div className="flex items-center gap-2">
                           <p className="text-white text-sm">
-                            {isEnglish ? "Average Eye Level" : "متوسط اللاعبون"}
+                            {isEnglish ? "Average Players" : "متوسط اللاعبون"}
                           </p>
                           <div
                             className={`h-5 w-5 border ${
