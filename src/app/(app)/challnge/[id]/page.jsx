@@ -849,6 +849,11 @@ export default function ChallengePage() {
                             alt="First Blood"
                             width={32}
                             height={32}
+                            className={
+                              flag.first_blood?.profile_image
+                                ? "rounded-full w-10 h-10"
+                                : ""
+                            }
                           />
                           <p className="text-white font-semibold">
                             {flag.first_blood?.user_name}
