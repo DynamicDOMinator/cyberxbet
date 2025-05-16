@@ -851,7 +851,7 @@ export default function ChallengePage() {
                             height={32}
                             className={
                               flag.first_blood?.profile_image
-                                ? "rounded-full w-10 h-10"
+                                ? "rounded-full w-[30px] h-[30px]"
                                 : ""
                             }
                           />
