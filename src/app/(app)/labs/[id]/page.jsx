@@ -143,7 +143,7 @@ export default function TrainingChallenges() {
                 dir={isEnglish ? "ltr" : "rtl"}
                 className="text-white text-[18px] pt-3"
               >
-                {truncateText(challenge.description, 120)}
+                {truncateText(challenge.description, 170)}
               </p>
             </div>
 

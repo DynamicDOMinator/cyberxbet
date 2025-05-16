@@ -416,7 +416,7 @@ export default function Home() {
                 dir={isEnglish ? "ltr" : "rtl"}
                 className="text-white text-[18px] pt-3 pb-[32px]"
               >
-                {truncateText(challenge.description, 120)}
+                {truncateText(challenge.description, 170)}
               </p>
             </div>
 
@@ -451,7 +451,7 @@ export default function Home() {
         ))}
       </div>
 
-      <div className="lg:px-16 pt-20 ">
+      <div className="md:px-16 pt-20 ">
         <h2
           className={`text-white text-[18px] pb-8 ${
             isEnglish ? "text-left" : "text-right"
@@ -591,7 +591,7 @@ export default function Home() {
                                 alt="user"
                                 width={24}
                                 height={24}
-                                className="rounded-full lg:w-[32px] lg:h-[32px]"
+                                className="rounded-full w-[30px] h-[30px]"
                               />
                               <span
                                 onClick={() => {
