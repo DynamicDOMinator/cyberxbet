@@ -307,7 +307,7 @@ export default function TeamRegistrationModal({
                 </p>
                 <button
                   onClick={() => setCurrentStep("create")}
-                  className="bg-[#38FFE5] cursor-pointer text-[#06373F] hover:bg-[#38FFE5]/90 font-bold px-6 py-2 rounded-md transition-colors w-full"
+                  className="bg-[#38FFE5] cursor-pointer text-[#06373F] hover:bg-[#38FFE5]/90 font-bold px-6 py-2 rounded-lg transition-colors w-full"
                 >
                   {isEnglish ? "Create your Team" : "إنشاء فريقك"}
                 </button>
@@ -333,7 +333,7 @@ export default function TeamRegistrationModal({
                 </p>
                 <button
                   onClick={() => setCurrentStep("join")}
-                  className="bg-[#38FFE5] cursor-pointer text-[#06373F] hover:bg-[#38FFE5]/90 font-bold px-6 py-2 rounded-2xl transition-colors w-full"
+                  className="bg-[#38FFE5] cursor-pointer text-[#06373F] hover:bg-[#38FFE5]/90 font-bold px-6 py-2 rounded-lg transition-colors w-full"
                 >
                   {isEnglish ? "Join Team" : "الإنضمام إلي فريق"}
                 </button>

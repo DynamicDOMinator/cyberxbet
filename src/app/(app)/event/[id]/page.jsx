@@ -59,7 +59,7 @@ export default function ChallengePage() {
         const token = Cookies.get("token");
 
         if (!token) {
-           ("No token found, skipping user data fetch");
+          ("No token found, skipping user data fetch");
           return;
         }
 
@@ -72,7 +72,7 @@ export default function ChallengePage() {
 
         if (response.data && response.data.user) {
           setUserData(response.data.user);
-           ("User data loaded:", response.data.user.user_name);
+          "User data loaded:", response.data.user.user_name;
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -87,13 +87,13 @@ export default function ChallengePage() {
     return () => {
       // Cleanup function - disconnect socket when component unmounts
       if (socket) {
-         ("Cleaning up socket connection");
+        ("Cleaning up socket connection");
         // First leave the challenge room
         socket.emit("leaveChallengeRoom", id);
         // If there's event data with event UUID, also leave the team room
         if (challenge?.event_uuid) {
           socket.emit("leaveTeamRoom", challenge.event_uuid);
-           (`Left team room: ${challenge.event_uuid}`);
+          `Left team room: ${challenge.event_uuid}`;
         }
         // Then disconnect the socket
         disconnectSocket();
@@ -109,24 +109,24 @@ export default function ChallengePage() {
       const socketId =
         userData.user_name ||
         `event_visitor_${Math.random().toString(36).substring(2, 10)}`;
-       (`Creating new socket connection with ID: ${socketId}`);
+      `Creating new socket connection with ID: ${socketId}`;
       const newSocket = createSocket(socketId);
 
       // Join the challenge room
       newSocket.emit("joinChallengeRoom", id);
-       (`Joined challenge room: ${id}`);
+      `Joined challenge room: ${id}`;
 
       // Store the socket
       setSocket(newSocket);
 
       // Set up listeners
       newSocket.on("connect", () => {
-         ("Socket connected successfully");
+        ("Socket connected successfully");
         setSocketConnected(true);
       });
 
       newSocket.on("disconnect", () => {
-         ("Socket disconnected");
+        ("Socket disconnected");
         setSocketConnected(false);
       });
 
@@ -164,7 +164,7 @@ export default function ChallengePage() {
 
     // Event listener for new solves - only updates challenge data, not activities
     const onNewSolve = async (data) => {
-       ("New solve event received:", data);
+      "New solve event received:", data;
 
       // Show toast notification
       if (data.user_name && data.user_name !== userData?.user_name) {
@@ -195,7 +195,7 @@ export default function ChallengePage() {
 
     // Event listener for first blood - only updates challenge data, not activities
     const onFirstBlood = async (data) => {
-       ("First blood event received:", data);
+      "First blood event received:", data;
 
       // Show toast notification
       if (data.user_name && data.user_name !== userData?.user_name) {
@@ -238,7 +238,7 @@ export default function ChallengePage() {
 
     // Event listener for team updates
     const onTeamUpdate = (data) => {
-       ("Team update received:", data);
+      "Team update received:", data;
 
       // If we have the team data and it matches our team
       if (
@@ -270,7 +270,7 @@ export default function ChallengePage() {
 
     // Event listener for when activities data should be refreshed
     const onRefreshActivities = () => {
-       ("Received signal to refresh activities data");
+      ("Received signal to refresh activities data");
 
       // Only fetch if the user is currently on the activities tab
       if (activities) {
@@ -307,7 +307,7 @@ export default function ChallengePage() {
 
       if (response.data.status === "success" && response.data.data?.members) {
         setActivitiesData(response.data.data.members);
-         ("Activities data refreshed via direct API call");
+        ("Activities data refreshed via direct API call");
 
         // Set empty state flag if needed
         if (response.data.data.members.length === 0) {
@@ -409,6 +409,10 @@ export default function ChallengePage() {
         );
 
         const challengeData = challengeResponse.data.data;
+        // Add event_name from the response if available
+        if (challengeResponse.data.event_name) {
+          challengeData.event_name = challengeResponse.data.event_name;
+        }
         setChallenge(challengeData);
         setNotFound(false);
 
@@ -466,7 +470,15 @@ export default function ChallengePage() {
             Authorization: `Bearer ${token}`,
           },
         });
-        setChallenge(response.data.data);
+
+        const newChallengeData = response.data.data;
+        // Preserve event_name during polling updates
+        if (challenge?.event_name) {
+          newChallengeData.event_name = challenge.event_name;
+        } else if (response.data.event_name) {
+          newChallengeData.event_name = response.data.event_name;
+        }
+        setChallenge(newChallengeData);
       } catch (error) {
         console.error("Error polling challenge data:", error);
       }
@@ -674,10 +686,7 @@ export default function ChallengePage() {
               }
 
               // REMOVED: No longer broadcasting flag submission with data
-               (
-                "[FLAG-SUBMIT] Signaling flag submission event:",
-                earnedPoints
-              );
+              "[FLAG-SUBMIT] Signaling flag submission event:", earnedPoints;
 
               // Signal to all connected clients to refresh their activities data
               // This doesn't send the data itself, just tells everyone to make their own API call
@@ -686,9 +695,7 @@ export default function ChallengePage() {
                   challengeId: id,
                   timestamp: Date.now(),
                 });
-                 (
-                  "Sent signal to all users to refresh activities data"
-                );
+                ("Sent signal to all users to refresh activities data");
               }
 
               // Now show appropriate notification
@@ -797,12 +804,12 @@ export default function ChallengePage() {
     if (socket && challenge?.event_uuid) {
       // Join the team room for this event
       socket.emit("joinTeamRoom", challenge.event_uuid);
-       (`Joined team room: ${challenge.event_uuid}`);
+      `Joined team room: ${challenge.event_uuid}`;
 
       // Clean up when component unmounts or challenge changes
       return () => {
         socket.emit("leaveTeamRoom", challenge.event_uuid);
-         (`Left team room: ${challenge.event_uuid}`);
+        `Left team room: ${challenge.event_uuid}`;
       };
     }
   }, [socket, challenge?.event_uuid]);
@@ -820,9 +827,7 @@ export default function ChallengePage() {
       if (result.success && Array.isArray(result.data)) {
         // Data is already normalized with consistent field names in our API route
         setActivitiesData(result.data);
-         (
-          `[ACTIVITIES] Loaded ${result.data.length} activities with consistent point values`
-        );
+        `[ACTIVITIES] Loaded ${result.data.length} activities with consistent point values`;
       }
     } catch (error) {
       return null;
@@ -846,17 +851,13 @@ export default function ChallengePage() {
 
     try {
       // Create SSE connection
-       (
-        `[SSE] Setting up connection for event ${challenge.event_uuid}`
-      );
+      `[SSE] Setting up connection for event ${challenge.event_uuid}`;
       eventSource = new EventSource(
         `/api/broadcast-activity?eventId=${challenge.event_uuid}`
       );
 
       eventSource.onopen = () => {
-         (
-          `[SSE] Connection established for event ${challenge.event_uuid}`
-        );
+        `[SSE] Connection established for event ${challenge.event_uuid}`;
       };
 
       eventSource.onmessage = (event) => {
@@ -865,15 +866,13 @@ export default function ChallengePage() {
 
           // Skip connection establishment messages
           if (data.type === "connection_established") {
-             (
-              `[SSE] Connection confirmed: ${data.clientCount} clients connected`
-            );
+            `[SSE] Connection confirmed: ${data.clientCount} clients connected`;
             return;
           }
 
           // Just log the activity message but don't update state directly
           // We'll use our direct API call for that
-           (`[SSE] Received activity:`, data);
+          `[SSE] Received activity:`, data;
 
           // If we're on the activities tab, refresh activities data via API
           if (activities) {
@@ -911,9 +910,7 @@ export default function ChallengePage() {
     // Clean up the SSE connection when the component unmounts
     return () => {
       if (eventSource) {
-         (
-          `[SSE] Closing connection for event ${challenge.event_uuid}`
-        );
+        `[SSE] Closing connection for event ${challenge.event_uuid}`;
         eventSource.close();
       }
     };
@@ -925,6 +922,26 @@ export default function ChallengePage() {
         <LoadingPage />
       ) : (
         <div className="max-w-[2000px] pt-36 mx-auto pb-5 relative">
+          {/* Breadcrumb Navigation */}
+          <div
+            dir={isEnglish ? "ltr" : "rtl"}
+            className="flex items-center gap-2 px-10 mb-8 text-xl"
+          >
+            <Link href="/events">{isEnglish ? "Events" : "الفعاليات"}</Link>
+            <span className="text-gray-400 text-xl">›</span>
+            {challenge?.event_uuid && (
+              <>
+                <Link href={`/events/${challenge.event_uuid}`}>
+                  {challenge?.event_name || (isEnglish ? "Event" : "الفعالية")}
+                </Link>
+                <span className="text-gray-400 text-xl">›</span>
+              </>
+            )}
+            <span className="font-medium text-[#38FFE5] text-xl">
+              {challenge?.title}
+            </span>
+          </div>
+
           {/* Socket connection status indicator */}
           <div className="absolute top-4 right-4 flex items-center gap-1 text-xs">
             <div
@@ -967,13 +984,19 @@ export default function ChallengePage() {
                       </p>
                       {flag.first_blood != null ? (
                         <div className="flex mt-2 items-center gap-1">
+                          {" "}
                           <Image
                             src={
                               flag.first_blood?.profile_image || "/icon1.png"
                             }
                             alt="First Blood"
-                            width={32}
-                            height={32}
+                            width={30}
+                            height={30}
+                            className={
+                              flag.first_blood?.profile_image
+                                ? "rounded-full w-[30px] h-[30px]"
+                                : "w-[30px] h-[30px]"
+                            }
                           />
                           <p
                             onClick={() =>
@@ -1062,8 +1085,14 @@ export default function ChallengePage() {
                               ?.profile_image || "/icon1.png"
                           }
                           alt="First Blood"
-                          width={32}
-                          height={32}
+                          width={30}
+                          height={30}
+                          className={
+                            challenge?.flags_data?.[0]?.first_blood
+                              ?.profile_image
+                              ? "rounded-full w-[30px] h-[30px]"
+                              : "w-[30px] h-[30px]"
+                          }
                         />
                         <p
                           onClick={() =>
@@ -1126,7 +1155,6 @@ export default function ChallengePage() {
               </div>
             </div>
           ) : null}
-
           <div
             dir={isEnglish ? "ltr" : "rtl"}
             className="pt-10 pb-5 px-5 bg-[#FFFFFF0D] rounded-2xl mx-10"
@@ -1201,7 +1229,6 @@ export default function ChallengePage() {
               </p>
             </div>
           </div>
-
           <div className="relative">
             <div
               dir={isEnglish ? "ltr" : "rtl"}
@@ -1612,7 +1639,6 @@ export default function ChallengePage() {
               </div>
             )}
           </div>
-
           {/* flag pop up  */}
           {challenge?.flag_type === "multiple_all" && flags && (
             <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -1693,7 +1719,6 @@ export default function ChallengePage() {
               </div>
             </div>
           )}
-
           {/* First blood animation card  */}
           {isFirstBlood && (
             <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-[2px] ">
@@ -1785,7 +1810,6 @@ export default function ChallengePage() {
               </div>
             </div>
           )}
-
           {/* Notification flag  */}
           {notfication && (
             <div className="w-full h-full fixed inset-0 z-50">
@@ -1805,7 +1829,6 @@ export default function ChallengePage() {
               </div>
             </div>
           )}
-
           <style jsx global>{`
             @keyframes slideInFromLeft {
               0% {
