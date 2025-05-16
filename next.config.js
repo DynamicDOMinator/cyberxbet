@@ -8,6 +8,14 @@ const nextConfig = {
       "picsum.photos",
       "i.imgur.com",
     ],
+    remotePatterns: [
+      {
+        protocol: "http",
+        hostname: "213.136.91.209",
+        port: "8000",
+        pathname: "/storage/**",
+      },
+    ],
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {

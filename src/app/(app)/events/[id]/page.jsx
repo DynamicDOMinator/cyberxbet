@@ -2416,7 +2416,11 @@ export default function EventPage() {
               className={`text-lg md:text-xl lg:text-[20px] font-bold pb-2 cursor-pointer ${
                 activeTab === "leaderboard" ? "border-b-2 border-[#38FFE5]" : ""
               }`}
-              onClick={() => setActiveTab("leaderboard")}
+              onClick={() => {
+                setActiveTab("leaderboard");
+                // Refresh leaderboard data when tab is clicked
+                eventScoreBoard();
+              }}
             >
               {isEnglish ? "Leaderboard" : "المتصدرين"}
             </h2>
@@ -3191,12 +3195,11 @@ export default function EventPage() {
             </div>
           )}
 
-          {/* Top 3 Users Display */}
-          <div className="flex flex-col md:flex-row justify-center items-center gap-4 sm:gap-8 md:gap-16 lg:gap-24 mb-10 mt-4">
-            {/* First Place (Middle) */}
-
-            {scoreboardData.length > 0 && (
-              <div className="flex flex-col items-center md:hidden   md:mb-28">
+          {/* Top 3 Users Display - Only show if scoreboardData exists and first team has points */}
+          {scoreboardData.length > 0 && scoreboardData[0].points > 0 && (
+            <div className="flex flex-col md:flex-row justify-center items-center gap-4 sm:gap-8 md:gap-16 lg:gap-24 mb-10 mt-4">
+              {/* First Place (Middle) */}
+              <div className="flex flex-col items-center md:hidden md:mb-28">
                 <div className="relative">
                   <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 relative">
                     {/* Background laurel wreath image */}
@@ -3242,7 +3245,7 @@ export default function EventPage() {
                 </p>
 
                 {/* Three score indicators */}
-                <div className="flex items-center gap-2 mt-2  ">
+                <div className="flex items-center gap-2 mt-2">
                   <div className="flex items-center gap-1">
                     <Image
                       src="/byte.png"
@@ -3278,265 +3281,266 @@ export default function EventPage() {
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* Second Place (Left) */}
-            {scoreboardData.length > 1 && (
-              <div className="flex flex-col items-center md:mt-10">
-                <div className="relative">
-                  <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 relative">
-                    {/* Background laurel wreath image */}
-                    <div className="absolute inset-0 mt-10 z-10 flex items-center justify-center">
-                      <Image
-                        src="/Sliver.png"
-                        alt="orange laurel wreath"
-                        width={144}
-                        height={144}
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
+              {/* Second Place (Left) */}
+              {scoreboardData.length > 1 && scoreboardData[1].points > 0 && (
+                <div className="flex flex-col items-center md:mt-10">
+                  <div className="relative">
+                    <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 relative">
+                      {/* Background laurel wreath image */}
+                      <div className="absolute inset-0 mt-10 z-10 flex items-center justify-center">
+                        <Image
+                          src="/Sliver.png"
+                          alt="orange laurel wreath"
+                          width={144}
+                          height={144}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
 
-                    {/* Profile image */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-[80%] h-[80%] rounded-full overflow-hidden">
-                        {scoreboardData[1].team_icon ? (
-                          <Image
-                            src={scoreboardData[1].team_icon}
-                            alt={scoreboardData[1].team_name}
-                            width={115}
-                            height={115}
-                            className="w-full h-full object-cover"
-                            unoptimized={true}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-[#06373F]">
+                      {/* Profile image */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-[80%] h-[80%] rounded-full overflow-hidden">
+                          {scoreboardData[1].team_icon ? (
                             <Image
-                              src="/icon1.png"
-                              alt="team"
-                              width={40}
-                              height={40}
-                              className="text-[#FFA500] text-2xl"
+                              src={scoreboardData[1].team_icon}
+                              alt={scoreboardData[1].team_name}
+                              width={115}
+                              height={115}
+                              className="w-full h-full object-cover"
+                              unoptimized={true}
                             />
-                          </div>
-                        )}
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-[#06373F]">
+                              <Image
+                                src="/icon1.png"
+                                alt="team"
+                                width={40}
+                                height={40}
+                                className="text-[#FFA500] text-2xl"
+                              />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <p className="mt-2 font-bold text-white">
-                  {scoreboardData[1].team_name}
-                </p>
+                  <p className="mt-2 font-bold text-white">
+                    {scoreboardData[1].team_name}
+                  </p>
 
-                {/* Three score indicators */}
-                <div className="flex items-center gap-2 bg-[#0A1316] rounded-lg p-2 mt-2">
-                  <div className="flex items-center gap-1">
-                    <Image
-                      src="/byte.png"
-                      alt="points"
-                      width={16}
-                      height={16}
-                    />
-                    <span className="text-white text-xs">
-                      {scoreboardData[1].points}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Image
-                      src="/icon-challnge.png"
-                      alt="challenges"
-                      width={16}
-                      height={16}
-                    />
-                    <span className="text-white text-xs">
-                      {scoreboardData[1].challenges_solved}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Image
-                      src="/blood.png"
-                      alt="first blood"
-                      width={16}
-                      height={16}
-                    />
-                    <span className="text-white text-xs">
-                      {scoreboardData[1].first_blood_count}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {scoreboardData.length > 0 && (
-              <div className="md:flex flex-col items-center hidden   md:mb-28">
-                <div className="relative">
-                  <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 relative">
-                    {/* Background laurel wreath image */}
-                    <div className="absolute inset-0 z-10 mt-10 flex items-center justify-center">
+                  {/* Three score indicators */}
+                  <div className="flex items-center gap-2 bg-[#0A1316] rounded-lg p-2 mt-2">
+                    <div className="flex items-center gap-1">
                       <Image
-                        src="/first1.png"
-                        alt="gold laurel wreath"
-                        width={160}
-                        height={160}
-                        className="w-full h-full object-contain"
+                        src="/byte.png"
+                        alt="points"
+                        width={16}
+                        height={16}
                       />
+                      <span className="text-white text-xs">
+                        {scoreboardData[1].points}
+                      </span>
                     </div>
+                    <div className="flex items-center gap-1">
+                      <Image
+                        src="/icon-challnge.png"
+                        alt="challenges"
+                        width={16}
+                        height={16}
+                      />
+                      <span className="text-white text-xs">
+                        {scoreboardData[1].challenges_solved}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Image
+                        src="/blood.png"
+                        alt="first blood"
+                        width={16}
+                        height={16}
+                      />
+                      <span className="text-white text-xs">
+                        {scoreboardData[1].first_blood_count}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-                    {/* Profile image */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-[80%] h-[80%] rounded-full overflow-hidden">
-                        {scoreboardData[0].team_icon ? (
-                          <Image
-                            src={scoreboardData[0].team_icon}
-                            alt={scoreboardData[0].team_name}
-                            width={128}
-                            height={128}
-                            className="w-full h-full object-cover"
-                            unoptimized={true}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-[#06373F]">
+              {/* First Place (Desktop version) */}
+              {scoreboardData.length > 0 && scoreboardData[0].points > 0 && (
+                <div className="md:flex flex-col items-center hidden md:mb-28">
+                  <div className="relative">
+                    <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 relative">
+                      {/* Background laurel wreath image */}
+                      <div className="absolute inset-0 z-10 mt-10 flex items-center justify-center">
+                        <Image
+                          src="/first1.png"
+                          alt="gold laurel wreath"
+                          width={160}
+                          height={160}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+
+                      {/* Profile image */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-[80%] h-[80%] rounded-full overflow-hidden">
+                          {scoreboardData[0].team_icon ? (
                             <Image
-                              src="/icon1.png"
-                              alt="team"
-                              width={40}
-                              height={40}
-                              className="text-[#FFD700] text-3xl"
+                              src={scoreboardData[0].team_icon}
+                              alt={scoreboardData[0].team_name}
+                              width={128}
+                              height={128}
+                              className="w-full h-full object-cover"
+                              unoptimized={true}
                             />
-                          </div>
-                        )}
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-[#06373F]">
+                              <Image
+                                src="/icon1.png"
+                                alt="team"
+                                width={40}
+                                height={40}
+                                className="text-[#FFD700] text-3xl"
+                              />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <p className="mt-2 font-bold text-white text-lg">
-                  {scoreboardData[0].team_name}
-                </p>
+                  <p className="mt-2 font-bold text-white text-lg">
+                    {scoreboardData[0].team_name}
+                  </p>
 
-                {/* Three score indicators */}
-                <div className="flex items-center gap-2 mt-2 bg-[#0A1316] rounded-lg p-2">
-                  <div className="flex items-center gap-1">
-                    <Image
-                      src="/byte.png"
-                      alt="points"
-                      width={16}
-                      height={16}
-                    />
-                    <span className="text-white text-xs">
-                      {scoreboardData[0].points}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Image
-                      src="/icon-challnge.png"
-                      alt="challenges"
-                      width={16}
-                      height={16}
-                    />
-                    <span className="text-white text-xs">
-                      {scoreboardData[0].challenges_solved}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Image
-                      src="/blood.png"
-                      alt="first blood"
-                      width={16}
-                      height={16}
-                    />
-                    <span className="text-white text-xs">
-                      {scoreboardData[0].first_blood_count}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Third Place (Right) */}
-            {scoreboardData.length > 2 && (
-              <div className="flex flex-col items-center md:mt-10">
-                <div className="relative">
-                  <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 relative">
-                    {/* Background laurel wreath image */}
-                    <div className="absolute inset-0 z-10 mt-10 flex items-center justify-center">
+                  {/* Three score indicators */}
+                  <div className="flex items-center gap-2 mt-2 bg-[#0A1316] rounded-lg p-2">
+                    <div className="flex items-center gap-1">
                       <Image
-                        src="/Bronze.png"
-                        alt="silver laurel wreath"
-                        width={144}
-                        height={144}
-                        className="w-full h-full object-contain"
+                        src="/byte.png"
+                        alt="points"
+                        width={16}
+                        height={16}
                       />
+                      <span className="text-white text-xs">
+                        {scoreboardData[0].points}
+                      </span>
                     </div>
+                    <div className="flex items-center gap-1">
+                      <Image
+                        src="/icon-challnge.png"
+                        alt="challenges"
+                        width={16}
+                        height={16}
+                      />
+                      <span className="text-white text-xs">
+                        {scoreboardData[0].challenges_solved}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Image
+                        src="/blood.png"
+                        alt="first blood"
+                        width={16}
+                        height={16}
+                      />
+                      <span className="text-white text-xs">
+                        {scoreboardData[0].first_blood_count}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-                    {/* Profile image */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-[80%] h-[80%] rounded-full overflow-hidden">
-                        {scoreboardData[2].team_icon ? (
-                          <Image
-                            src={scoreboardData[2].team_icon}
-                            alt={scoreboardData[2].team_name}
-                            width={115}
-                            height={115}
-                            className="w-full h-full object-cover"
-                            unoptimized={true}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-[#06373F]">
+              {/* Third Place (Right) */}
+              {scoreboardData.length > 2 && scoreboardData[2].points > 0 && (
+                <div className="flex flex-col items-center md:mt-10">
+                  <div className="relative">
+                    <div className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 relative">
+                      {/* Background laurel wreath image */}
+                      <div className="absolute inset-0 z-10 mt-10 flex items-center justify-center">
+                        <Image
+                          src="/Bronze.png"
+                          alt="silver laurel wreath"
+                          width={144}
+                          height={144}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+
+                      {/* Profile image */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-[80%] h-[80%] rounded-full overflow-hidden">
+                          {scoreboardData[2].team_icon ? (
                             <Image
-                              src="/icon1.png"
-                              alt="team"
-                              width={40}
-                              height={40}
-                              className="text-[#C0C0C0] text-2xl"
+                              src={scoreboardData[2].team_icon}
+                              alt={scoreboardData[2].team_name}
+                              width={115}
+                              height={115}
+                              className="w-full h-full object-cover"
+                              unoptimized={true}
                             />
-                          </div>
-                        )}
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-[#06373F]">
+                              <Image
+                                src="/icon1.png"
+                                alt="team"
+                                width={40}
+                                height={40}
+                                className="text-[#C0C0C0] text-2xl"
+                              />
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <p className="mt-2 font-bold text-white">
-                  {scoreboardData[2].team_name}
-                </p>
+                  <p className="mt-2 font-bold text-white">
+                    {scoreboardData[2].team_name}
+                  </p>
 
-                {/* Three score indicators */}
-                <div className="flex items-center gap-2 mt-2 bg-[#0A1316] rounded-lg p-2">
-                  <div className="flex items-center gap-1">
-                    <Image
-                      src="/byte.png"
-                      alt="points"
-                      width={16}
-                      height={16}
-                    />
-                    <span className="text-white text-xs">
-                      {scoreboardData[2].points}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Image
-                      src="/icon-challnge.png"
-                      alt="challenges"
-                      width={16}
-                      height={16}
-                    />
-                    <span className="text-white text-xs">
-                      {scoreboardData[2].challenges_solved}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Image
-                      src="/blood.png"
-                      alt="first blood"
-                      width={16}
-                      height={16}
-                    />
-                    <span className="text-white text-xs">
-                      {scoreboardData[2].first_blood_count}
-                    </span>
+                  {/* Three score indicators */}
+                  <div className="flex items-center gap-2 mt-2 bg-[#0A1316] rounded-lg p-2">
+                    <div className="flex items-center gap-1">
+                      <Image
+                        src="/byte.png"
+                        alt="points"
+                        width={16}
+                        height={16}
+                      />
+                      <span className="text-white text-xs">
+                        {scoreboardData[2].points}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Image
+                        src="/icon-challnge.png"
+                        alt="challenges"
+                        width={16}
+                        height={16}
+                      />
+                      <span className="text-white text-xs">
+                        {scoreboardData[2].challenges_solved}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Image
+                        src="/blood.png"
+                        alt="first blood"
+                        width={16}
+                        height={16}
+                      />
+                      <span className="text-white text-xs">
+                        {scoreboardData[2].first_blood_count}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Responsive Table Container */}
           <div className="w-full overflow-x-auto bg-[#06373F26] rounded-2xl p-5">
@@ -3586,7 +3590,7 @@ export default function EventPage() {
                     <div className="col-span-2 flex justify-center">
                       <div className="flex gap-4 md:gap-12 items-center">
                         <div className="w-[35px] flex justify-center">
-                          {index < 3 ? (
+                          {team.points > 0 && index < 3 ? (
                             <Image
                               src={
                                 index === 0
@@ -3601,7 +3605,7 @@ export default function EventPage() {
                             />
                           ) : (
                             <span className="text-white text-base md:text-xl font-bold">
-                              {index + 1}
+                              {team.points === 0 ? "-" : index + 1}
                             </span>
                           )}
                         </div>
