@@ -670,7 +670,7 @@ export default function ChallengePage() {
             className="mb-4"
           />
           <p className="text-[#BCC9DB] text-[18px]">
-            {isEnglish ? "No activities yet" : "لاتوجد أنشطة حتي الآن"}
+            {isEnglish ? "No activities yet" : "لاتوجد أنشطة حتى الآن"}
           </p>
         </div>
       );
@@ -862,7 +862,7 @@ export default function ChallengePage() {
                       ) : isEnglish ? (
                         "Not yet"
                       ) : (
-                        "لا يوجد حتي الان"
+                        "لا يوجد حتى الان"
                       )}
                     </div>
                   </div>
@@ -958,7 +958,7 @@ export default function ChallengePage() {
                     ) : isEnglish ? (
                       "Not yet"
                     ) : (
-                      "لا يوجد حتي الان"
+                      "لا يوجد حتى الان"
                     )}
                   </div>
                 </div>
