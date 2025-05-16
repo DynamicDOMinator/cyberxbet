@@ -27,6 +27,13 @@ export default function Home() {
   const [advertisements, setAdvertisements] = useState([]);
   const router = useRouter();
 
+  // Function to truncate text with ellipsis
+  const truncateText = (text, maxLength = 100) => {
+    if (!text) return "";
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + "...";
+  };
+
   // Function to fetch activities data
   const fetchActivities = async () => {
     try {
@@ -125,17 +132,14 @@ export default function Home() {
 
       // Listen for events that should trigger activity refresh
       socket.on("newSolve", (data) => {
-      
         fetchActivities();
       });
 
       socket.on("firstBlood", (data) => {
-       
         fetchActivities();
       });
 
       socket.on("activityUpdate", (data) => {
-      
         fetchActivities();
       });
 
@@ -410,9 +414,9 @@ export default function Home() {
               </div>
               <p
                 dir={isEnglish ? "ltr" : "rtl"}
-                className="text-white  text-[18px]  pt-3 pb-[32px]"
+                className="text-white text-[18px] pt-3 pb-[32px]"
               >
-                {challenge.description}
+                {truncateText(challenge.description, 120)}
               </p>
             </div>
 

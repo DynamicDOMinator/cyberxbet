@@ -12,6 +12,13 @@ export default function TrainingChallenges() {
   const [latestChallenges, setLatestChallenges] = useState([]);
   const params = useParams();
 
+  // Function to truncate text with ellipsis
+  const truncateText = (text, maxLength = 100) => {
+    if (!text) return "";
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + "...";
+  };
+
   useEffect(() => {
     const fetchCategoryData = async () => {
       try {
@@ -134,9 +141,9 @@ export default function TrainingChallenges() {
               </div>
               <p
                 dir={isEnglish ? "ltr" : "rtl"}
-                className="text-white  text-[18px] pt-3"
+                className="text-white text-[18px] pt-3"
               >
-                {challenge.description}
+                {truncateText(challenge.description, 120)}
               </p>
             </div>
 
