@@ -1606,27 +1606,20 @@ export default function ChallengePage() {
                     })}
                   </div>
                 ) : (
-                  <div className="bg-[#FFFFFF0D] rounded-2xl p-4 sm:p-6 mt-4 mx-10">
-                    <div className="flex flex-col items-center justify-center py-8">
+                  (
+                    <div className="flex bg-[#06373F26] mx-10 rounded-2xl mt-10 mb-4 flex-col items-center justify-center py-10">
                       <Image
-                        src="/ranking.png"
-                        height={80}
-                        width={80}
-                        alt="activities"
-                        className="w-16 h-16 sm:w-20 sm:h-20 mb-4"
+                        src="/notfound.png"
+                        alt="No activities"
+                        width={64}
+                        height={64}
+                        className="mb-4"
                       />
-                      <h3 className="text-lg sm:text-xl font-medium text-center">
-                        {isEnglish
-                          ? "No activities to show yet"
-                          : "لا توجد أنشطة لعرضها حتى الآن"}
-                      </h3>
-                      <p className="text-sm text-gray-400 mt-2 text-center max-w-md">
-                        {isEnglish
-                          ? "Team activities will appear here once the event starts"
-                          : "ستظهر أنشطة الفريق هنا بمجرد بدء الفعالية"}
+                      <p className="text-[#BCC9DB] text-[18px]">
+                        {isEnglish ? "No activities yet" : "لاتوجد أنشطة حتى الآن"}
                       </p>
                     </div>
-                  </div>
+                  )
                 )}
               </div>
             )}
