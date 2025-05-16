@@ -193,19 +193,19 @@ export default function TeamRegistrationModal({
                   type="text"
                   value={createTeam}
                   onChange={(e) => setCreateTeam(e.target.value)}
-                  className="w-full bg-[#0B0D0F]  rounded-md p-2 focus:border-[#38FFE5] focus:outline-none"
+                  className="w-full bg-[#0B0D0F]  rounded-lg p-2 focus:border-[#38FFE5] focus:outline-none"
                 />
               </div>
 
               <button
                 onClick={handleCreateTeam}
-                className="md:w-2/3 w-full mt-7 cursor-pointer bg-[#38FFE5] text-[#06373F] font-bold py-2 rounded-md hover:bg-[#38FFE5]/90 transition-colors"
+                className="md:w-2/3 w-full mt-7 cursor-pointer bg-[#38FFE5] text-[#06373F] font-bold py-2 rounded-lg hover:bg-[#38FFE5]/90 transition-colors"
               >
                 {isEnglish ? "Create Team" : "انشاء فريق"}
               </button>
               <button
                 onClick={() => setCurrentStep("initial")}
-                className="  bg-transparent border md:w-2/3 w-full border-[#38FFE5] mb-4 text-[#38FFE5] font-bold py-2 rounded-md hover:bg-[#38FFE5]/10 transition-colors"
+                className="  bg-transparent border md:w-2/3 w-full border-[#38FFE5] mb-4 text-[#38FFE5] font-bold py-2 rounded-lg hover:bg-[#38FFE5]/10 transition-colors"
               >
                 {isEnglish ? "Back" : "الرجوع للخلف"}
               </button>
@@ -237,7 +237,7 @@ export default function TeamRegistrationModal({
                   type="text"
                   value={joinTeam}
                   onChange={(e) => setJoinTeam(e.target.value)}
-                  className="w-full bg-[#0B0D0F]  rounded-md p-2 focus:border-[#38FFE5] focus:outline-none"
+                  className="w-full bg-[#0B0D0F]  rounded-lg p-2 focus:border-[#38FFE5] focus:outline-none"
                   placeholder={
                     isEnglish ? "Enter team name" : "أدخل اسم الفريق"
                   }
@@ -251,7 +251,7 @@ export default function TeamRegistrationModal({
                   type="password"
                   value={teamPassword}
                   onChange={(e) => setTeamPassword(e.target.value)}
-                  className="w-full bg-[#0B0D0F]  rounded-md p-2 focus:border-[#38FFE5] focus:outline-none"
+                  className="w-full bg-[#0B0D0F]  rounded-lg p-2 focus:border-[#38FFE5] focus:outline-none"
                   placeholder={
                     isEnglish ? "Enter team password" : "أدخل كلمة مرور الفريق"
                   }
@@ -259,13 +259,13 @@ export default function TeamRegistrationModal({
               </div>
               <button
                 onClick={handleJoinTeam}
-                className="md:w-2/3 w-full mt-10 cursor-pointer bg-[#38FFE5] text-[#06373F] font-bold py-2 rounded-md hover:bg-[#38FFE5]/90 transition-colors"
+                className="md:w-2/3 w-full mt-10 cursor-pointer bg-[#38FFE5] text-[#06373F] font-bold py-2 rounded-lg hover:bg-[#38FFE5]/90 transition-colors"
               >
                 {isEnglish ? "Join Team" : "انضم إلى الفريق"}
               </button>
               <button
                 onClick={() => setCurrentStep("initial")}
-                className="  bg-transparent border md:w-2/3 w-full border-[#38FFE5] mb-4 text-[#38FFE5] font-bold py-2 rounded-md hover:bg-[#38FFE5]/10 transition-colors"
+                className="  bg-transparent border md:w-2/3 w-full border-[#38FFE5] mb-4 text-[#38FFE5] font-bold py-2 rounded-lg hover:bg-[#38FFE5]/10 transition-colors"
               >
                 {isEnglish ? "Back" : "الرجوع للخلف"}
               </button>
