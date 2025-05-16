@@ -1568,29 +1568,21 @@ export default function ChallengePage() {
                                 className="w-7 h-9"
                               />
                             </div>
-                            <div
-                              onClick={() => {
-                                // Handle different possible username fields
-                                const displayUsername =
-                                  user.username ||
-                                  user.user_name ||
-                                  user.userName ||
-                                  "Unknown User";
-                                router.push(`/profile/${displayUsername}`);
-                              }}
-                              className="flex items-center gap-4 cursor-pointer"
-                            >
+                            <div className="flex items-center gap-4 cursor-pointer ">
                               <Image
-                                src={user.profile_image || "/icon1.png"}
+                                src={user.team_icon || "/icon1.png"}
                                 alt="profile"
                                 width={32}
                                 height={32}
+                                className={
+                                  user.team_icon ? "rounded-full w-30 h-30" : ""
+                                }
                               />
                               <p className="text-xl font-semibold">
                                 {/* Display username with fallbacks for different field names */}
-                                {user.username ||
-                                  user.user_name ||
-                                  user.userName ||
+                                {user.team_name ||
+                                  user.team_name ||
+                                  user.team_name ||
                                   "Unknown User"}
                               </p>
                             </div>
