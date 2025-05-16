@@ -472,26 +472,26 @@ export default function Home() {
                       } flex items-center justify-between`}
                     >
                       <th
-                        className={`py-3 lg:py-4 w-[25%] text-sm lg:text-base ${
+                        className={`py-4 lg:py-5 w-[25%] px-6 text-sm lg:text-base ${
                           isEnglish
-                            ? "text-left pl-3 lg:pl-5"
-                            : "text-right pr-3 lg:pr-5"
+                            ? "text-right pl-4 lg:pl-6"
+                            : "text-left pr-4 lg:pr-6"
                         }`}
                       >
                         {isEnglish ? "Time" : "التوقيت"}
                       </th>
                       <th
-                        className={`py-3 lg:py-4 w-[25%] text-sm lg:text-base ${
-                          isEnglish ? "text-left" : "text-right"
+                        className={`py-4 lg:py-5 w-[25%]  text-sm lg:text-base ${
+                          isEnglish ? "text-center" : "text-center"
                         }`}
                       >
                         {isEnglish ? "Bytes" : "البايتس"}
                       </th>
                       <th
-                        className={`py-3 lg:py-4 w-[50%] text-sm lg:text-base ${
+                        className={`py-4 lg:py-5 w-[50%] text-sm lg:text-base ${
                           isEnglish
-                            ? "text-left pl-3 lg:pl-5"
-                            : "text-right pr-3 lg:pr-5"
+                            ? "text-left pl-4 lg:pl-6"
+                            : "text-right pr-4 lg:pr-6"
                         }`}
                       >
                         {isEnglish ? "User" : "المستخدم"}
@@ -541,20 +541,20 @@ export default function Home() {
                         >
                           <td
                             dir={isEnglish ? "ltr" : "rtl"}
-                            className={`py-2 lg:py-3 text-white/70 w-[25%] text-sm lg:text-base ${
-                              isEnglish ? "pl-3 lg:pl-5" : "pr-3 lg:pr-5"
+                            className={`py-3 lg:py-4 text-white/70 w-[25%] px-5 text-left text-sm lg:text-base ${
+                              isEnglish ? "pl-4 lg:pl-6 text-right" : "pr-4 lg:pr-6"
                             }`}
                           >
                             {timeAgo}
                           </td>
-                          <td className="py-2 lg:py-3 w-[25%]">
+                          <td className="py-3 lg:py-4 w-[25%] ">
                             <div
                               dir={isEnglish ? "ltr" : "rtl"}
-                              className={`flex items-center gap-1 lg:gap-2 ${
-                                isEnglish ? "pl-0" : "pr-0"
+                              className={`flex  justify-center items-center gap-2 pl-20   ${
+                                isEnglish ? "pr-32" : "pl-20"
                               }`}
                             >
-                              <div className="flex flex-row-reverse items-center gap-1 w-[120px]">
+                              <div className="flex flex-row-reverse justify-start items-center gap-1 w-[120px] ">
                                 <span className="text-white text-sm lg:text-base">
                                   {activity.is_first_blood
                                     ? activity.bytes
@@ -564,15 +564,10 @@ export default function Home() {
                                 <span className="text-red-500 text-sm">
                                   {activity.is_first_blood &&
                                   activity.first_blood_bytes > activity.bytes
-                                    ? `
-                                    
-                                    
-                                    ${isEnglish ? "bytes" : "بايتس"}
-                                    
-                                    +${
-                                      activity.first_blood_bytes -
-                                      activity.bytes
-                                    } `
+                                    ? `${isEnglish ? "bytes" : "بايتس"} ${
+                                        activity.first_blood_bytes -
+                                        activity.bytes
+                                      }+`
                                     : ""}
                                 </span>
                               </div>
@@ -594,11 +589,11 @@ export default function Home() {
                               />
                             </div>
                           </td>
-                          <td className="py-2 lg:py-3 w-[50%]">
+                          <td className="py-3 lg:py-4 w-[50%]">
                             <div
                               dir={isEnglish ? "ltr" : "rtl"}
-                              className={`flex items-center gap-2 lg:gap-3 ${
-                                isEnglish ? "pl-2 lg:pl-3" : "pr-2 lg:pr-3"
+                              className={`flex items-center  gap-2 lg:gap-3 ${
+                                isEnglish ? "pl-4 lg:pl-6" : "pr-4 lg:pr-6"
                               }`}
                             >
                               <span className="text-sm lg:text-base min-w-[20px] text-center">
@@ -621,7 +616,7 @@ export default function Home() {
                               >
                                 {activity.user_name}
                               </span>
-                              <span className="text-white text-sm lg:text-base">
+                              <span className="text-white text-sm lg:text-base ml-2">
                                 {isEnglish
                                   ? activity.is_first_blood
                                     ? `got first blood from ${activity.challenge_title}`
