@@ -52,10 +52,10 @@ export default function Events() {
   // Function to explicitly check freeze state from the API
   const checkEventFreezeState = async (eventId) => {
     try {
-        (`Checking freeze state for event ${eventId}`);
+      `Checking freeze state for event ${eventId}`;
       const response = await axios.get(`/api/freeze?eventId=${eventId}`);
       const frozen = response.data.frozen;
-        (`Event ${eventId} freeze state from API: ${frozen}`);
+      `Event ${eventId} freeze state from API: ${frozen}`;
 
       if (frozen) {
         // Show toast notification for freeze
@@ -77,10 +77,10 @@ export default function Events() {
   // Check global system freeze state
   const checkGlobalFreezeState = async () => {
     try {
-        ("Checking global freeze state");
+      ("Checking global freeze state");
       const response = await axios.get("/api/freeze");
       const frozen = response.data.frozen;
-        (`Global freeze state from API: ${frozen}`);
+      `Global freeze state from API: ${frozen}`;
 
       if (frozen) {
         // Show toast notification for freeze
@@ -101,7 +101,7 @@ export default function Events() {
 
   // Function to handle system freeze events from socket
   const handleSystemFreezeEvent = (data) => {
-      ("Received system_freeze event:", data);
+    "Received system_freeze event:", data;
 
     if (data.eventId && mainEvent && data.eventId === mainEvent.uuid) {
       // Event-specific freeze
@@ -118,14 +118,14 @@ export default function Events() {
 
   // Initialize socket and set up listeners
   useEffect(() => {
-      ("Initializing socket connection");
+    ("Initializing socket connection");
     const userName = Cookies.get("username");
     const socket = createSocket(userName);
     socketRef.current = socket;
 
     // Listen for system_freeze events
     if (socket) {
-        ("Setting up system_freeze event listener");
+      ("Setting up system_freeze event listener");
 
       socket.on("system_freeze", handleSystemFreezeEvent);
 
@@ -139,7 +139,7 @@ export default function Events() {
     // Setup window event listener for custom events (for the virtual socket implementation)
     const handleFreezeUpdate = (event) => {
       const { detail } = event;
-        ("Received system_freeze_update event:", detail);
+      "Received system_freeze_update event:", detail;
 
       if (detail.isGlobal) {
         setIsFrozen(detail.frozen);
@@ -179,14 +179,14 @@ export default function Events() {
   // Effect to check event-specific freeze state when mainEvent changes
   useEffect(() => {
     if (mainEvent?.uuid) {
-        (`Main event loaded: ${mainEvent.uuid}`);
+      `Main event loaded: ${mainEvent.uuid}`;
 
       // Check event-specific freeze state
       checkEventFreezeState(mainEvent.uuid);
 
       // Join the team room for real-time updates
       if (socketRef.current) {
-          (`Joining team room for event: ${mainEvent.uuid}`);
+        `Joining team room for event: ${mainEvent.uuid}`;
         socketRef.current.emit("joinTeamRoom", mainEvent.uuid);
       }
     }
@@ -194,7 +194,7 @@ export default function Events() {
     return () => {
       // Leave the team room when component unmounts or mainEvent changes
       if (mainEvent?.uuid && socketRef.current) {
-          (`Leaving team room for event: ${mainEvent.uuid}`);
+        `Leaving team room for event: ${mainEvent.uuid}`;
         socketRef.current.emit("leaveTeamRoom", mainEvent.uuid);
       }
     };
@@ -741,79 +741,98 @@ export default function Events() {
             isFrozen={isFrozen || eventFrozen}
           />
 
-          <div
-            dir={isEnglish ? "ltr" : "rtl"}
-            className="grid mt-20 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 md:mt-16 gap-4 md:gap-[56px] pb-10"
-          >
-            {event.map((event) => (
-              <div
-                onClick={() => router.push(`/events/${event.uuid}`)}
-                key={event.uuid}
-                className="bg-white/1 cursor-pointer min-h-[320px] relative rounded-2xl  shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                <div className="relative h-1/2 w-full">
-                  <Image
-                    className="object-cover rounded-t-2xl"
-                    src={event.image}
-                    alt={event.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    priority
-                  />
-                </div>
-                <div className="px-4 pt-[27px]">
-                  <h3 className="text-lg lg:text-[27px]  text-center font-semibold ">
-                    {event.title}
-                  </h3>
-                  <hr className="text-[#38FFE5]/20 mt-[27px]" />
-                  <div
-                    className={`flex items-center pt-[20px] ${
-                      isEnglish ? "justify-center" : "justify-center"
-                    }`}
-                  >
-                    <span
-                      className={`${isEnglish ? "mr-2" : "ml-2"} text-teal-400`}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <rect
-                          x="3"
-                          y="4"
-                          width="18"
-                          height="18"
-                          rx="2"
-                          ry="2"
-                        ></rect>
-                        <line x1="16" y1="2" x2="16" y2="6"></line>
-                        <line x1="8" y1="2" x2="8" y2="6"></line>
-                        <line x1="3" y1="10" x2="21" y2="10"></line>
-                      </svg>
-                    </span>
-                    <span
-                      className={`text-sm md:text-base text-gray-400 ${
-                        isEnglish ? "text-left" : "text-right"
+          {event.length === 0 ? (
+            <div className="flex flex-col items-center justify-center my-20 py-10">
+              <Image
+                src="/notfound.png"
+                alt="No events found"
+                width={300}
+                height={300}
+                className="mb-6"
+              />
+              <h3 className="text-2xl font-medium text-center">
+                {isEnglish
+                  ? "No events available yet"
+                  : "لا توجد فعاليات متاحة بعد"}
+              </h3>
+            </div>
+          ) : (
+            <div
+              dir={isEnglish ? "ltr" : "rtl"}
+              className="grid mt-20 grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 md:mt-16 gap-4 md:gap-[56px] pb-10"
+            >
+              {event.map((event) => (
+                <div
+                  onClick={() => router.push(`/events/${event.uuid}`)}
+                  key={event.uuid}
+                  className="bg-white/1 cursor-pointer min-h-[320px] relative rounded-2xl  shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <div className="relative h-1/2 w-full">
+                    <Image
+                      className="object-cover rounded-t-2xl"
+                      src={event.image}
+                      alt={event.title}
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      priority
+                    />
+                  </div>
+                  <div className="px-4 pt-[27px]">
+                    <h3 className="text-lg lg:text-[27px]  text-center font-semibold ">
+                      {event.title}
+                    </h3>
+                    <hr className="text-[#38FFE5]/20 mt-[27px]" />
+                    <div
+                      className={`flex items-center pt-[20px] ${
+                        isEnglish ? "justify-center" : "justify-center"
                       }`}
                     >
-                      {event.is_ended
-                        ? `${
-                            isEnglish ? "Ended at " : "انتهى في "
-                          } ${formatDate(event.end_date)}`
-                        : formatDate(event.start_date)}
-                    </span>
+                      <span
+                        className={`${
+                          isEnglish ? "mr-2" : "ml-2"
+                        } text-teal-400`}
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <rect
+                            x="3"
+                            y="4"
+                            width="18"
+                            height="18"
+                            rx="2"
+                            ry="2"
+                          ></rect>
+                          <line x1="16" y1="2" x2="16" y2="6"></line>
+                          <line x1="8" y1="2" x2="8" y2="6"></line>
+                          <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                      </span>
+                      <span
+                        className={`text-sm md:text-base text-gray-400 ${
+                          isEnglish ? "text-left" : "text-right"
+                        }`}
+                      >
+                        {event.is_ended
+                          ? `${
+                              isEnglish ? "Ended at " : "انتهى في "
+                            } ${formatDate(event.end_date)}`
+                          : formatDate(event.start_date)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </>

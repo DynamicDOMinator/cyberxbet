@@ -1098,7 +1098,7 @@ export default function Profile() {
                       height={150}
                     />
                     <p className="text-center pt-5">
-                      {isEnglish ? "No events yet" : "لاتوجد فعاليات حتي الآن"}
+                      {isEnglish ? "No events yet" : "لاتوجد فعاليات حتى الآن"}
                     </p>
                   </div>
                 )}
@@ -1242,7 +1242,7 @@ export default function Profile() {
                       <p className="text-center pt-5 text-lg">
                         {isEnglish
                           ? "No activities yet"
-                          : "لاتوجد أنشطة حتي الآن"}
+                          : "لاتوجد أنشطة حتى الآن"}
                       </p>
                     </div>
                   )}
