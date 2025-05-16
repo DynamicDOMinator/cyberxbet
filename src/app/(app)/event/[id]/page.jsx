@@ -1575,7 +1575,7 @@ export default function ChallengePage() {
                                 width={32}
                                 height={32}
                                 className={
-                                  user.team_icon ? "rounded-full w-30 h-30" : ""
+                                  user.team_icon ? "rounded-full w-[30px] h-[30px]" : ""
                                 }
                               />
                               <p className="text-xl font-semibold">
