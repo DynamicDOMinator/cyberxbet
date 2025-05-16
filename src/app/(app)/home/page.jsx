@@ -554,9 +554,29 @@ export default function Home() {
                                 isEnglish ? "pl-0" : "pr-0"
                               }`}
                             >
-                              <span className="text-white text-sm lg:text-base min-w-[24px] md:min-w-[32px] text-left">
-                                {activity.total_bytes}
-                              </span>
+                              <div className="flex flex-row-reverse items-center gap-1 w-[120px]">
+                                <span className="text-white text-sm lg:text-base">
+                                  {activity.is_first_blood
+                                    ? activity.bytes
+                                    : activity.total_bytes}
+                                </span>
+
+                                <span className="text-red-500 text-sm">
+                                  {activity.is_first_blood &&
+                                  activity.first_blood_bytes > activity.bytes
+                                    ? `
+                                    
+                                    
+                                    ${isEnglish ? "bytes" : "بايتس"}
+                                    
+                                    +${
+                                      activity.first_blood_bytes -
+                                      activity.bytes
+                                    } `
+                                    : ""}
+                                </span>
+                              </div>
+
                               <Image
                                 src={
                                   activity.is_first_blood
