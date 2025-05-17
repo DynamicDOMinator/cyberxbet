@@ -184,7 +184,6 @@ export default function ChallengePage() {
           success = true;
         } catch (error) {
           retryCount++;
-       
 
           // Only retry on server errors (500s) or timeouts
           if (
@@ -265,7 +264,6 @@ export default function ChallengePage() {
         const token = Cookies.get("token");
 
         if (!token) {
-      
           return;
         }
 
@@ -278,7 +276,6 @@ export default function ChallengePage() {
 
         if (response.data && response.data.user) {
           setUserData(response.data.user);
-      
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -293,7 +290,6 @@ export default function ChallengePage() {
     return () => {
       // Cleanup function - disconnect socket when component unmounts
       if (socket) {
-     
         // First leave the challenge room
         socket.emit("leaveChallengeRoom", id);
         // Then disconnect the socket
@@ -310,24 +306,21 @@ export default function ChallengePage() {
       const socketId =
         userData?.user_name ||
         `challenge_visitor_${Math.random().toString(36).substring(2, 10)}`;
-   
+
       const newSocket = createSocket(socketId);
 
       // Join the challenge room
       newSocket.emit("joinChallengeRoom", id);
-   
 
       // Store the socket
       setSocket(newSocket);
 
       // Set up listeners
       newSocket.on("connect", () => {
-      
         setSocketConnected(true);
       });
 
       newSocket.on("disconnect", () => {
-    
         setSocketConnected(false);
       });
 
@@ -343,7 +336,7 @@ export default function ChallengePage() {
       const heartbeatInterval = setInterval(() => {
         if (newSocket.connected) {
           newSocket.emit("heartbeat");
-        
+
           setSocketConnected(true);
         } else {
           setSocketConnected(false);
@@ -366,7 +359,6 @@ export default function ChallengePage() {
 
     // Event listener for new solves
     const onNewSolve = (data) => {
-    
       // Log event for debugging
       setSocketEvents((prev) => [
         { type: "newSolve", data, time: new Date().toLocaleTimeString() },
@@ -383,7 +375,6 @@ export default function ChallengePage() {
 
     // Event listener for first blood
     const onFirstBlood = (data) => {
-     
       // Log event for debugging
       setSocketEvents((prev) => [
         { type: "firstBlood", data, time: new Date().toLocaleTimeString() },
@@ -486,8 +477,6 @@ export default function ChallengePage() {
         }
       );
 
-   
-
       if (response.data.status === "error") {
         setError(response.data.message);
         return;
@@ -524,8 +513,6 @@ export default function ChallengePage() {
           // Notify others via socket for first blood
           if (socket) {
             try {
-            
-
               socket.emit("flagFirstBlood", {
                 challenge_id: id,
                 user_name: userData?.user_name || "anonymous",
@@ -535,8 +522,6 @@ export default function ChallengePage() {
                   "/icon1.png",
                 points: response.data.data.first_blood_points || 0,
               });
-
-            
             } catch (socketError) {
               console.error("Socket first blood error:", socketError);
               // Continue even if socket emission fails
@@ -551,8 +536,6 @@ export default function ChallengePage() {
           // Notify others via socket for regular flag submission
           if (socket) {
             try {
-          
-
               socket.emit("flagSubmitted", {
                 challenge_id: id,
                 user_name: userData?.user_name || "anonymous",
@@ -562,8 +545,6 @@ export default function ChallengePage() {
                   "/icon1.png",
                 points: response.data.data.points || 0,
               });
-
-             
             } catch (socketError) {
               console.error("Socket flag submitted error:", socketError);
               // Continue even if socket emission fails
@@ -738,14 +719,16 @@ export default function ChallengePage() {
           }`}
         >
           <div className="flex items-center gap-8">
+            {" "}
             <div>
+              {" "}
               <Image
-                src={index === 0 ? "/blood.png" : "/flag.png"}
+                src={user.is_first_blood ? "/blood.png" : "/flag.png"}
                 alt="flag"
                 width={32}
                 height={32}
                 className="w-7 h-9"
-              />
+              />{" "}
             </div>
             <div className="flex items-center gap-4">
               <Image
