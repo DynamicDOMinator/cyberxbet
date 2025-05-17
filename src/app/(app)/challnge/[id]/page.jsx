@@ -748,7 +748,7 @@ export default function ChallengePage() {
                   user.flag_name && (
                     <span className="text-sm text-white  ">
                       {" "}
-                      {isEnglish ? "from" : "من"} {user.flag_name}{" "}
+                      {isEnglish ? "from" : "من"} {isEnglish ? user.flag_name : user.flag_name_ar}{" "}
                     </span>
                   )}{" "}
                 {index === 0 && (
