@@ -1045,7 +1045,7 @@ export default function ChallengePage() {
                         alt="Hacks"
                         width={32}
                         height={32}
-                        className="w-9 h-10"
+                        className="w-8 h-10"
                       />
                     </div>
                     <div>
@@ -1139,7 +1139,7 @@ export default function ChallengePage() {
                       alt="Hacks"
                       width={32}
                       height={32}
-                      className="w-9 h-10"
+                      className="w-8 h-10"
                     />
                   </div>
                   <div>
