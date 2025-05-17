@@ -3113,7 +3113,7 @@ export default function EventPage() {
                                             {isEnglish
                                               ? activity.challenge
                                                   .is_first_blood
-                                                ? `got first blood in ${activity.challenge.challenge_name}`
+                                                ? `got first bytes in ${activity.challenge.challenge_name}`
                                                 : `earned bytes in ${activity.challenge.challenge_name}`
                                               : activity.challenge
                                                   .is_first_blood
@@ -3573,7 +3573,7 @@ export default function EventPage() {
                   {isEnglish ? "Challenges" : "التحديات"}
                 </div>
                 <div className="col-span-1 text-sm md:text-base text-center text-white font-semibold">
-                  {isEnglish ? "First Blood" : "البايتس الأولى"}
+                  {isEnglish ? "First bytes" : "البايتس الأولى"}
                 </div>
               </div>
 
@@ -4090,7 +4090,7 @@ export default function EventPage() {
                                   <span className="text-white text-sm lg:text-base">
                                     {isEnglish
                                       ? activity.is_first_blood
-                                        ? `got first blood from ${activity.challenge_title}`
+                                        ? `got first bytes from ${activity.challenge_title}`
                                         : `earned bytes from ${activity.challenge_title}`
                                       : activity.is_first_blood
                                       ? `حصل على البايتس الاول في ${activity.challenge_title}`

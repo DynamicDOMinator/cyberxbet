@@ -619,7 +619,7 @@ export default function Home() {
                               <span className="text-white text-sm lg:text-base ml-2">
                                 {isEnglish
                                   ? activity.is_first_blood
-                                    ? `got first blood from ${activity.challenge_title}`
+                                    ? `got first bytes from ${activity.challenge_title}`
                                     : `earned bytes from ${activity.challenge_title}`
                                   : activity.is_first_blood
                                   ? `حصل على البايتس الاول في ${activity.challenge_title}`
