@@ -51,11 +51,14 @@ export default function TrainingChallenges() {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         const token = Cookies.get("token");
-        const response = await axios.get(`${apiUrl}/last-Three-challenges`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await axios.get(
+          `${apiUrl}/last-Three-challenges/${params.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         if (response.data.status === "success") {
           setLatestChallenges(response.data.data);
         }
@@ -65,7 +68,7 @@ export default function TrainingChallenges() {
     };
 
     fetchChallenges();
-  }, []);
+  }, [params.id]);
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
