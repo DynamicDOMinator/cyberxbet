@@ -742,13 +742,13 @@ export default function Events() {
           />
 
           {event.length === 0 ? (
-            <div className="flex flex-col items-center justify-center my-20 py-10">
+            <div className="flex flex-col items-center justify-center my-20 py-10 ">
               <Image
                 src="/notfound.png"
                 alt="No events found"
                 width={300}
                 height={300}
-                className="mb-6"
+                className="mb-6 w-[230px] h-[230px]"
               />
               <h3 className="text-2xl font-medium text-center">
                 {isEnglish
