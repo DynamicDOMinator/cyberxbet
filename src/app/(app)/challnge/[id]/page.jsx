@@ -742,13 +742,22 @@ export default function ChallengePage() {
                 onClick={() => router.push(`/profile/${user.user_name}`)}
                 className="text-xl flex items-center gap-2 font-semibold cursor-pointer"
               >
-                {user.user_name}
+                {" "}
+                {user.user_name}{" "}
+                {challenge?.flag_type === "multiple_individual" &&
+                  user.flag_name && (
+                    <span className="text-sm text-white  ">
+                      {" "}
+                      {isEnglish ? "from" : "من"} {user.flag_name}{" "}
+                    </span>
+                  )}{" "}
                 {index === 0 && (
                   <span className="text-sm text-red-500">
+                    {" "}
                     {calculateTimeDifference(
                       challenge?.created_at,
                       user.solved_at
-                    )}
+                    )}{" "}
                   </span>
                 )}
               </p>
